@@ -1,0 +1,20 @@
+extends layout
+
+block content
+  h1= title
+  p Welcome to 
+    span.received-message #{example}
+  input(type='text', class='message', onkeyup='send(this)')
+  script(src="/socket.io/index.js")
+  script.
+    var socket = io.connect('https://localhost');
+    socket.on('receive', function (message) {
+      console.log('received %s', message);
+      document.querySelector('.received-message').innerText = message;
+    });
+    function send(input) {
+      console.log(input.value)
+      var value = input.value;
+      console.log('Sending Client Message: %s to Server', value);
+      socket.emit('messageChange', {message: value});
+    }
