@@ -9,6 +9,8 @@ var userSchema = new schema({
     password: { type: String },
     contactNo: { type: String},
     imageUrl: { type: String },
+    isSocialLogin:{type:Boolean,default:false},
+    socialId:{ type: String },
     resetPasswordToken: {
         type: String
     },

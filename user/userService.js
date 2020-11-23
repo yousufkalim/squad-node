@@ -125,27 +125,212 @@ function resetpassword(req, res) {
 
     })
 }
+function socialloginGmail(req, res) {
+    // const { id, email, name } = req.body;
+    const name = req.body.name.trim(),
+        socialId = req.body.id.trim(),
+        email = req.body.email.trim();
+    if (req.body.photo) {
 
-// function uploadPhoto(req, res) {
-//     req.newFile_name = [];
-//     console.log("in upload photo", req.newFile_name)
-//     util.upload(req, res, async function (err) {
-//         if (err) {
-//             return res.json({ code: code.badRequest, message: err })
-//         }
-//         else {
-//             const files = req.files;
-//             let index, len;
-//             var filepathlist = []
-//             for (index = 0, len = files.length; index < len; ++index) {
-//                 console.log("uploadPhoto -> files[index].path", files[index].path)
-//                 let filepath = process.env.IMAGEPREFIX + files[index].path.slice(4,);;
-//                 filepathlist.push(filepath)
-//             }
-//             return res.json({ code: code.created, message: msg.ok, data: filepathlist })
-//         }
-//     });
-// }
+        imageUrl = req.body.photo.trim()
+    }
+    else {
+        imageUrl = ""
+    }
+    console.log("socialloginGmail -> req.body.name======================>", req.body)
+
+
+    let query = { $or: [{ socialId: socialId }, { email: email }] };
+    update = { $set: { email: email, name: name, isSocialLogin: true, imageUrl: imageUrl } },
+        options = { new: true }
+    return userdao.findOneAndUpdate(query, update, options).then(async (result) => {
+        if (!result) {
+            console.log("no result")
+            req.body.isSocialLogin = true
+            // req.body.accountType = accountType.CUSTOMER
+            const data = {
+                isSocialLogin: true,
+                name: req.body.name.trim(),
+                socialId: req.body.id.trim(),
+                email: req.body.email.trim()
+            }
+            if (req.body.photo) {
+
+                data.imageUrl = req.body.photo;
+            }
+            return userdao.create(data).then((user) => {
+                console.log("socialloginGmail -> result", user)
+                let token = util.generateToken(user, process.env.USER_SECRET)
+                let data = {
+                    _id: user._id,
+                    email: user.email,
+                    name: user.name,
+                    imageUrl: user.imageUrl,
+                    token: token
+                }
+                return res.json({ code: code.ok, message: msg.loggedIn, data: data })
+            })
+        }
+        else {
+            console.log(" result")
+            let token = util.generateToken(result, process.env.USER_SECRET)
+            let data = {
+                _id: result._id,
+                email: result.email,
+                // accountType: result.accountType,
+                name: result.name,
+                imageUrl: result.imageUrl,
+                token: token
+            }
+            return res.json({ code: code.ok, message: msg.loggedIn, data: data })
+        }
+    }).catch((err) => {
+        console.log("socialloginGmail -> err", err)
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+}
+function socialloginFacebook(req, res) {
+    // const { id, email, name } = req.body;
+    const name = req.body.name.trim(),
+        socialId = req.body.id.trim(),
+        email = req.body.email.trim();
+    if (req.body.imageUrl) {
+
+        imageUrl = req.body.photo.trim()
+    }
+    else {
+        imageUrl = ""
+    }
+
+    let query = { $or: [{ socialId: socialId }, { email: email }]};
+    update = { $set: { email: email, name: name, isSocialLogin: true, imageUrl: imageUrl } },
+        options = { new: true }
+    return userdao.findOneAndUpdate(query, update, options).then(async (result) => {
+        if (!result) {
+            req.body.isSocialLogin = true
+            // req.body.accountType = accountType.CUSTOMER
+            const data = {
+                isSocialLogin: true,
+                name: req.body.name.trim(),
+                socialId: req.body.id.trim(),
+                email: req.body.email.trim()
+            }
+            if (req.body.photo) {
+
+                data.imageUrl = req.body.photo;
+            }
+            return userdao.create(data).then((user) => {
+                let token = util.generateToken(user, process.env.USER_SECRET)
+                let data = {
+                    _id: user._id,
+                    email: user.email,
+                    // accountType: user.accountType,
+                    name: user.name,
+                    imageUrl: user.imageUrl,
+                    token: token
+                }
+                console.log("socialloginFacebook -> data", data)
+                return res.json({ code: code.ok, message: msg.loggedIn, data: data })
+            })
+        }
+        else {
+            let token = util.generateToken(result, process.env.USER_SECRET)
+            let data = {
+                _id: result._id,
+                email: result.email,
+                // accountType: result.accountType,
+                name: result.name,
+                imageUrl: result.imageUrl,
+                token: token
+            }
+            console.log("socialloginFacebook -> data", data)
+            return res.json({ code: code.ok, message: msg.loggedIn, data: data })
+        }
+    }).catch((err) => {
+        console.log("socialloginFacebook -> catch", err)
+
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+}
+function socialloginLinkedin(req, res) {
+    console.log("socialloginLinkedin -> req=================================================", req.body)
+    const name = req.body.firstName.trim(),
+        socialId = req.body.socialId.trim(),
+        email = req.body.email.trim();
+    if (req.body.imageUrl) {
+
+        imageUrl = req.body.imageUrl.trim()
+    }
+    else {
+        imageUrl = ""
+    }
+
+    let query = { $or: [{ socialId: socialId }, { email: email }] };
+    update = { $set: { email: email, name: name, isSocialLogin: true, imageUrl: imageUrl } },
+        options = { new: true }
+    return userdao.findOneAndUpdate(query, update, options).then(async (result) => {
+        if (!result) {
+            req.body.isSocialLogin = true
+            // req.body.accountType = accountType.CUSTOMER
+            const data = {
+                isSocialLogin: true,
+                name: req.body.firstName.trim(),
+                socialId: req.body.socialId.trim(),
+                email: req.body.email.trim()
+            }
+            if (req.body.imageUrl) {
+
+                data.imageUrl = req.body.imageUrl;
+            }
+            return userdao.create(data).then((user) => {
+                let token = util.generateToken(user, process.env.USER_SECRET)
+                let data = {
+                    _id: user._id,
+                    email: user.email,
+                    // accountType: user.accountType,
+                    name: user.name,
+                    imageUrl: user.imageUrl,
+                    token: token
+                }
+                console.log("socialloginlinkedin -> data----------create", data)
+                return res.json({ code: code.ok, message: msg.loggedIn, data: data })
+            })
+        }
+        else {
+            let token = util.generateToken(result, process.env.USER_SECRET)
+            let data = {
+                _id: result._id,
+                email: result.email,
+                // accountType: result.accountType,
+                name: result.name,
+                imageUrl: result.imageUrl,
+                token: token
+            }
+            console.log("socialloginlinkedin -> data------------login", data)
+            return res.json({ code: code.ok, message: msg.loggedIn, data: data })
+        }
+    }).catch((err) => {
+        console.log("socialloginlinkedin -> catch", err)
+
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+}
+function getprofile(req, res) {
+    let token = req.headers['authorization']
+    let obj = util.decodeToken(token)
+    console.log("getprofile -> obj", obj)
+    let query = { _id: obj.id }
+    userdao.findone(query).then((data) => {
+        // id
+        // email
+        // contactNo
+        // name
+        // imageurl
+        res.json({ code: code.ok, data: data })
+    }).catch((err) => {
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+}
 
 // function updateProfile(req, res) {
 //     let token = req.headers['authorization']
@@ -169,8 +354,11 @@ module.exports = {
     registerUser,
     // updateProfile,
     loginUser,
-    // uploadPhoto,
     forgotPassword,
     getresetpassword,
-    resetpassword
+    resetpassword,
+    getprofile,
+    socialloginGmail,
+    socialloginFacebook,
+    socialloginLinkedin
 }

@@ -16,7 +16,9 @@ messages = {
     notFound:"User not found",
     tokeninvalidorexpire:"Token Invalid or Expired",
     passwordChanged:"Password changed",
-    mailNotSent:"Mail not send"
+    mailNotSent:"Mail not send",
+    invalidtoken:'Invalid Token',
+    invalidBody: 'Invalid input',
 }
 schemas = {
     admin: 'admin',

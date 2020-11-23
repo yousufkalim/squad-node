@@ -1,5 +1,5 @@
 const userRouter = require('express').Router();
-// const service = require('./userService')
+const service = require('./userService')
 const validate = require('./userValidator')
 const actions = require('./userAction')
 
@@ -25,8 +25,23 @@ userRouter.route('/reset/:token')
     .post([], (req, res) => {
         actions.resetpassword(req, res)
     })
-// commonRouter.route('/uploadPhoto')
-//     .post([], (req, res) => {
-//         service.uploadPhoto(req, res)
-//     })
+userRouter.route('/getprofile')
+    .get([validate.verifyToken], (req, res) => {
+        actions.getprofile(req, res)
+    })
+
+
+
+userRouter.route('/gmail/socialLogin')
+    .post([validate.validateSocialLogin], (req, res) => {
+        actions.socialloginGmail(req, res)
+    })
+userRouter.route('/facebook/socialLogin')
+    .post([validate.validateSocialLoginFace], (req, res) => {
+        actions.socialloginFacebook(req, res)
+    })
+userRouter.route('/linkedin/socialLogin')
+    .post([validate.validateSocialLoginLinkedin], (req, res) => {
+        actions.socialloginLinkedin(req, res)
+    })
 module.exports = userRouter;

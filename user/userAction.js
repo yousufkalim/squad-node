@@ -17,7 +17,18 @@ function getresetpassword(req, res,next) {
 function resetpassword(req, res,next) {
     service.resetpassword(req, res,next)
 }
-
+function getprofile(req, res,next) {
+    service.getprofile(req, res,next)
+}
+function socialloginGmail(req, res) {
+    service.socialloginGmail(req, res)
+}
+function socialloginFacebook(req, res) {
+    service.socialloginFacebook(req, res)
+}
+function socialloginLinkedin(req, res) {
+    service.socialloginLinkedin(req, res)
+}
 
 
 module.exports = {
@@ -25,6 +36,10 @@ module.exports = {
     loginUser,
     forgotPassword,
     getresetpassword,
-    resetpassword
+    resetpassword,
+    socialloginGmail,
+    socialloginFacebook,
+    socialloginLinkedin,
+    getprofile
   
 }
