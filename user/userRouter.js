@@ -29,7 +29,10 @@ userRouter.route('/getprofile')
     .get([validate.verifyToken], (req, res) => {
         actions.getprofile(req, res)
     })
-
+userRouter.route('/update')
+    .put([validate.verifyToken], (req, res) => {
+        actions.update(req, res)
+    })
 
 
 userRouter.route('/gmail/socialLogin')
@@ -44,4 +47,5 @@ userRouter.route('/linkedin/socialLogin')
     .post([validate.validateSocialLoginLinkedin], (req, res) => {
         actions.socialloginLinkedin(req, res)
     })
+
 module.exports = userRouter;

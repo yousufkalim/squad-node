@@ -6,28 +6,44 @@ http_codes = {
     ok: 200,
     notImplemented: 501,
     forbidden: 403,
-    unAuthorized:401
+    unAuthorized: 401
 }
 
 messages = {
-    internalServerError:"Internal server error",
-    registered:"Registered",
-    incorrectpass:"Incorrect Password",
-    notFound:"User not found",
-    tokeninvalidorexpire:"Token Invalid or Expired",
-    passwordChanged:"Password changed",
-    mailNotSent:"Mail not send",
-    invalidtoken:'Invalid Token',
+    internalServerError: "Internal server error",
+    registered: "Registered",
+    incorrectpass: "Incorrect Password",
+    notFound: "User not found",
+    tokeninvalidorexpire: "Token Invalid or Expired",
+    passwordChanged: "Password changed",
+    mailNotSent: "Mail not send",
+    invalidToken: 'Invalid Token',
     invalidBody: 'Invalid input',
+    deacacc: 'Deactivated Account',
+    passwordreset: 'Password reset',
+    mailnotsend: 'cant send mail currently try after sometime',
+    userdeleted: 'user Deleted'
 }
 schemas = {
     admin: 'admin',
-    user:'user'
+    user: 'user',
+    chat: 'chat',
+    sport: 'sport'
 }
-
-
+status = {
+    active: "ACTIVE",
+    deactive: "DEACTIVE",
+    read: "READ",
+    unread: "UNREAD"
+}
+role = {
+    admin: "ADMIN",
+    user: "USER"
+}
 module.exports = {
     schemas,
     http_codes,
-    messages
+    messages,
+    status,
+    role
 }

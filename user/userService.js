@@ -21,10 +21,12 @@ function registerUser(req, res) {
 }
 
 
-function loginUser(req, res) {
+function loginUser(req, res) {//user should be active
     return user.findOne({ email: req.body.email }).populate('nursery', '_id name').then(async (result) => {
         if (result) {
-            console.log("loginUser -> result", result.nursery)
+            if (result.active == false) {
+                return res.json({code:code.forbidden,message:msg.deacacc})
+            }
             const match = await bcrypt.compare(req.body.password, result.password);
             if (match) {
                 let tokn = util.generateToken(result, process.env.USER_SECRET)
@@ -34,7 +36,8 @@ function loginUser(req, res) {
                     name: result.name,
                     email: result.email,
                     contactNo: result.contactNo,
-                    token: tokn
+                    token: tokn,
+                    role: result.role
                 }
                 return res.json({ code: code.ok, data: data })
             } else {
@@ -202,7 +205,7 @@ function socialloginFacebook(req, res) {
         imageUrl = ""
     }
 
-    let query = { $or: [{ socialId: socialId }, { email: email }]};
+    let query = { $or: [{ socialId: socialId }, { email: email }] };
     update = { $set: { email: email, name: name, isSocialLogin: true, imageUrl: imageUrl } },
         options = { new: true }
     return userdao.findOneAndUpdate(query, update, options).then(async (result) => {
@@ -321,17 +324,31 @@ function getprofile(req, res) {
     console.log("getprofile -> obj", obj)
     let query = { _id: obj.id }
     userdao.findone(query).then((data) => {
-        // id
-        // email
-        // contactNo
-        // name
-        // imageurl
-        res.json({ code: code.ok, data: data })
+        let response = {
+         
+            active: data.active,
+            _id: data._id,
+            name: data.name,
+            email: data.email,
+            contactNo:data.contactNo,
+            imageUrl:data.imageUrl,
+            role:data.role
+        }
+        res.json({ code: code.ok, data: response })
     }).catch((err) => {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
-
+function update(req, res) {
+    let query = { _id: req.query.userId },
+        update = { $set: req.body },
+        options = { new: true }
+    userdao.findOneAndUpdate(query, update, options).then((data) => {
+        return res.json({ code: code.ok, data: data })
+    }).catch((err) => {
+        return res.json({ code: code.ineternalError, messages: msg.internalServerError })
+    })
+}
 // function updateProfile(req, res) {
 //     let token = req.headers['authorization']
 //     let obj = util.decodeToken(token)
@@ -360,5 +377,6 @@ module.exports = {
     getprofile,
     socialloginGmail,
     socialloginFacebook,
-    socialloginLinkedin
+    socialloginLinkedin,
+    update
 }

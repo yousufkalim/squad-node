@@ -1,4 +1,4 @@
-// var adminRouter = require('../admin/adminRouter')
+var adminRouter = require('../admin/adminRouter')
 var commonRouter = require('../common/commonRouter')
 var userRouter = require('../user/userRouter')
 const path = require('path')
@@ -6,7 +6,7 @@ var express = require('express');
 
 
 module.exports = function (app) {
-    // app.use('/admin', adminRouter)
+    app.use('/admin', adminRouter)
     app.use('/user', userRouter)
     app.use('/', commonRouter)
     app.use('/test', (req, res) => {
