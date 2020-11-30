@@ -1,7 +1,9 @@
 const util = require('../app util/util');
 const code = require('../constants').http_codes;
 const msg = require('../constants').messages;
+const status =require('../constants').status;
 const userdao = require('./userDao');
+const sportdao = require('../sport/sportDao')
 const bcrypt = require('bcrypt');
 const user = require('../schema/user')
 const crypto = require('crypto');
@@ -25,7 +27,7 @@ function loginUser(req, res) {//user should be active
     return user.findOne({ email: req.body.email }).populate('nursery', '_id name').then(async (result) => {
         if (result) {
             if (result.active == false) {
-                return res.json({code:code.forbidden,message:msg.deacacc})
+                return res.json({ code: code.forbidden, message: msg.deacacc })
             }
             const match = await bcrypt.compare(req.body.password, result.password);
             if (match) {
@@ -325,14 +327,14 @@ function getprofile(req, res) {
     let query = { _id: obj.id }
     userdao.findone(query).then((data) => {
         let response = {
-         
+
             active: data.active,
             _id: data._id,
             name: data.name,
             email: data.email,
-            contactNo:data.contactNo,
-            imageUrl:data.imageUrl,
-            role:data.role
+            contactNo: data.contactNo,
+            imageUrl: data.imageUrl,
+            role: data.role
         }
         res.json({ code: code.ok, data: response })
     }).catch((err) => {
@@ -344,6 +346,14 @@ function update(req, res) {
         update = { $set: req.body },
         options = { new: true }
     userdao.findOneAndUpdate(query, update, options).then((data) => {
+        return res.json({ code: code.ok, data: data })
+    }).catch((err) => {
+        return res.json({ code: code.ineternalError, messages: msg.internalServerError })
+    })
+}
+function sportlist(req, res) {
+    let query = { status: status.active }
+    sportdao.find(query).then((data) => {
         return res.json({ code: code.ok, data: data })
     }).catch((err) => {
         return res.json({ code: code.ineternalError, messages: msg.internalServerError })
@@ -378,5 +388,6 @@ module.exports = {
     socialloginGmail,
     socialloginFacebook,
     socialloginLinkedin,
-    update
+    update,
+    sportlist
 }

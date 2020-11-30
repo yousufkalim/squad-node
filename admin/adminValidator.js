@@ -38,6 +38,9 @@ async function verifyToken(req, res, next) {
 
                         next();
                     }
+                    else {
+                        return res.json({ code: code.unAuthorized, message: msg.youcantaccess })
+                    }
 
                 }
             }).catch((err) => {

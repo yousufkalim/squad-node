@@ -33,7 +33,10 @@ userRouter.route('/update')
     .put([validate.verifyToken], (req, res) => {
         actions.update(req, res)
     })
-
+userRouter.route('/sportlist')
+    .get([validate.verifyToken], (req, res) => {
+        actions.sportlist(req, res)
+    })
 
 userRouter.route('/gmail/socialLogin')
     .post([validate.validateSocialLogin], (req, res) => {

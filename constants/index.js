@@ -13,7 +13,7 @@ messages = {
     internalServerError: "Internal server error",
     registered: "Registered",
     incorrectpass: "Incorrect Password",
-    notFound: "User not found",
+    notFound: "Reccord not found",
     tokeninvalidorexpire: "Token Invalid or Expired",
     passwordChanged: "Password changed",
     mailNotSent: "Mail not send",
@@ -22,7 +22,10 @@ messages = {
     deacacc: 'Deactivated Account',
     passwordreset: 'Password reset',
     mailnotsend: 'cant send mail currently try after sometime',
-    userdeleted: 'user Deleted'
+    userdeleted: 'User Deleted',
+    sportadded:'Sport Added',
+    youcantaccess:'You Dont have access to these service',
+    sportdeleted:'Sport Deleted'
 }
 schemas = {
     admin: 'admin',
@@ -40,10 +43,16 @@ role = {
     admin: "ADMIN",
     user: "USER"
 }
+level = {
+    beginner: "BEGINNER",
+    intermediate:"INTERMEDIATE",
+    advanced:"ADVANCED"
+}
 module.exports = {
     schemas,
     http_codes,
     messages,
     status,
-    role
+    role,
+    level
 }

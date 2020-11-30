@@ -32,6 +32,9 @@ function socialloginLinkedin(req, res) {
 function update(req, res) {
     service.update(req, res)
 }
+function sportlist(req, res) {
+    service.sportlist(req, res)
+}
 
 
 module.exports = {
@@ -44,6 +47,7 @@ module.exports = {
     socialloginFacebook,
     socialloginLinkedin,
     getprofile,
-    update
+    update,
+    sportlist
   
 }
