@@ -25,13 +25,15 @@ messages = {
     userdeleted: 'User Deleted',
     sportadded:'Sport Added',
     youcantaccess:'You Dont have access to these service',
-    sportdeleted:'Sport Deleted'
+    sportdeleted:'Sport Deleted',
+    eventcreated:'Event Created'
 }
 schemas = {
     admin: 'admin',
     user: 'user',
     chat: 'chat',
-    sport: 'sport'
+    sport: 'sport',
+    event:'event'
 }
 status = {
     active: "ACTIVE",
@@ -48,11 +50,22 @@ level = {
     intermediate:"INTERMEDIATE",
     advanced:"ADVANCED"
 }
+gender={
+    men:"MEN",
+    women:"WOMEN",
+    both:"BOTH"
+}
+eventType={
+    public:"PUBLIC",
+    private:"PRIVATE"
+}
 module.exports = {
     schemas,
     http_codes,
     messages,
     status,
     role,
-    level
+    level,
+    gender,
+    eventType
 }
