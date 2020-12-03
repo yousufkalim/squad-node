@@ -68,7 +68,13 @@ const env = require('dotenv').config()
 app.use(cors({credentials: true, origin: true}))
 app.use(bodyParser.json({ limit: '10mb', extended: true }))
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }))
-mongoose.connect(process.env.DBURL)
+// mongoose.connect(process.env.DBURL)
+mongoose.connect(process.env.DBURL, function (err) {
+    if (err) {
+        console.log("err-----------------------------------------", err)
+
+    }
+});
 app.use(morgan('combined'));
 app.use(express.static('./img'));
 require('./router')(app)
