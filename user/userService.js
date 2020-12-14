@@ -1,12 +1,13 @@
 const util = require('../app util/util');
 const code = require('../constants').http_codes;
 const msg = require('../constants').messages;
-const status =require('../constants').status;
+const status = require('../constants').status;
 const userdao = require('./userDao');
 const sportdao = require('../sport/sportDao')
 const bcrypt = require('bcrypt');
 const user = require('../schema/user')
 const crypto = require('crypto');
+const { role } = require('../constants');
 const env = require('dotenv').config()
 function registerUser(req, res) {
     // const newpass = util.generateRandomPassword().toUpperCase()
@@ -15,7 +16,8 @@ function registerUser(req, res) {
     const data = req.body
 
     return userdao.create(data).then(async (result) => {
-        res.json({ code: code.created, message: msg.registered })
+        let tokn = util.generateToken(result, process.env.USER_SECRET)
+        res.json({ code: code.created, message: msg.registered,token:tokn })
     }).catch((err) => {
         console.log("createUser -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
@@ -54,7 +56,28 @@ function loginUser(req, res) {//user should be active
 
     })
 }
+function loginAdmin(req, res) {//user should be active
+    return user.findOne({ email: req.body.email, role: role.admin }).then(async (result) => {
+        if (result) {
+         
+            const match = await bcrypt.compare(req.body.password, result.password);
+            if (match) {
+                let tokn = util.generateToken(result, process.env.ADMIN_SECRET)
 
+             
+                return res.json({ code: code.ok, token: tokn })
+            } else {
+                return res.json({ code: code.badRequest, message: msg.incorrectpass })
+            }
+        } else {
+            return res.json({ code: code.notFound, message: msg.notFound })
+        }
+    }).catch((err) => {
+        console.log("login -> err=================================================================>", err)
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+
+    })
+}
 function forgotPassword(req, res) {
     let query = { email: req.body.email }
     userdao.findone(query).then((result) => {
@@ -72,6 +95,7 @@ function forgotPassword(req, res) {
                 options = { new: true }
             userdao.findOneAndUpdate(query, update, options).then(async (user) => {
                 let link = "http://" + req.headers.host + "/user/reset/" + user.resetPasswordToken;
+                console.log("forgotPassword -> link", link)
                 let data = {
                     username: user.name,
                     subject: "Reset Password Link",
@@ -359,6 +383,28 @@ function sportlist(req, res) {
         return res.json({ code: code.ineternalError, messages: msg.internalServerError })
     })
 }
+function verifyToken(req, res, next) {
+    var token = req.headers['authorization'];
+
+
+    if (!token) {
+        // return res.json({ msg: "Token not provided" })
+        return res.json({ code: code.badRequest, message: msg.tokenNotPrvided, data: {} })
+    } else {
+        util.verifyAdminToken(token).then((result) => {
+            if (result) {
+                return res.json({ code: code.ok, message: "Token valid" })
+
+            } else {
+
+                return res.json({ code: code.internalError, message: msg.internalServerError, err: err })
+            }
+        }).catch(err => {
+
+            return res.json({ code: code.unAuthorized, message: msg.inValidToken })
+        })
+    }
+}
 // function updateProfile(req, res) {
 //     let token = req.headers['authorization']
 //     let obj = util.decodeToken(token)
@@ -389,5 +435,7 @@ module.exports = {
     socialloginFacebook,
     socialloginLinkedin,
     update,
-    sportlist
+    sportlist,
+    verifyToken,
+    loginAdmin
 }

@@ -12,11 +12,18 @@ userRouter.route('/login')
     .post([validate.validateLogin], (req, res, next) => {
         actions.loginUser(req, res, next)
     });
+userRouter.route('/loginAdmin')
+    .post([validate.validateLogin], (req, res, next) => {
+        actions.loginAdmin(req, res, next)
+    });
 userRouter.route('/forgotPassword')
     .post([], (req, res) => {
         actions.forgotPassword(req, res)
     })
-
+userRouter.route('/verifyToken')
+    .get([], (req, res) => {
+        actions.verifyToken(req, res)
+    })
 userRouter.route('/reset/:token')
     .get([], (req, res) => {
         actions.getresetpassword(req, res)

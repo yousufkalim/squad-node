@@ -1,24 +1,27 @@
 const service = require('./userService')
 
 
-function registerUser(req, res,next) {
-    service.registerUser(req, res,next)
+function registerUser(req, res, next) {
+    service.registerUser(req, res, next)
 }
-function loginUser(req, res,next) {
-    service.loginUser(req, res,next)
+function loginUser(req, res, next) {
+    service.loginUser(req, res, next)
 }
 
-function forgotPassword(req, res,next) {
-    service.forgotPassword(req, res,next)
+function forgotPassword(req, res, next) {
+    service.forgotPassword(req, res, next)
 }
-function getresetpassword(req, res,next) {
-    service.getresetpassword(req, res,next)
+function verifyToken(req, res, next) {
+    service.verifyToken(req, res, next)
 }
-function resetpassword(req, res,next) {
-    service.resetpassword(req, res,next)
+function getresetpassword(req, res, next) {
+    service.getresetpassword(req, res, next)
 }
-function getprofile(req, res,next) {
-    service.getprofile(req, res,next)
+function resetpassword(req, res, next) {
+    service.resetpassword(req, res, next)
+}
+function getprofile(req, res, next) {
+    service.getprofile(req, res, next)
 }
 function socialloginGmail(req, res) {
     service.socialloginGmail(req, res)
@@ -35,6 +38,9 @@ function update(req, res) {
 function sportlist(req, res) {
     service.sportlist(req, res)
 }
+function loginAdmin(req, res) {
+    service.loginAdmin(req, res)
+}
 
 
 module.exports = {
@@ -48,6 +54,7 @@ module.exports = {
     socialloginLinkedin,
     getprofile,
     update,
-    sportlist
-  
+    sportlist,
+    verifyToken,
+    loginAdmin
 }

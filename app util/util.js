@@ -90,6 +90,15 @@ function checkFileType(file, callback) {
         callback('Error:Images only!')
     }
 }
+var verifyAdminToken = async function (jwtToken) {
+    try {
+        let payload = await jwt.verify(jwtToken, process.env.ADMIN_SECRET);
+        return payload
+    } catch (e) {
+
+        return res.json({ code: CODE.BADREQUEST, message:MSG.internalServerError })
+    }
+};
 
 module.exports = {
     validateEmail,
@@ -99,5 +108,6 @@ module.exports = {
     generateRandomPassword,
     decodeToken,
     upload,
-    checkFileType
+    checkFileType,
+    verifyAdminToken
 }
