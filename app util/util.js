@@ -81,7 +81,7 @@ function decodeToken(token) {
     return jwt.decode(token)
 }
 function checkFileType(file, callback) {
-    const fileTypes = /jpeg|jpg|png|gif/;
+    const fileTypes = /jpeg|jpg|png|gif|svg/;
     const extName = fileTypes.test(path.extname(file.originalname).toLocaleLowerCase());
     if (extName) {
         return callback(null, true);

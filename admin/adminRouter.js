@@ -8,7 +8,10 @@ adminRouter.route('/listuser')
     .get([validate.verifyToken], (req, res, next) => {
         actions.listuser(req, res, next)
     });
-
+    adminRouter.route('/listsport')
+    .get([validate.verifyToken], (req, res, next) => {
+        actions.listsport(req, res, next)
+    })
 adminRouter.route('/userdetail')
     .get([validate.verifyToken], (req, res, next) => {
         actions.userdetail(req, res, next)

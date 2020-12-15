@@ -20,7 +20,7 @@ async function verifyToken(req, res, next) {
     console.log("verifyToken -> req.headers", req.headers)
     let token = req.headers['authorization']
     console.log("verifyToken -> token", token)
-    await jwt.verify(token, process.env.USER_SECRET, (err) => {
+    await jwt.verify(token, process.env.ADMIN_SECRET, (err) => {
         console.log("verifyToken -> err", err)
         if (err) {
             return res.json({ code: code.unAuthorized, message: msg.invalidToken })

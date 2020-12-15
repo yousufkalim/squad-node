@@ -2,11 +2,15 @@ const util = require('../app util/util');
 const code = require('../constants').http_codes;
 const msg = require('../constants').messages;
 const userdao = require('../user/userDao');
+const sportdao=require('../sport/sportDao')
 const bcrypt = require('bcrypt');
 const user = require('../schema/user')
 const crypto = require('crypto');
 const { role } = require('../constants');
 const env = require('dotenv').config()
+
+
+
 function listuser(req, res) {
     let query = { role: role.user }
     userdao.find(query).then((data) => {
@@ -15,7 +19,14 @@ function listuser(req, res) {
         return res.json({ code: code.ineternalError, messages: msg.internalServerError })
     })
 }
-
+function listsport(req, res) {
+    // let query = { role: role.user }
+    sportdao.find().then((data) => {
+        return res.json({ code: code.ok, data: data })
+    }).catch((err) => {
+        return res.json({ code: code.ineternalError, messages: msg.internalServerError })
+    })
+}
 function userdetail(req, res) {
     let query = { _id: req.query.userId }
     userdao.findone(query).then((data) => {
@@ -96,6 +107,7 @@ module.exports = {
     updateuser,
     deactiveuser,
     deleteuser,
-    resetpassword
+    resetpassword,
+    listsport
 
 }

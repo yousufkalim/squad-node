@@ -17,7 +17,15 @@ function registerUser(req, res) {
 
     return userdao.create(data).then(async (result) => {
         let tokn = util.generateToken(result, process.env.USER_SECRET)
-        res.json({ code: code.created, message: msg.registered,token:tokn })
+        var data = {
+            _id: result._id,
+            name: result.name,
+            email: result.email,
+            contactNo: result.contactNo,
+            token: tokn,
+            role: result.role
+        }
+        res.json({ code: code.created, message: msg.registered,data:data})
     }).catch((err) => {
         console.log("createUser -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })

@@ -4,7 +4,9 @@ const service = require('./adminService')
 function listuser(req, res,next) {
     service.listuser(req, res,next)
 }
-
+function listsport(req, res,next) {
+    service.listsport(req, res,next)
+}
 function userdetail(req, res,next) {
     service.userdetail(req, res,next)
 }
@@ -29,6 +31,7 @@ module.exports = {
     updateuser,
     deactiveuser,
     deleteuser,
-    resetpassword
+    resetpassword,
+    listsport
  
 }
