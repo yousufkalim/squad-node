@@ -21,8 +21,17 @@ eventRouter.route('/myevents')
     .get([validate.verifyToken], (req, res, next) => {
         actions.myevents(req, res, next)//created by user
     });
-    eventRouter.route('/joinevent')
+eventRouter.route('/joinevent')
     .post([validate.verifyToken], (req, res, next) => {
-        actions.joinevent(req, res, next)//created by user
+        actions.joinevent(req, res, next)
     });
+eventRouter.route('/eventplayed')
+    .get([validate.verifyToken], (req, res, next) => {
+        actions.eventplayed(req, res, next)
+    });
+eventRouter.route('/eventwillplayed')
+    .get([validate.verifyToken], (req, res, next) => {
+        actions.eventwillplayed(req, res, next)
+    });
+// eventwillplayed
 module.exports = eventRouter;

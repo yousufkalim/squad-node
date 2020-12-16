@@ -1,7 +1,8 @@
 const util = require('../app util/util');
 const code = require('../constants').http_codes;
 const msg = require('../constants').messages;
-const eventdao = require('./eventDao')
+const eventdao = require('./eventDao');
+const { options } = require('./eventRouter');
 
 function addevent(req, res) {
     let token = req.headers['authorization']
@@ -40,6 +41,7 @@ function eventlist(req, res) {
     let query = (req.query.date) ? { date: req.query.date } : {};
     console.log("eventlist -> query", query)
     return eventdao.find(query).then((data) => {
+        req, res
         res.json({ code: code.ok, data: data })
     }).catch((err) => {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
@@ -48,11 +50,31 @@ function eventlist(req, res) {
 function joinevent(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
-    let query = { _id: req.query.eventId }
-    update = { $push: { participants: obj.id }  },
-        options = { new: true }
+    let query = { _id: req.query.eventId },
+        update = { $push: { participants: obj.id } },
+        options = { new: true };
+    return eventdao.findOneAndUpdate(query, update, options).then((data) => {
+        res.json({ code: code.ok, msg: msg.eventjoin })
+    }).catch((err) => {
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+}
+function eventplayed(req, res) {
+    let token = req.headers['authorization']
+    let obj = util.decodeToken(token)
+    let query = { date: { "$lt": new Date(req.query.date) },participants:{"$in" : [obj.id] }};
     return eventdao.find(query).then((data) => {
-        res.json({ code: code.ok, data: data })
+        res.json({ code: code.ok, data:data })
+    }).catch((err) => {
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+}
+function eventwillplayed(req, res) {
+    let token = req.headers['authorization']
+    let obj = util.decodeToken(token)
+    let query = { date: { "$gt": new Date(req.query.date) },participants:{"$in" : [obj.id] }};
+    return eventdao.find(query).then((data) => {
+        res.json({ code: code.ok, data:data })
     }).catch((err) => {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
@@ -62,5 +84,7 @@ module.exports = {
     eventdetail,
     myevents,
     eventlist,
-    joinevent
+    joinevent,
+    eventplayed,
+    eventwillplayed
 }

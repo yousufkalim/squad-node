@@ -26,7 +26,8 @@ messages = {
     sportadded:'Sport Added',
     youcantaccess:'You Dont have access to these service',
     sportdeleted:'Sport Deleted',
-    eventcreated:'Event Created'
+    eventcreated:'Event Created',
+    eventjoin:'Event Joined'
 }
 schemas = {
     admin: 'admin',

@@ -17,15 +17,18 @@ function eventlist(req, res,next) {
 function joinevent(req, res,next) {
     service.joinevent(req, res,next)
 }
-
-
-
-
-
+function eventplayed(req, res,next) {
+    service.eventplayed(req, res,next)
+}
+function eventwillplayed(req, res,next) {
+    service.eventwillplayed(req, res,next)
+}
 module.exports = {
     addevent,
     eventdetail,
     myevents,
     eventlist,
-    joinevent
+    joinevent,
+    eventplayed,
+    eventwillplayed
 }
