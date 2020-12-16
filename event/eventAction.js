@@ -14,6 +14,9 @@ function myevents(req, res,next) {
 function eventlist(req, res,next) {
     service.eventlist(req, res,next)
 }
+function joinevent(req, res,next) {
+    service.joinevent(req, res,next)
+}
 
 
 
@@ -23,5 +26,6 @@ module.exports = {
     addevent,
     eventdetail,
     myevents,
-    eventlist
+    eventlist,
+    joinevent
 }

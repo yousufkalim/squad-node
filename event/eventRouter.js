@@ -21,5 +21,8 @@ eventRouter.route('/myevents')
     .get([validate.verifyToken], (req, res, next) => {
         actions.myevents(req, res, next)//created by user
     });
-
+    eventRouter.route('/joinevent')
+    .post([validate.verifyToken], (req, res, next) => {
+        actions.joinevent(req, res, next)//created by user
+    });
 module.exports = eventRouter;

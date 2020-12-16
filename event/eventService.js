@@ -2,10 +2,6 @@ const util = require('../app util/util');
 const code = require('../constants').http_codes;
 const msg = require('../constants').messages;
 const eventdao = require('./eventDao')
-// const userdao = require('../user/userDao');
-// const bcrypt = require('bcrypt');
-// const crypto = require('crypto');
-// const env = require('dotenv').config()
 
 function addevent(req, res) {
     let token = req.headers['authorization']
@@ -40,17 +36,31 @@ function myevents(req, res) {
     })
 }
 function eventlist(req, res) {
-    let query = { date: req.query.date }
+
+    let query = (req.query.date) ? { date: req.query.date } : {};
+    console.log("eventlist -> query", query)
     return eventdao.find(query).then((data) => {
         res.json({ code: code.ok, data: data })
     }).catch((err) => {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
-
+function joinevent(req, res) {
+    let token = req.headers['authorization']
+    let obj = util.decodeToken(token)
+    let query = { _id: req.query.eventId }
+    update = { $push: { participants: obj.id }  },
+        options = { new: true }
+    return eventdao.find(query).then((data) => {
+        res.json({ code: code.ok, data: data })
+    }).catch((err) => {
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+}
 module.exports = {
     addevent,
     eventdetail,
     myevents,
-    eventlist
+    eventlist,
+    joinevent
 }
