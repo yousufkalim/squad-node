@@ -29,7 +29,7 @@ eventRouter.route('/eventplayed')
     .get([validate.verifyToken], (req, res, next) => {
         actions.eventplayed(req, res, next)
     });
-eventRouter.route('/eventwillplayed')
+eventRouter.route('/eventwillplay')
     .get([validate.verifyToken], (req, res, next) => {
         actions.eventwillplayed(req, res, next)
     });
