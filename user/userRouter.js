@@ -58,4 +58,17 @@ userRouter.route('/linkedin/socialLogin')
         actions.socialloginLinkedin(req, res)
     })
 
+
+userRouter.route('/createpreference')
+    .post([validate.verifyToken], (req, res) => {
+        actions.createpreference(req, res)
+    })
+userRouter.route('/getpreference')
+    .get([validate.verifyToken], (req, res) => {
+        actions.getpreference(req, res)
+    })
+userRouter.route('/updatepreference')
+    .put([validate.verifyToken], (req, res) => {
+        actions.updatepreference(req, res)
+    })
 module.exports = userRouter;

@@ -41,8 +41,15 @@ function sportlist(req, res) {
 function loginAdmin(req, res) {
     service.loginAdmin(req, res)
 }
-
-
+function createpreference(req, res) {
+    service.createpreference(req, res)
+}
+function getpreference(req, res) {
+    service.getpreference(req, res)
+}
+function updatepreference(req, res) {
+    service.updatepreference(req, res)
+}
 module.exports = {
     registerUser,
     loginUser,
@@ -56,5 +63,8 @@ module.exports = {
     update,
     sportlist,
     verifyToken,
-    loginAdmin
+    loginAdmin,
+    createpreference,
+    getpreference,
+    updatepreference
 }

@@ -25,7 +25,7 @@ function registerUser(req, res) {
             token: tokn,
             role: result.role
         }
-        res.json({ code: code.created, message: msg.registered,data:data})
+        res.json({ code: code.created, message: msg.registered, data: data })
     }).catch((err) => {
         console.log("createUser -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
@@ -67,12 +67,12 @@ function loginUser(req, res) {//user should be active
 function loginAdmin(req, res) {//user should be active
     return user.findOne({ email: req.body.email, role: role.admin }).then(async (result) => {
         if (result) {
-         
+
             const match = await bcrypt.compare(req.body.password, result.password);
             if (match) {
                 let tokn = util.generateToken(result, process.env.ADMIN_SECRET)
 
-             
+
                 return res.json({ code: code.ok, token: tokn })
             } else {
                 return res.json({ code: code.badRequest, message: msg.incorrectpass })
@@ -355,7 +355,7 @@ function socialloginLinkedin(req, res) {
 function getprofile(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
-    console.log("getprofile -> obj", obj)
+
     let query = { _id: obj.id }
     userdao.findone(query).then((data) => {
         let response = {
@@ -431,6 +431,40 @@ function verifyToken(req, res, next) {
 //         res.json({ code: code.ineternalError, message: msg.internalServerError })
 //     })
 // }
+function createpreference(req, res, next) {
+    let token = req.headers['authorization']
+    let obj = util.decodeToken(token)
+    let query = { _id: obj.id },
+        update = { $push: { "preferences": req.body.preferences } },
+        options = { new: true };
+    userdao.findOneAndUpdate(query, update, options).then((data) => {
+        res.json({ code: code.ok, data: data })
+    }).catch((err) => {
+       
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+}
+function getpreference(req, res, next) {
+    let token = req.headers['authorization']
+    let obj = util.decodeToken(token)
+    let query = { _id: obj.id }
+    user.findOne(query).populate('preferences.sportId','_id name image').then((data) => {
+        res.json({ code: code.ok, data: data.preferences })
+    }).catch((err) => {
+    console.log("getpreference -> err", err)
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+}
+function updatepreference(req, res) {
+    user.updateOne({ preferences: { $elemMatch: { _id: req.query.id } } },
+        { $set: { 'preferences.$': req.body } }).exec((err, data) => {
+            if (err) {
+                return res.json({ code: code.internalError, message: msg.internalServerError })
+            } else {
+                return res.json({ code: code.ok, message: msg.preferencesupdated })
+            }
+        })
+}
 module.exports = {
     registerUser,
     // updateProfile,
@@ -445,5 +479,8 @@ module.exports = {
     update,
     sportlist,
     verifyToken,
-    loginAdmin
+    loginAdmin,
+    createpreference,
+    getpreference,
+    updatepreference
 }
