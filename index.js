@@ -69,7 +69,7 @@ app.use(cors({credentials: true, origin: true}))
 app.use(bodyParser.json({ limit: '10mb', extended: true }))
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }))
 // mongoose.connect(process.env.DBURL)
-mongoose.connect(process.env.DBURL, function (err) {
+mongoose.connect(process.env.DBURL, { useNewUrlParser: true, useUnifiedTopology: true }, function (err) {
     if (err) {
         console.log("err-----------------------------------------", err)
 
