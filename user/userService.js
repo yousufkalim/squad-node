@@ -16,32 +16,33 @@ function registerUser(req, res) {
     const data = req.body
 
     return userdao.create(data).then(async (result) => {
-        let link = "http://" + req.headers.host + "/user/validateemail/" + result._id;
+        // let link = "http://" + req.headers.host + "/user/validateemail/" + result._id;
 
-        let data = {
-            username: user.name,
-            subject: "Validate Your EmailID for SQUAD",
-            html: `Hi ${result.name} \n 
-            Please click on ${link} to Validate Your EmailID. \n\n 
-            If you did not request this, please ignore this email.\n`
-        }
-        await util.sendEMail(result.email, data).then((data) => {
+        // let data = {
+        //     username: result.name,
+        //     subject: "Validate Your EmailID for SQUAD",
+        //     html: `Hi ${result.name} \n 
+        //     Please click on ${link} to Validate Your EmailID. \n\n 
+        //     If you did not request this, please ignore this email.\n`
+        // }
+        // await util.sendEMail(result.email, data).then((data) => {
             // return (data == true) ? res.json({ code: code.ok, message: `Link send on ${result.email}` })
             //     : res.json({ code: code.notImplemented, message: msg.mailNotSent })
+        //     res.json({ code: code.created, message: msg.registered + " " + `Validation Link send on ${result.email}` })
+        // })
             // if (data == true) {
-            //     let tokn = util.generateToken(result, process.env.USER_SECRET);
-            //     var dataresponse = {
-            //         _id: result._id,
-            //         name: result.name,
-            //         email: result.email,
-            //         contactNo: result.contactNo,
-            //         token: tokn,
-            //         role: result.role
-            //     }
+                let tokn = util.generateToken(result, process.env.USER_SECRET);
+                var dataresponse = {
+                    _id: result._id,
+                    name: result.name,
+                    email: result.email,
+                    contactNo: result.contactNo,
+                    token: tokn,
+                    role: result.role
+                }
                 
             // }
-            res.json({ code: code.created, message: msg.registered + " " + `Validation Link send on ${result.email}` })
-        })
+            res.json({ code: code.created, message: msg.registered ,data:dataresponse})
 
     }).catch((err) => {
         console.log("createUser -> err", err)
@@ -56,9 +57,9 @@ function loginUser(req, res) {//user should be active
             if (result.active == false) {
                 return res.json({ code: code.forbidden, message: msg.deacacc })
             }
-            else if(result.emailvalidate==false){
-                return res.json({ code: code.badRequest, message: msg.verifyemailfirst })
-            }
+            // else if(result.emailvalidate==false){
+            //     return res.json({ code: code.badRequest, message: msg.verifyemailfirst })
+            // }
             const match = await bcrypt.compare(req.body.password, result.password);
             if (match) {
                 let tokn = util.generateToken(result, process.env.USER_SECRET)
