@@ -32,11 +32,11 @@ userRouter.route('/reset/:token')
     .post([], (req, res) => {
         actions.resetpassword(req, res)
     })
-userRouter.route('/validateemail/:email')
+userRouter.route('/validateemail/:id')
     .get([], (req, res) => {
         actions.getvalidateemail(req, res)
     })
-userRouter.route('/validateemail/:email')
+userRouter.route('/validateemail/:id')
     .post([], (req, res) => {
         actions.validateemail(req, res)
     })

@@ -16,7 +16,7 @@ function registerUser(req, res) {
     const data = req.body
 
     return userdao.create(data).then(async (result) => {
-        let link = "http://" + req.headers.host + "/user/validateemail/" + result.email;
+        let link = "http://" + req.headers.host + "/user/validateemail/" + result._id;
 
         let data = {
             username: user.name,
@@ -40,7 +40,7 @@ function registerUser(req, res) {
             //     }
                 
             // }
-            res.json({ code: code.created, message: msg.registered + " " + `Validation Link send on ${result.email}`, data: dataresponse })
+            res.json({ code: code.created, message: msg.registered + " " + `Validation Link send on ${result.email}` })
         })
 
     }).catch((err) => {
@@ -486,7 +486,7 @@ function updatepreference(req, res) {
         })
 }
 function getvalidateemail(req, res) {
-    let query = { email: req.params.email }
+    let query = { _id: req.params.id };
     userdao.findone(query)
         .then((user) => {
             if (!user) return res.json({ code: code.unAuthorized, message: msg.notFound })
@@ -498,7 +498,7 @@ function getvalidateemail(req, res) {
         });
 }
 function validateemail(req, res) {
-    let query = { email: req.params.email },
+    let query = { _id: req.params.id },
     update={emailvalidate:true};
     userdao.findOneAndUpdate(query,update)
         .then((user) => {
