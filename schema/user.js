@@ -11,6 +11,7 @@ var userSchema = new schema({
     lastname: { type: String },
     dob:{type:Date},
     email: { type: String },
+    emailvalidate:{type:Boolean,default:false},
     password: { type: String },
     contactNo: { type: String },
     imageUrl: { type: String },

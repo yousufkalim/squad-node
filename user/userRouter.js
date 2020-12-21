@@ -5,7 +5,7 @@ const actions = require('./userAction')
 
 
 userRouter.route('/register')
-    .post([], (req, res, next) => {
+    .post([validate.validateSignUp], (req, res, next) => {
         actions.registerUser(req, res, next)
     });
 userRouter.route('/login')
@@ -31,6 +31,14 @@ userRouter.route('/reset/:token')
 userRouter.route('/reset/:token')
     .post([], (req, res) => {
         actions.resetpassword(req, res)
+    })
+userRouter.route('/validateemail/:email')
+    .get([], (req, res) => {
+        actions.getvalidateemail(req, res)
+    })
+userRouter.route('/validateemail/:email')
+    .post([], (req, res) => {
+        actions.validateemail(req, res)
     })
 userRouter.route('/getprofile')
     .get([validate.verifyToken], (req, res) => {

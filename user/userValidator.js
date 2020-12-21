@@ -3,10 +3,40 @@ const code = require('../constants').http_codes;
 const msg = require('../constants').messages;
 const status = require('../constants').status;
 const commondao = require('../common/commonDao');
+const userdao=require('../user/userDao')
 const util = require('../app util/util');
 const jwt = require('jsonwebtoken')
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client();
+async function validateSignUp(req, res, next) {
+    if (req.body.name && req.body.password && req.body.email) {
+        var name = req.body.name.trim(),
+            email = req.body.email.trim(),
+            password = req.body.password.trim();
+
+        if (name && email && password) {
+            let query = { email: email }
+            if (await userdao.findone(query)) {
+                return res.json({ code: code.badRequest, message: msg.emailAlreadyRegistered });
+            }
+            else {
+                if (util.validateEmail(email)
+                    && util.validatePassword(password)) {
+                    next()
+                } else {
+                    return res.json({ code: code.badRequest, message: msg.invalidEmailPass })
+                }
+            }
+        }
+        else {
+            return res.json({ code: code.badRequest, message: msg.invalidBody })
+        }
+    }
+    else {
+        return res.json({ code: code.badRequest, message: msg.invalidBody })
+    }
+}
+
 async function validateLogin(req, res, next) {
     const { email, password } = req.body;
     if (email && password) {
@@ -165,6 +195,7 @@ module.exports = {
     validateUpdate,
     validateSocialLogin,
     validateSocialLoginFace,
-    validateSocialLoginLinkedin
+    validateSocialLoginLinkedin,
+    validateSignUp
 
 }

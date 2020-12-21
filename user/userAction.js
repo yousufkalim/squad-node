@@ -50,6 +50,12 @@ function getpreference(req, res) {
 function updatepreference(req, res) {
     service.updatepreference(req, res)
 }
+function getvalidateemail(req, res) {
+    service.getvalidateemail(req, res)
+}
+function validateemail(req, res) {
+    service.validateemail(req, res)
+}
 module.exports = {
     registerUser,
     loginUser,
@@ -66,5 +72,7 @@ module.exports = {
     loginAdmin,
     createpreference,
     getpreference,
-    updatepreference
+    updatepreference,
+    getvalidateemail,
+    validateemail
 }

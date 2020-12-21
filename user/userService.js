@@ -16,16 +16,33 @@ function registerUser(req, res) {
     const data = req.body
 
     return userdao.create(data).then(async (result) => {
-        let tokn = util.generateToken(result, process.env.USER_SECRET)
-        var data = {
-            _id: result._id,
-            name: result.name,
-            email: result.email,
-            contactNo: result.contactNo,
-            token: tokn,
-            role: result.role
+        let link = "http://" + req.headers.host + "/user/validateemail/" + result.email;
+
+        let data = {
+            username: user.name,
+            subject: "Validate Your EmailID for SQUAD",
+            html: `Hi ${result.name} \n 
+            Please click on ${link} to Validate Your EmailID. \n\n 
+            If you did not request this, please ignore this email.\n`
         }
-        res.json({ code: code.created, message: msg.registered, data: data })
+        await util.sendEMail(result.email, data).then((data) => {
+            // return (data == true) ? res.json({ code: code.ok, message: `Link send on ${result.email}` })
+            //     : res.json({ code: code.notImplemented, message: msg.mailNotSent })
+            // if (data == true) {
+            //     let tokn = util.generateToken(result, process.env.USER_SECRET);
+            //     var dataresponse = {
+            //         _id: result._id,
+            //         name: result.name,
+            //         email: result.email,
+            //         contactNo: result.contactNo,
+            //         token: tokn,
+            //         role: result.role
+            //     }
+                
+            // }
+            res.json({ code: code.created, message: msg.registered + " " + `Validation Link send on ${result.email}`, data: dataresponse })
+        })
+
     }).catch((err) => {
         console.log("createUser -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
@@ -38,6 +55,9 @@ function loginUser(req, res) {//user should be active
         if (result) {
             if (result.active == false) {
                 return res.json({ code: code.forbidden, message: msg.deacacc })
+            }
+            else if(result.emailvalidate==false){
+                return res.json({ code: code.badRequest, message: msg.verifyemailfirst })
             }
             const match = await bcrypt.compare(req.body.password, result.password);
             if (match) {
@@ -103,7 +123,7 @@ function forgotPassword(req, res) {
                 options = { new: true }
             userdao.findOneAndUpdate(query, update, options).then(async (user) => {
                 let link = "http://" + req.headers.host + "/user/reset/" + user.resetPasswordToken;
-                console.log("forgotPassword -> link", link)
+
                 let data = {
                     username: user.name,
                     subject: "Reset Password Link",
@@ -440,7 +460,7 @@ function createpreference(req, res, next) {
     userdao.findOneAndUpdate(query, update, options).then((data) => {
         res.json({ code: code.ok, data: data })
     }).catch((err) => {
-       
+
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
@@ -448,10 +468,10 @@ function getpreference(req, res, next) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     let query = { _id: obj.id }
-    user.findOne(query).populate('preferences.sportId','_id name image').then((data) => {
+    user.findOne(query).populate('preferences.sportId', '_id name image').then((data) => {
         res.json({ code: code.ok, data: data.preferences })
     }).catch((err) => {
-    console.log("getpreference -> err", err)
+        console.log("getpreference -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
@@ -464,6 +484,31 @@ function updatepreference(req, res) {
                 return res.json({ code: code.ok, message: msg.preferencesupdated })
             }
         })
+}
+function getvalidateemail(req, res) {
+    let query = { email: req.params.email }
+    userdao.findone(query)
+        .then((user) => {
+            if (!user) return res.json({ code: code.unAuthorized, message: msg.notFound })
+            else res.render('validateemail.jade', { user });
+        })
+        .catch(err => {
+            console.log("getresetpassword -> err", err)
+            res.json({ code: code.ineternalError, message: msg.internalServerError })
+        });
+}
+function validateemail(req, res) {
+    let query = { email: req.params.email },
+    update={emailvalidate:true};
+    userdao.findOneAndUpdate(query,update)
+        .then((user) => {
+            if (!user) return res.json({ code: code.notFound, message: msg.notFound })
+            else   res.json({ code: code.ok, message: msg.emailvalidate });
+        })
+        .catch(err => {
+          
+            res.json({ code: code.ineternalError, message: msg.internalServerError })
+        });
 }
 module.exports = {
     registerUser,
@@ -482,5 +527,7 @@ module.exports = {
     loginAdmin,
     createpreference,
     getpreference,
-    updatepreference
+    updatepreference,
+    getvalidateemail,
+    validateemail
 }
