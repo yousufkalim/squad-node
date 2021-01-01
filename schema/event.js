@@ -19,7 +19,7 @@ var eventSchema = new schema({
     //lat long
     price: { type: Number },
     seats: { type: Number },
-    type:{type:String,enum:[eventType.private,eventType.public]},
+    type:{type:String,enum:[eventType.participate,eventType.public]},
     createdby: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
     participants:[{ type: mongoose.Schema.Types.ObjectId, ref: schmaName.user }] 
 });

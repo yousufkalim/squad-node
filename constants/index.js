@@ -63,7 +63,8 @@ gender={
 }
 eventType={
     public:"PUBLIC",
-    private:"PRIVATE"
+    private:"PRIVATE",
+    participate:"PARTICIPATE"
 }
 module.exports = {
     schemas,
