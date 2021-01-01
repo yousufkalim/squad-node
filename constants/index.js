@@ -32,7 +32,7 @@ messages = {
     emailvalidate:"Email Validated",
     verifyemailfirst:"Verify Your Email First",
     emailAlreadyRegistered:"Email Already registered",
-    invalidEmailPass: 'Invalid email or password, Email_format:standard email format. Password_format: between 8 to 20 character with number and special character eg. Superm@n123',
+    invalidEmailPass: "Email or Password is incorrect"//'Invalid email or password, Email_format:standard email format. Password_format: between 8 to 20 character with number and special character eg. Superm@n123',
 }
 schemas = {
     admin: 'admin',
