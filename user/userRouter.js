@@ -79,4 +79,8 @@ userRouter.route('/updatepreference')
     .put([validate.verifyToken], (req, res) => {
         actions.updatepreference(req, res)
     })
+userRouter.route('/test')
+    .get([], (req, res) => {
+        res.redirect('squad://reset/123')
+    })
 module.exports = userRouter;

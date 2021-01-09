@@ -37,10 +37,12 @@ function myevents(req, res) {
     })
 }
 function eventlist(req, res) {
-
     let query = (req.query.date) ? { date: req.query.date } : {};
-    console.log("eventlist -> query", query)
-    return eventdao.find(query).then((data) => {
+    return eventdao.find(query, {
+        sort: {
+            date: -1
+        } //Sort by Date Added DESC
+    }).then((data) => {
         req, res
         res.json({ code: code.ok, data: data })
     }).catch((err) => {
@@ -62,9 +64,9 @@ function joinevent(req, res) {
 function eventplayed(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
-    let query = { date: { "$lt": new Date(req.query.date) },participants:{"$in" : [obj.id] }};
+    let query = { date: { "$lt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
     return eventdao.find(query).then((data) => {
-        res.json({ code: code.ok, data:data })
+        res.json({ code: code.ok, data: data })
     }).catch((err) => {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
@@ -72,9 +74,9 @@ function eventplayed(req, res) {
 function eventwillplayed(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
-    let query = { date: { "$gt": new Date(req.query.date) },participants:{"$in" : [obj.id] }};
+    let query = { date: { "$gt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
     return eventdao.find(query).then((data) => {
-        res.json({ code: code.ok, data:data })
+        res.json({ code: code.ok, data: data })
     }).catch((err) => {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
