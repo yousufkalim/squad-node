@@ -8,7 +8,8 @@ const bcrypt = require('bcrypt');
 const user = require('../schema/user')
 const crypto = require('crypto');
 const { role } = require('../constants');
-const env = require('dotenv').config()
+const env = require('dotenv').config();
+const UAParser = require('ua-parser-js');
 function registerUser(req, res) {
     // const newpass = util.generateRandomPassword().toUpperCase()
     const hash = bcrypt.hashSync(req.body.password, bcrypt.genSaltSync(10))
@@ -144,15 +145,28 @@ function forgotPassword(req, res) {
     })
 }
 function getresetpassword(req, res) {
+    var parser = new UAParser();
+    var ua = req.headers['user-agent'];
+    var browserName = parser.setUA(ua).getBrowser().name;
+    // console.log("getresetpassword -> browserName=========================================>", browserName)
     let query = { resetPasswordToken: req.params.token, resetPasswordExpires: { $gt: Date.now() } }
     userdao.findone(query)
         .then((user) => {
             if (!user) return res.json({ code: code.unAuthorized, message: msg.tokeninvalidorexpire })
             else {
-                res.redirect('squad://reset/' + user._id)
-                res.render('reset.jade', { user });
-                // squad://reset/user-id
-                // intent://rest/123/#Intent;scheme=squad;package=com.squad;end chrome
+                if(browserName==Firefox){
+                    res.redirect('squad://reset/' + user._id)
+                    res.render('reset.jade', { user });
+
+                }else if(browserName==Chrome){
+                    res.redirect('intent://reset/' + user._id+'/#Intent;scheme=squad;package=com.squad')
+                    res.render('reset.jade', { user });
+                }else{
+                    res.redirect('squad://reset/' + user._id)
+                    res.render('reset.jade', { user });
+                }
+                // squad://reset/user-id firefox
+                // intent://reset/123/#Intent;scheme=squad;package=com.squad;end chrome
             }
         })
         .catch(err => {
