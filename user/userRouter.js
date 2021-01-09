@@ -83,4 +83,6 @@ userRouter.route('/test')
     .get([], (req, res) => {
         res.redirect('squad://reset/123')
     })
+
+
 module.exports = userRouter;

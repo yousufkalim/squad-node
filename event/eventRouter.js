@@ -34,4 +34,10 @@ eventRouter.route('/eventwillplay')
         actions.eventwillplayed(req, res, next)
     });
 // eventwillplayed
+
+
+eventRouter.route('/invitation')
+    .get([validate.verifyToken], (req, res, next) => {
+        actions.eventinvitation(req, res, next)
+    });
 module.exports = eventRouter;

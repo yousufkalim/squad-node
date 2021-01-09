@@ -148,21 +148,21 @@ function getresetpassword(req, res) {
     var parser = new UAParser();
     var ua = req.headers['user-agent'];
     var browserName = parser.setUA(ua).getBrowser().name;
-    // console.log("getresetpassword -> browserName=========================================>", browserName)
     let query = { resetPasswordToken: req.params.token, resetPasswordExpires: { $gt: Date.now() } }
     userdao.findone(query)
         .then((user) => {
             if (!user) return res.json({ code: code.unAuthorized, message: msg.tokeninvalidorexpire })
             else {
-                if(browserName==Firefox){
-                    res.redirect('squad://reset/' + user._id)
+                console.log("getresetpassword -> user.resetPasswordToken", user.resetPasswordToken)
+                if (browserName == Firefox) {
+                    res.redirect('squad://reset/' + user.resetPasswordToken)
                     res.render('reset.jade', { user });
 
-                }else if(browserName==Chrome){
-                    res.redirect('intent://reset/' + user._id+'/#Intent;scheme=squad;package=com.squad')
+                } else if (browserName == Chrome) {
+                    res.redirect('intent://reset/' + user.resetPasswordToken + '/#Intent;scheme=squad;package=com.squad')
                     res.render('reset.jade', { user });
-                }else{
-                    res.redirect('squad://reset/' + user._id)
+                } else {
+                    res.redirect('squad://reset/' + user.resetPasswordToken)
                     res.render('reset.jade', { user });
                 }
                 // squad://reset/user-id firefox

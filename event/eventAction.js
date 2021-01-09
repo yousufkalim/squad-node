@@ -23,6 +23,10 @@ function eventplayed(req, res,next) {
 function eventwillplayed(req, res,next) {
     service.eventwillplayed(req, res,next)
 }
+
+function eventinvitation(req, res,next) {
+    service.eventinvitation(req, res,next)
+}
 module.exports = {
     addevent,
     eventdetail,
@@ -30,5 +34,6 @@ module.exports = {
     eventlist,
     joinevent,
     eventplayed,
-    eventwillplayed
+    eventwillplayed,
+    eventinvitation
 }

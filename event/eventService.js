@@ -44,8 +44,8 @@ function eventlist(req, res) {
         var sorttype = -1
     } else if (req.query.order == "Desc") {
         var sorttype = 1
-    }else{
-        var sorttype ='' ;
+    } else {
+        var sorttype = '';
     }
     return event.find(query).sort({ date: sorttype }).then((data) => {
         req, res
@@ -87,6 +87,11 @@ function eventwillplayed(req, res) {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
+
+function eventinvitation(req, res) {
+    console.log("eventinvitation",req.body)
+}
+
 module.exports = {
     addevent,
     eventdetail,
@@ -94,5 +99,6 @@ module.exports = {
     eventlist,
     joinevent,
     eventplayed,
-    eventwillplayed
+    eventwillplayed,
+    eventinvitation
 }
