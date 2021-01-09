@@ -154,11 +154,13 @@ function getresetpassword(req, res) {
             if (!user) return res.json({ code: code.unAuthorized, message: msg.tokeninvalidorexpire })
             else {
                 console.log("getresetpassword -> user.resetPasswordToken", user.resetPasswordToken)
-                if (browserName == Firefox) {
+                if (browserName == "Firefox") {
+                    console.log("getresetpassword -> Firefox")
                     res.redirect('squad://reset/' + user.resetPasswordToken)
                     res.render('reset.jade', { user });
 
-                } else if (browserName == Chrome) {
+                } else if (browserName == "Chrome") {
+                    console.log("getresetpassword -> Chrome")
                     res.redirect('intent://reset/' + user.resetPasswordToken + '/#Intent;scheme=squad;package=com.squad')
                     res.render('reset.jade', { user });
                 } else {
