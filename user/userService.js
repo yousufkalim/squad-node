@@ -26,23 +26,23 @@ function registerUser(req, res) {
         //     If you did not request this, please ignore this email.\n`
         // }
         // await util.sendEMail(result.email, data).then((data) => {
-            // return (data == true) ? res.json({ code: code.ok, message: `Link send on ${result.email}` })
-            //     : res.json({ code: code.notImplemented, message: msg.mailNotSent })
+        // return (data == true) ? res.json({ code: code.ok, message: `Link send on ${result.email}` })
+        //     : res.json({ code: code.notImplemented, message: msg.mailNotSent })
         //     res.json({ code: code.created, message: msg.registered + " " + `Validation Link send on ${result.email}` })
         // })
-            // if (data == true) {
-                let tokn = util.generateToken(result, process.env.USER_SECRET);
-                var dataresponse = {
-                    _id: result._id,
-                    name: result.name,
-                    email: result.email,
-                    contactNo: result.contactNo,
-                    token: tokn,
-                    role: result.role
-                }
-                
-            // }
-            res.json({ code: code.created, message: msg.registered ,data:dataresponse})
+        // if (data == true) {
+        let tokn = util.generateToken(result, process.env.USER_SECRET);
+        var dataresponse = {
+            _id: result._id,
+            name: result.name,
+            email: result.email,
+            contactNo: result.contactNo,
+            token: tokn,
+            role: result.role
+        }
+
+        // }
+        res.json({ code: code.created, message: msg.registered, data: dataresponse })
 
     }).catch((err) => {
         console.log("createUser -> err", err)
@@ -148,7 +148,11 @@ function getresetpassword(req, res) {
     userdao.findone(query)
         .then((user) => {
             if (!user) return res.json({ code: code.unAuthorized, message: msg.tokeninvalidorexpire })
-            else res.render('reset.jade', { user });
+            else {
+                res.redirect('squad://reset/' + user._id)
+                res.render('reset.jade', { user });
+                // squad://reset/user-id
+            }
         })
         .catch(err => {
             console.log("getresetpassword -> err", err)
@@ -500,14 +504,14 @@ function getvalidateemail(req, res) {
 }
 function validateemail(req, res) {
     let query = { _id: req.params.id },
-    update={emailvalidate:true};
-    userdao.findOneAndUpdate(query,update)
+        update = { emailvalidate: true };
+    userdao.findOneAndUpdate(query, update)
         .then((user) => {
             if (!user) return res.json({ code: code.notFound, message: msg.notFound })
-            else   res.json({ code: code.ok, message: msg.emailvalidate });
+            else res.json({ code: code.ok, message: msg.emailvalidate });
         })
         .catch(err => {
-          
+
             res.json({ code: code.ineternalError, message: msg.internalServerError })
         });
 }
