@@ -152,6 +152,7 @@ function getresetpassword(req, res) {
                 res.redirect('squad://reset/' + user._id)
                 res.render('reset.jade', { user });
                 // squad://reset/user-id
+                // intent://rest/123/#Intent;scheme=squad;package=com.squad;end chrome
             }
         })
         .catch(err => {

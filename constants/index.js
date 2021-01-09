@@ -13,7 +13,7 @@ messages = {
     internalServerError: "Internal server error",
     registered: "Registered",
     incorrectpass: "Incorrect Password",
-    notFound: "Reccord not found",
+    notFound: "Email Address not found",//"Reccord not found",
     tokeninvalidorexpire: "Token Invalid or Expired",
     passwordChanged: "Password changed",
     mailNotSent: "Mail not send",

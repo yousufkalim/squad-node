@@ -2,6 +2,7 @@ const util = require('../app util/util');
 const code = require('../constants').http_codes;
 const msg = require('../constants').messages;
 const eventdao = require('./eventDao');
+const event = require('../schema/event')
 const { options } = require('./eventRouter');
 
 function addevent(req, res) {
@@ -37,15 +38,20 @@ function myevents(req, res) {
     })
 }
 function eventlist(req, res) {
+    console.log("eventlist -> req.query.order", req.query.order)
     let query = (req.query.date) ? { date: req.query.date } : {};
-    return eventdao.find(query, {
-        sort: {
-            date: -1
-        } //Sort by Date Added DESC
-    }).then((data) => {
+    if (req.query.order == "Asce") {
+        var sorttype = -1
+    } else if (req.query.order == "Desc") {
+        var sorttype = 1
+    }else{
+        var sorttype ='' ;
+    }
+    return event.find(query).sort({ date: sorttype }).then((data) => {
         req, res
         res.json({ code: code.ok, data: data })
     }).catch((err) => {
+        console.log("eventlist -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
