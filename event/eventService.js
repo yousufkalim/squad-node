@@ -47,7 +47,19 @@ function eventlist(req, res) {
     } else {
         var sorttype = '';
     }
-    return event.find(query).sort({ date: sorttype }).then((data) => {
+    // event.aggregate([
+    //     {
+    //         total:
+    //         {
+    //             $subtract: [{
+    //                 $add: ["$seats", "$participants.length()"]
+    //             }
+    //         },{
+
+    //         }
+        
+    // ])
+    return event.find(query).sort({ starttime: sorttype }).then((data) => {
         req, res
         res.json({ code: code.ok, data: data })
     }).catch((err) => {
@@ -89,7 +101,7 @@ function eventwillplayed(req, res) {
 }
 
 function eventinvitation(req, res) {
-    console.log("eventinvitation",req.body)
+    console.log("eventinvitation", req.body)
 }
 
 module.exports = {
