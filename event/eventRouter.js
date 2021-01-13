@@ -9,6 +9,10 @@ eventRouter.route('/add')
     .post([validate.verifyToken], (req, res, next) => {
         actions.addevent(req, res, next)
     });
+eventRouter.route('/update')
+    .put([validate.verifyToken], (req, res, next) => {
+        actions.updateevent(req, res, next)
+    });
 eventRouter.route('/detail')
     .get([validate.verifyToken], (req, res, next) => {
         actions.eventdetail(req, res, next)

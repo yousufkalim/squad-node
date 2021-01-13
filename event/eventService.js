@@ -2,7 +2,7 @@ const util = require('../app util/util');
 const code = require('../constants').http_codes;
 const msg = require('../constants').messages;
 const eventdao = require('./eventDao');
-const event = require('../schema/event')
+const event = require('../schema/event');
 const { options } = require('./eventRouter');
 
 function addevent(req, res) {
@@ -14,6 +14,16 @@ function addevent(req, res) {
     return eventdao.create(data).then((response) => {
         console.log("addevent -> response", response)
         res.json({ code: code.created, message: msg.eventcreated })
+    }).catch((err) => {
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+}
+function updateevent(req, res) {
+    let query = { _id: req.query.eventId },
+        update = { $set: req.body },
+        options = { new: true }
+    return eventdao.findOneAndUpdate(query, update, options).then((result) => {
+        return res.json({ code: code.ok, data: result })
     }).catch((err) => {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
@@ -57,7 +67,7 @@ function eventlist(req, res) {
     //         },{
 
     //         }
-        
+
     // ])
     return event.find(query).sort({ starttime: sorttype }).then((data) => {
         req, res
@@ -112,5 +122,6 @@ module.exports = {
     joinevent,
     eventplayed,
     eventwillplayed,
-    eventinvitation
+    eventinvitation,
+    updateevent
 }

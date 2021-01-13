@@ -5,6 +5,9 @@ const service = require('./eventService')
 function addevent(req, res,next) {
     service.addevent(req, res,next)
 }
+function updateevent(req, res,next) {
+    service.updateevent(req, res,next)
+}
 function eventdetail(req, res,next) {
     service.eventdetail(req, res,next)
 }
@@ -35,5 +38,6 @@ module.exports = {
     joinevent,
     eventplayed,
     eventwillplayed,
-    eventinvitation
+    eventinvitation,
+    updateevent
 }
