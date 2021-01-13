@@ -10,6 +10,9 @@ const crypto = require('crypto');
 const { role } = require('../constants');
 const env = require('dotenv').config();
 const UAParser = require('ua-parser-js');
+var FCM = require('fcm-node');
+var serverKey = process.env.SERVER_KEY;
+var fcm = new FCM(serverKey);
 function registerUser(req, res) {
     // const newpass = util.generateRandomPassword().toUpperCase()
     const hash = bcrypt.hashSync(req.body.password, bcrypt.genSaltSync(10))
@@ -52,7 +55,10 @@ function registerUser(req, res) {
 }
 
 
-function loginUser(req, res) {//user should be active
+function loginUser(req, res) {
+    console.log("loginUser -> req", req.body)
+
+    console.log("loginUser ->   req.body.fcm", req.body.fcm)
     return user.findOne({ email: req.body.email }).populate('nursery', '_id name').then(async (result) => {
         if (result) {
             if (result.active == false) {
@@ -73,7 +79,34 @@ function loginUser(req, res) {//user should be active
                     token: tokn,
                     role: result.role
                 }
+
+                //fcm push notification
+                var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+                    to: req.body.fcm,//'registration_token',//fcm token
+                    // collapse_key: 'your_collapse_key',
+
+                    notification: {
+                        title: 'Title of your push notification',
+                        body: 'Body of your push notification'
+                    },
+
+                    data: {  //you can send only notification or only data(or include both)
+                        my_key: 'CODERSOCOTH',
+                        my_another_key: 'my another value'
+                    }
+                };
+                fcm.send(message, function (err, response) {
+                    if (err) {
+                        console.log("Something has gone wrong!");
+                    } else {
+                        console.log("Successfully sent with response: ", response);
+                    }
+                });
                 return res.json({ code: code.ok, data: data })
+
+
+
+
             } else {
                 return res.json({ code: code.badRequest, message: msg.incorrectpass })
             }
@@ -154,7 +187,7 @@ function getresetpassword(req, res) {
             if (!user) return res.json({ code: code.unAuthorized, message: msg.tokeninvalidorexpire })
             else {
                 console.log("getresetpassword -> user.resetPasswordToken", user.resetPasswordToken)
-                if (browserName == "Firefox") {          
+                if (browserName == "Firefox") {
                     res.redirect('squad://reset/' + user.resetPasswordToken)
                     res.render('reset.jade', { user });
 

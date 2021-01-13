@@ -5,10 +5,10 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser')
 var cors = require('cors')
 const env = require('dotenv').config()
-app.use(cors({credentials: true, origin: true}))
+app.use(cors({ credentials: true, origin: true }))
 app.use(bodyParser.json({ limit: '10mb', extended: true }))
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }))
-// mongoose.connect(process.env.DBURL)
+
 mongoose.connect(process.env.DBURL, { useNewUrlParser: true, useUnifiedTopology: true }, function (err) {
     if (err) {
         console.log("err-----------------------------------------", err)
@@ -38,3 +38,6 @@ const whitelist = ['http://localhost:4200'];
 var socket = require('socket.io')(http);
 const io = socket.listen(server)
 require('./socket/socketHandler')(io)
+
+
+
