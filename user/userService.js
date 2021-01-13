@@ -97,6 +97,7 @@ function loginUser(req, res) {
                 };
                 fcm.send(message, function (err, response) {
                     if (err) {
+                        console.log("loginUser -> err============================================>", err)
                         console.log("Something has gone wrong!");
                     } else {
                         console.log("Successfully sent with response: ", response);
