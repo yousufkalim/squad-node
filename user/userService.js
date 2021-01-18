@@ -513,6 +513,7 @@ function createpreference(req, res, next) {
     userdao.findOneAndUpdate(query, update, options).then((data) => {
         res.json({ code: code.ok, data: data })
     }).catch((err) => {
+    console.log("createpreference -> err", err)
 
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })

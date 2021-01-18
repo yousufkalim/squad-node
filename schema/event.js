@@ -14,7 +14,7 @@ var eventSchema = new schema({
     Address: { type: String },
     location: {
         type: { type: String, default: 'Point' },
-        coordinates: [Number] // [  ,<longitude>, <latitude> ]
+        coordinates: [Number] // [  ,<longitude (value < -90 || value > 90)>, <latitude(value < -180 || value > 180)> ]
     },
     //lat long
     price: { type: Number },

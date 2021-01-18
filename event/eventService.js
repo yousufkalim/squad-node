@@ -11,9 +11,8 @@ function addevent(req, res) {
     let obj = util.decodeToken(token)
     req.body.createdby = obj.id
     const data = req.body;
-    console.log("addevent -> data", data)
+    console.log("addevent -> data==============================>", data)
     return eventdao.create(data).then((response) => {
-        console.log("addevent -> response", response)
         res.json({ code: code.created, message: msg.eventcreated })
     }).catch((err) => {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
