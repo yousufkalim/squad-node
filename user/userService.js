@@ -432,8 +432,10 @@ function getprofile(req, res) {
     let query = { _id: obj.id }
     userdao.findone(query).then((data) => {
         let response = {
-
+            firstname:data.firstname,
+            lastname:data.lastname,
             active: data.active,
+            dob:data.dob,
             _id: data._id,
             name: data.name,
             email: data.email,
