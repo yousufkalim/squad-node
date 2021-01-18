@@ -1,17 +1,21 @@
-//for directors and teachers
+
 const schmaName = require('../constants').schemas;
 const mongoose = require('mongoose');
 const schema = mongoose.Schema;
 const schemaName = require('../constants').schemas;
 const role = require('../constants/index').role;
 const bcrypt = require('bcrypt');
-const level=require('../constants/index').level;
+const level = require('../constants/index').level;
 var userSchema = new schema({
     firstname: { type: String },
     lastname: { type: String },
-    dob:{type:Date},
+    dob: { type: Date },
     email: { type: String },
-    emailvalidate:{type:Boolean,default:false},
+    location: {
+        type: { type: String, default: 'Point' },
+        coordinates: [Number] // [  ,<longitude>, <latitude> ]
+    },
+    emailvalidate: { type: Boolean, default: false },
     password: { type: String },
     contactNo: { type: String },
     imageUrl: { type: String },
@@ -23,15 +27,17 @@ var userSchema = new schema({
     resetPasswordExpires: {
         type: Date
     },
-    role: { type: String, enum: [role.admin, role.user] },
+    role: { type: String, enum: [role.admin, role.user],default:role.user },
     isdeleted: { type: Boolean, default: false },
     active: { type: Boolean, default: true },
-    preferences:[{
-        sportId:{type: mongoose.Schema.Types.ObjectId, ref: schmaName.sport},
-        radius:{type: String},
-        level:{type:String,enum:[level.beginner,level.intermediate,level.advanced]}
-    }]
-
+    preferences: [{
+        sportId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.sport },
+        radius: { type: Number },
+        level: { type: String, enum: [level.beginner, level.intermediate, level.advanced] }
+    }],
+    fcmToken: { type: String },
+    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: schmaName.user }],
+    friendRequest: [{ type: mongoose.Schema.Types.ObjectId, ref: schmaName.user }]
 });
 
 Users = module.exports = mongoose.model(schemaName.user, userSchema)
@@ -47,7 +53,7 @@ Users.countDocuments().then((data) => {
                 console.log("data but no admin")
                 addAdmin()
             }
-            else{
+            else {
                 console.log("There is already admin")
             }
         })

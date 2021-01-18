@@ -26,6 +26,9 @@ function eventplayed(req, res,next) {
 function eventwillplayed(req, res,next) {
     service.eventwillplayed(req, res,next)
 }
+function preferenceBasedList(req, res,next) {
+    service.preferenceBasedList(req, res,next)
+}
 
 function eventinvitation(req, res,next) {
     service.eventinvitation(req, res,next)
@@ -39,5 +42,6 @@ module.exports = {
     eventplayed,
     eventwillplayed,
     eventinvitation,
-    updateevent
+    updateevent,
+    preferenceBasedList
 }

@@ -3,7 +3,8 @@ const code = require('../constants').http_codes;
 const msg = require('../constants').messages;
 const eventdao = require('./eventDao');
 const event = require('../schema/event');
-const { options } = require('./eventRouter');
+// const { options } = require('./eventRouter');
+const user = require('../schema/user');
 
 function addevent(req, res) {
     let token = req.headers['authorization']
@@ -109,9 +110,43 @@ function eventwillplayed(req, res) {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
+function preferenceBasedList(req, res) {
+    let token = req.headers['authorization']
+    let obj = util.decodeToken(token)
+    var eventlist = [];
+    user.findById(obj.id).then((data) => {
+        data.preferences.map((el, index) => {
+            let query = {//db.events.createIndex( {location: "2dsphere" } )
 
+                location: {
+
+                    $nearSphere: {
+                        $geometry: {
+                            type: "Point",
+                            coordinates: [data.location.coordinates[0], data.location.coordinates[1]]
+                        },
+                        $maxDistance: parseFloat(el.radius) * 1000
+                    }
+                },
+                sport: el.sportId,
+                level: el.level
+
+            };
+            event.find(query).then((eventdata) => {
+                eventlist.push(eventdata[0])
+                if (index == (data.preferences.length - 1)) {
+                    res.json({ code: code.ok, data: eventlist })
+                }
+            })
+        })
+    }).catch((err) => {
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+
+    })
+}
 function eventinvitation(req, res) {
     console.log("eventinvitation", req.body)
+
 }
 
 module.exports = {
@@ -123,5 +158,6 @@ module.exports = {
     eventplayed,
     eventwillplayed,
     eventinvitation,
-    updateevent
+    updateevent,
+    preferenceBasedList
 }

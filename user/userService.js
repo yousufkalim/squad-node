@@ -56,21 +56,45 @@ function registerUser(req, res) {
 
 
 function loginUser(req, res) {
-    console.log("loginUser -> req", req.body)
-
     console.log("loginUser ->   req.body.fcm", req.body.fcm)
+    const fcmToken = req.body.fcm
     return user.findOne({ email: req.body.email }).populate('nursery', '_id name').then(async (result) => {
         if (result) {
             if (result.active == false) {
                 return res.json({ code: code.forbidden, message: msg.deacacc })
             }
-            // else if(result.emailvalidate==false){
-            //     return res.json({ code: code.badRequest, message: msg.verifyemailfirst })
-            // }
             const match = await bcrypt.compare(req.body.password, result.password);
             if (match) {
-                let tokn = util.generateToken(result, process.env.USER_SECRET)
+                //update fcm token
+                let query = { _id: result._id },
+                    update = { $set: { fcmToken: fcmToken } },
+                    options = { new: true }
+                user.findOneAndUpdate(query, update, options).then((updateddata) => {
+                    //fcm push notification
+                    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+                        to: updateddata.fcmToken,//'registration_token',//fcm token
+                        // collapse_key: 'your_collapse_key',
 
+                        notification: {
+                            title: 'Title of your push notification',
+                            body: 'Body of your push notification'
+                        },
+
+                        data: {  //you can send only notification or only data(or include both)
+                            my_key: 'CODERSOCOTH',
+                            my_another_key: 'my another value'
+                        }
+                    };
+                    fcm.send(message, function (err, response) {
+                        if (err) {
+                            console.log("loginUser -> err============================================>", err)
+                            console.log("Something has gone wrong!");
+                        } else {
+                            console.log("Successfully sent with response: ", response);
+                        }
+                    });
+                })
+                let tokn = util.generateToken(result, process.env.USER_SECRET)
                 var data = {
                     _id: result._id,
                     name: result.name,
@@ -79,35 +103,7 @@ function loginUser(req, res) {
                     token: tokn,
                     role: result.role
                 }
-
-                //fcm push notification
-                var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
-                    to: req.body.fcm,//'registration_token',//fcm token
-                    // collapse_key: 'your_collapse_key',
-
-                    notification: {
-                        title: 'Title of your push notification',
-                        body: 'Body of your push notification'
-                    },
-
-                    data: {  //you can send only notification or only data(or include both)
-                        my_key: 'CODERSOCOTH',
-                        my_another_key: 'my another value'
-                    }
-                };
-                fcm.send(message, function (err, response) {
-                    if (err) {
-                        console.log("loginUser -> err============================================>", err)
-                        console.log("Something has gone wrong!");
-                    } else {
-                        console.log("Successfully sent with response: ", response);
-                    }
-                });
                 return res.json({ code: code.ok, data: data })
-
-
-
-
             } else {
                 return res.json({ code: code.badRequest, message: msg.incorrectpass })
             }
@@ -240,7 +236,8 @@ function socialloginGmail(req, res) {
     // const { id, email, name } = req.body;
     const name = req.body.name.trim(),
         socialId = req.body.id.trim(),
-        email = req.body.email.trim();
+        email = req.body.email.trim(),
+        fcmToken = req.body.fcm
     if (req.body.photo) {
 
         imageUrl = req.body.photo.trim()
@@ -251,8 +248,8 @@ function socialloginGmail(req, res) {
     console.log("socialloginGmail -> req.body.name======================>", req.body)
 
 
-    let query = { $or: [{ socialId: socialId }, { email: email }] };
-    update = { $set: { email: email, name: name, isSocialLogin: true, imageUrl: imageUrl } },
+    let query = { $or: [{ socialId: socialId }, { email: email }] },
+        update = { $set: { email: email, name: name, isSocialLogin: true, imageUrl: imageUrl, fcmToken: fcmToken } },
         options = { new: true }
     return userdao.findOneAndUpdate(query, update, options).then(async (result) => {
         if (!result) {
@@ -304,7 +301,8 @@ function socialloginFacebook(req, res) {
     // const { id, email, name } = req.body;
     const name = req.body.name.trim(),
         socialId = req.body.id.trim(),
-        email = req.body.email.trim();
+        email = req.body.email.trim(),
+        fcmToken = req.body.fcm
     if (req.body.imageUrl) {
 
         imageUrl = req.body.photo.trim()
@@ -313,8 +311,8 @@ function socialloginFacebook(req, res) {
         imageUrl = ""
     }
 
-    let query = { $or: [{ socialId: socialId }, { email: email }] };
-    update = { $set: { email: email, name: name, isSocialLogin: true, imageUrl: imageUrl } },
+    let query = { $or: [{ socialId: socialId }, { email: email }] },
+        update = { $set: { email: email, name: name, isSocialLogin: true, imageUrl: imageUrl, fcmToken: fcmToken } },
         options = { new: true }
     return userdao.findOneAndUpdate(query, update, options).then(async (result) => {
         if (!result) {
@@ -367,7 +365,8 @@ function socialloginLinkedin(req, res) {
     console.log("socialloginLinkedin -> req=================================================", req.body)
     const name = req.body.firstName.trim(),
         socialId = req.body.socialId.trim(),
-        email = req.body.email.trim();
+        email = req.body.email.trim(),
+        fcmToken = req.body.fcm
     if (req.body.imageUrl) {
 
         imageUrl = req.body.imageUrl.trim()
@@ -376,8 +375,8 @@ function socialloginLinkedin(req, res) {
         imageUrl = ""
     }
 
-    let query = { $or: [{ socialId: socialId }, { email: email }] };
-    update = { $set: { email: email, name: name, isSocialLogin: true, imageUrl: imageUrl } },
+    let query = { $or: [{ socialId: socialId }, { email: email }] },
+        update = { $set: { email: email, name: name, isSocialLogin: true, imageUrl: imageUrl, fcmToken: fcmToken } },
         options = { new: true }
     return userdao.findOneAndUpdate(query, update, options).then(async (result) => {
         if (!result) {

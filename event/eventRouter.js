@@ -37,6 +37,10 @@ eventRouter.route('/eventwillplay')
     .get([validate.verifyToken], (req, res, next) => {
         actions.eventwillplayed(req, res, next)
     });
+eventRouter.route('/preferencebasedlist')
+    .get([validate.verifyToken], (req, res, next) => {
+        actions.preferenceBasedList(req, res, next)
+    });
 // eventwillplayed
 
 
