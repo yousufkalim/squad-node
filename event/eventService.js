@@ -15,6 +15,7 @@ function addevent(req, res) {
     return eventdao.create(data).then((response) => {
         res.json({ code: code.created, message: msg.eventcreated })
     }).catch((err) => {
+    console.log("addevent -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }

@@ -58,7 +58,7 @@ function registerUser(req, res) {
 function loginUser(req, res) {
     console.log("loginUser ->   req.body.fcm", req.body.fcm)
     const fcmToken = req.body.fcm
-    return user.findOne({ email: req.body.email }).populate('nursery', '_id name').then(async (result) => {
+    return user.findOne({ email: req.body.email}).then(async (result) => {
         if (result) {
             if (result.active == false) {
                 return res.json({ code: code.forbidden, message: msg.deacacc })
@@ -98,6 +98,8 @@ function loginUser(req, res) {
                 var data = {
                     _id: result._id,
                     name: result.name,
+                    firstname:data.firstname,
+                    lastname:data.lastname,
                     email: result.email,
                     contactNo: result.contactNo,
                     token: tokn,
@@ -157,9 +159,9 @@ function forgotPassword(req, res) {
                 let link = "http://" + req.headers.host + "/user/reset/" + user.resetPasswordToken;
 
                 let data = {
-                    username: user.name,
+                    username: user.firstname,
                     subject: "Reset Password Link",
-                    html: `Hi ${user.name} \n 
+                    html: `Hi ${user.firstname} \n 
                     Please click on ${link} to reset your password. \n\n 
                     If you did not request this, please ignore this email and your password will remain unchanged.\n`
                 }
@@ -216,9 +218,9 @@ function resetpassword(req, res) {
                 options = { new: true }
             userdao.findOneAndUpdate(query, update, options).then(async (user) => {
                 let data = {
-                    username: user.name,
+                    username: user.firstname,
                     subject: "Your Password has been changed",
-                    html: `Hi ${user.name} \n 
+                    html: `Hi ${user.firstname} \n 
                     //                         This is a confirmation that the password for your account ${user.email} has just been changed.\n`
                 }
                 await util.sendEMail(user.email, data).then((data) => {

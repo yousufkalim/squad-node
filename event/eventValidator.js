@@ -32,10 +32,21 @@ async function verifyToken(req, res, next) {
         }
     })
 }
-
+function verifylatlong(req, res, next) {
+    var longitude = req.body.location.coordinates[0],
+        latitude = req.body.location.coordinates[1];
+    if (req.body.location) {
+        if ((-90 <= latitude <= 90) && (-180 <= longitude <= 180)) {
+            next();
+        } else if (!((-90 <= latitude <= 90) && (-180 <= longitude <= 180))) {
+            return res.json({ code: code.badRequest, message: msg.latlongincorrect })
+        }
+    }
+}
 module.exports = {
 
     verifyToken,
+    verifylatlong
 
 
 }
