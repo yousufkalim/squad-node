@@ -115,30 +115,35 @@ function preferenceBasedList(req, res) {
     let obj = util.decodeToken(token)
     var eventlist = [];
     user.findById(obj.id).then((data) => {
-        data.preferences.map((el, index) => {
-            let query = {//db.events.createIndex( {location: "2dsphere" } )
+        if (data.preferences) {
+            data.preferences.map((el, index) => {
+                let query = {//db.events.createIndex( {location: "2dsphere" } )
 
-                location: {
+                    location: {
 
-                    $nearSphere: {
-                        $geometry: {
-                            type: "Point",
-                            coordinates: [data.location.coordinates[0], data.location.coordinates[1]]
-                        },
-                        $maxDistance: parseFloat(el.radius) * 1000
+                        $nearSphere: {
+                            $geometry: {
+                                type: "Point",
+                                coordinates: [data.location.coordinates[0], data.location.coordinates[1]]
+                            },
+                            $maxDistance: parseFloat(el.radius) * 1000
+                        }
+                    },
+                    sport: el.sportId,
+                    level: el.level
+
+                };
+                event.find(query).then((eventdata) => {
+                    eventlist.push(eventdata[0])
+                    if (index == (data.preferences.length - 1)) {
+                        res.json({ code: code.ok, data: eventlist })
                     }
-                },
-                sport: el.sportId,
-                level: el.level
-
-            };
-            event.find(query).then((eventdata) => {
-                eventlist.push(eventdata[0])
-                if (index == (data.preferences.length - 1)) {
-                    res.json({ code: code.ok, data: eventlist })
-                }
+                })
             })
-        })
+        }else{
+            res.json({ code: code.ok, data: eventlist })
+        }
+
     }).catch((err) => {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
 
