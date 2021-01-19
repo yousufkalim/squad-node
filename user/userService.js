@@ -191,14 +191,14 @@ function getresetpassword(req, res) {
                     res.render('reset.jade', { user });
 
                 } else if (browserName == "Chrome") {
-                    res.redirect('intent://reset/' + user.resetPasswordToken + '/#Intent;scheme=squad;package=com.squad')
+                    res.redirect('intent://reset/' + user.resetPasswordToken + '/#Intent;scheme=squad;package=com.squadxyz')
+                 
                     res.render('reset.jade', { user });
                 } else {
                     res.redirect('squad://reset/' + user.resetPasswordToken)
                     res.render('reset.jade', { user });
                 }
-                // squad://reset/user-id firefox
-                // intent://reset/123/#Intent;scheme=squad;package=com.squad;end chrome
+             
             }
         })
         .catch(err => {
