@@ -6,6 +6,7 @@ const schemaName = require('../constants').schemas;
 const role = require('../constants/index').role;
 const bcrypt = require('bcrypt');
 const level = require('../constants/index').level;
+const gender = require('../constants/index').gender;
 var userSchema = new schema({
     firstname: { type: String },
     lastname: { type: String },
@@ -20,6 +21,7 @@ var userSchema = new schema({
     contactNo: { type: String },
     imageUrl: { type: String },
     isSocialLogin: { type: Boolean, default: false },
+    gender: { type: String, enum: [gender.male, gender.female, gender.other]},
     socialId: { type: String },
     resetPasswordToken: {
         type: String

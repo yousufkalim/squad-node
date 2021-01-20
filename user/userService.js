@@ -98,12 +98,13 @@ function loginUser(req, res) {
                 var data = {
                     _id: result._id,
                     name: result.name,
-                    firstname:data.firstname,
-                    lastname:data.lastname,
+                    firstname:(result.firstName)?result.firstname:"",
+                    lastname:(result.lastname)?result.lastname:"",
                     email: result.email,
                     contactNo: result.contactNo,
                     token: tokn,
-                    role: result.role
+                    role: result.role,
+                    gender:(result.gender)?result.gender:""
                 }
                 return res.json({ code: code.ok, data: data })
             } else {
