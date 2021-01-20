@@ -8,6 +8,7 @@ const util = require('../app util/util');
 const jwt = require('jsonwebtoken')
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client();
+const axios = require('axios');
 async function validateSignUp(req, res, next) {
     if (req.body.name && req.body.password && req.body.email) {
         var name = req.body.name.trim(),
