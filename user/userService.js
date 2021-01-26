@@ -444,7 +444,8 @@ function getprofile(req, res) {
             email: data.email,
             contactNo: data.contactNo,
             imageUrl: data.imageUrl,
-            role: data.role
+            role: data.role,
+            gender:data.gender
         }
         res.json({ code: code.ok, data: response })
     }).catch((err) => {
