@@ -609,7 +609,7 @@ async function removepreference(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     console.log("removepreference -> obj", obj)
-    let query = { _id: obj.id},
+    let query = { _id: obj.id },
         update = { "$pull": { preferences: { "_id": ObjectId(req.query.preferenceId) } } },
         options = { safe: true, multi: true }
     user.findOneAndUpdate(query, update, options).exec((err, data) => {
@@ -617,6 +617,37 @@ async function removepreference(req, res) {
             return res.json({ code: code.internalError, message: msg.internalServerError })
         } else {
             return res.json({ code: code.ok, message: msg.preferancedeleted })
+        }
+    })
+}
+async function peoplearound(req, res) {
+    const { sportId, level, gender } = req.body;
+    if (!req.query.radius) {
+        req.query.radius = 100
+    }
+    let query = {
+        $and: [{ preferences: { $elemMatch: { "sportId": sportId } } },
+        { preferences: { $elemMatch: { "level": level } } },
+        { gender: gender },
+        {
+            location: {
+                $nearSphere: {
+                    $geometry: { type: "Point", coordinates: [req.query.long, req.query.lat] },
+                    $maxDistance: parseFloat(req.query.radius) * 1000
+                }
+            }
+        }
+
+        ],
+
+    }
+    user.find(query
+    ).exec((err, data) => {
+        if (err) {
+            console.log("peoplearound -> err", err)
+            return res.json({ code: code.internalError, message: msg.internalServerError })
+        } else {
+            return res.json({ code: code.ok, data: data })
         }
     })
 }
@@ -640,5 +671,6 @@ module.exports = {
     updatepreference,
     getvalidateemail,
     validateemail,
-    removepreference
+    removepreference,
+    peoplearound
 }

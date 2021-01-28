@@ -88,5 +88,8 @@ userRouter.route('/test')
         res.redirect('squad://reset/123')
     })
 
-
+userRouter.route('/peoplearound')
+    .get([validate.verifyToken], (req, res) => {
+        actions.peoplearound(req, res)
+    })
 module.exports = userRouter;
