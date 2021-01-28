@@ -56,6 +56,9 @@ function getvalidateemail(req, res) {
 function validateemail(req, res) {
     service.validateemail(req, res)
 }
+function removepreference(req, res) {
+    service.removepreference(req, res)
+}
 module.exports = {
     registerUser,
     loginUser,
@@ -74,5 +77,6 @@ module.exports = {
     getpreference,
     updatepreference,
     getvalidateemail,
-    validateemail
+    validateemail,
+    removepreference
 }

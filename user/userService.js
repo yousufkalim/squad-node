@@ -13,6 +13,7 @@ const UAParser = require('ua-parser-js');
 var FCM = require('fcm-node');
 var serverKey = process.env.SERVER_KEY;
 var fcm = new FCM(serverKey);
+var ObjectId = require('mongodb').ObjectID;
 function registerUser(req, res) {
     // const newpass = util.generateRandomPassword().toUpperCase()
     const hash = bcrypt.hashSync(req.body.password, bcrypt.genSaltSync(10))
@@ -58,7 +59,7 @@ function registerUser(req, res) {
 function loginUser(req, res) {
     console.log("loginUser ->   req.body.fcm", req.body.fcm)
     const fcmToken = req.body.fcm
-    return user.findOne({ email: req.body.email}).then(async (result) => {
+    return user.findOne({ email: req.body.email }).then(async (result) => {
         if (result) {
             if (result.active == false) {
                 return res.json({ code: code.forbidden, message: msg.deacacc })
@@ -98,13 +99,13 @@ function loginUser(req, res) {
                 var data = {
                     _id: result._id,
                     name: result.name,
-                    firstname:(result.firstName)?result.firstname:"",
-                    lastname:(result.lastname)?result.lastname:"",
+                    firstname: (result.firstName) ? result.firstname : "",
+                    lastname: (result.lastname) ? result.lastname : "",
                     email: result.email,
                     contactNo: result.contactNo,
                     token: tokn,
                     role: result.role,
-                    gender:(result.gender)?result.gender:""
+                    gender: (result.gender) ? result.gender : ""
                 }
                 return res.json({ code: code.ok, data: data })
             } else {
@@ -193,13 +194,13 @@ function getresetpassword(req, res) {
 
                 } else if (browserName == "Chrome") {
                     res.redirect('intent://reset/' + user.resetPasswordToken + '/#Intent;scheme=squad;package=com.squadxyz')
-                 
+
                     res.render('reset.jade', { user });
                 } else {
                     res.redirect('squad://reset/' + user.resetPasswordToken)
                     res.render('reset.jade', { user });
                 }
-             
+
             }
         })
         .catch(err => {
@@ -435,17 +436,17 @@ function getprofile(req, res) {
     let query = { _id: obj.id }
     userdao.findone(query).then((data) => {
         let response = {
-            firstname:data.firstname,
-            lastname:data.lastname,
+            firstname: data.firstname,
+            lastname: data.lastname,
             active: data.active,
-            dob:data.dob,
+            dob: data.dob,
             _id: data._id,
             name: data.name,
             email: data.email,
             contactNo: data.contactNo,
             imageUrl: data.imageUrl,
             role: data.role,
-            gender:data.gender
+            gender: data.gender
         }
         res.json({ code: code.ok, data: response })
     }).catch((err) => {
@@ -519,7 +520,7 @@ function createpreference(req, res, next) {
     userdao.findOneAndUpdate(query, update, options).then((data) => {
         res.json({ code: code.ok, data: data })
     }).catch((err) => {
-    console.log("createpreference -> err", err)
+        console.log("createpreference -> err", err)
 
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
@@ -528,15 +529,49 @@ function getpreference(req, res, next) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     let query = { _id: obj.id }
+    let finalpreferancearray = []
     user.findOne(query).populate('preferences.sportId', '_id name image').then((data) => {
-        res.json({ code: code.ok, data: data.preferences })
+        data.preferences.map((preferance) => {
+            if (preferance.sportId != null) {
+                let obj = {
+                    ...preferance._doc,
+                    isSelected: true
+                }
+                finalpreferancearray.push(obj);
+            }
+
+        })
+        sportdao.find({ status: status.active }).then((sportlist) => {
+            sportlist.map((list => {
+                var found = finalpreferancearray.filter(item => {
+                    let match;
+                    if (item.sportId) {
+                        match = (item.sportId.name === list.name)
+                        return match
+                    } else {
+                        match = (item.name === list.name);
+                        return match
+                    }
+                })
+
+                if (found == false) {
+                    let obj = {
+                        ...list._doc,
+                        isSelected: false
+                    }
+                    finalpreferancearray.push(obj)
+                }
+            }))
+            res.json({ code: code.ok, data: finalpreferancearray })
+
+        })
     }).catch((err) => {
         console.log("getpreference -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
 function updatepreference(req, res) {
-    user.updateOne({ preferences: { $elemMatch: { _id: req.query.id } } },
+    user.updateOne({ preferences: { $elemMatch: { _id: req.query.preferanceId } } },
         { $set: { 'preferences.$': req.body } }).exec((err, data) => {
             if (err) {
                 return res.json({ code: code.internalError, message: msg.internalServerError })
@@ -570,6 +605,21 @@ function validateemail(req, res) {
             res.json({ code: code.ineternalError, message: msg.internalServerError })
         });
 }
+async function removepreference(req, res) {
+    let token = req.headers['authorization']
+    let obj = util.decodeToken(token)
+    console.log("removepreference -> obj", obj)
+    let query = { _id: obj.id},
+        update = { "$pull": { preferences: { "_id": ObjectId(req.query.preferenceId) } } },
+        options = { safe: true, multi: true }
+    user.findOneAndUpdate(query, update, options).exec((err, data) => {
+        if (err) {
+            return res.json({ code: code.internalError, message: msg.internalServerError })
+        } else {
+            return res.json({ code: code.ok, message: msg.preferancedeleted })
+        }
+    })
+}
 module.exports = {
     registerUser,
     // updateProfile,
@@ -589,5 +639,6 @@ module.exports = {
     getpreference,
     updatepreference,
     getvalidateemail,
-    validateemail
+    validateemail,
+    removepreference
 }
