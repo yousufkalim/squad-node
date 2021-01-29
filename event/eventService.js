@@ -6,6 +6,16 @@ const event = require('../schema/event');
 // const { options } = require('./eventRouter');
 const user = require('../schema/user');
 
+function addeventunauthorized(req, res) {
+    const data = req.body;
+    console.log("addevent -> data==============================>", data)
+    return eventdao.create(data).then((response) => {
+        res.json({ code: code.created, message: msg.eventcreated })
+    }).catch((err) => {
+        console.log("addevent -> err", err)
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+}
 function addevent(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
@@ -15,7 +25,7 @@ function addevent(req, res) {
     return eventdao.create(data).then((response) => {
         res.json({ code: code.created, message: msg.eventcreated })
     }).catch((err) => {
-    console.log("addevent -> err", err)
+        console.log("addevent -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
@@ -140,7 +150,7 @@ function preferenceBasedList(req, res) {
                     }
                 })
             })
-        }else{
+        } else {
             res.json({ code: code.ok, data: eventlist })
         }
 
@@ -164,5 +174,6 @@ module.exports = {
     eventwillplayed,
     eventinvitation,
     updateevent,
-    preferenceBasedList
+    preferenceBasedList,
+    addeventunauthorized
 }

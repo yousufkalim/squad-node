@@ -7,7 +7,10 @@ sportRouter.route('/add')
     .post([validate.verifyAdminToken], (req, res, next) => {
         actions.addsport(req, res, next)
     });
-
+sportRouter.route('/listunauthorized')
+    .get([], (req, res, next) => {
+        actions.listsport(req, res, next)
+    });
 sportRouter.route('/list')
     .get([validate.verifyToken], (req, res, next) => {
         actions.listsport(req, res, next)

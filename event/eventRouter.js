@@ -3,7 +3,10 @@ const service = require('./eventService')
 const validate = require('./eventValidator')
 const actions = require('./eventAction')
 
-
+eventRouter.route('/addunauthorized')
+    .post([], (req, res, next) => {
+        actions.addeventunauthorized(req, res, next)
+    });
 
 eventRouter.route('/add')
     .post([validate.verifyToken], (req, res, next) => {
