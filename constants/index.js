@@ -34,6 +34,7 @@ messages = {
     emailAlreadyRegistered:"Email Already registered",
     latlongincorrect:"longitude/latitude is out of bounds",
     preferancedeleted:"Preferance Removed",
+    placeadded:"Place added",
     invalidEmailPass: "Email or Password is incorrect"//'Invalid email or password, Email_format:standard email format. Password_format: between 8 to 20 character with number and special character eg. Superm@n123',
 }
 schemas = {
@@ -41,7 +42,8 @@ schemas = {
     user: 'user',
     chat: 'chat',
     sport: 'sport',
-    event:'event'
+    event:'event',
+    place:'place'
 }
 status = {
     active: "ACTIVE",
