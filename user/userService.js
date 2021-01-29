@@ -620,7 +620,9 @@ async function removepreference(req, res) {
         }
     })
 }
-async function peoplearound(req, res) {
+async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsphere" } )
+
+
     const { sportId, level, gender } = req.body;
     if (!req.query.radius) {
         req.query.radius = 100
@@ -651,6 +653,48 @@ async function peoplearound(req, res) {
         }
     })
 }
+function invitepeople(req, res) {
+    let token = req.headers['authorization']
+    const { users, eventId } = req.body;
+    var obj = []
+    users.map((el, i) => {
+        let query = { _id: el }
+        userdao.findone(query).then((data) => {
+            let info = {
+                firstname: data.firstname,
+                email: data.email,
+                fcmToken: (data.fcmToken) ? data.fcmToken : ''
+            }
+            obj.push(info)
+            if (i == (users.length - 1)) {
+                this.invitemail(obj, res, req.body.eventlink)
+
+                // return obj
+            }
+        }).catch((err) => {
+            console.log("invitepeople -> err", err)
+        })
+    })
+}
+async function invitemail(users, res, eventlink) {
+    let usersemail = []
+    users.map(async (el, i) => {
+        usersemail.push(el.email)
+        let link = eventlink;
+        let data = {
+            username: el.firstname,
+            subject: "Invitation Link",
+            html: `Hi ${el.firstname} \n 
+           Someone invites you to the event click on these link and join ${link}`
+        }
+        await util.sendEMail(el.email, data).then((data) => {
+
+            if ((data == true) && (i == (users.length - 1))) {
+                return res.json({ code: code.ok, msg: `Invitation send to ${usersemail}` })
+            }
+        })
+    })
+}
 module.exports = {
     registerUser,
     // updateProfile,
@@ -672,5 +716,7 @@ module.exports = {
     getvalidateemail,
     validateemail,
     removepreference,
-    peoplearound
+    peoplearound,
+    invitepeople,
+    invitemail
 }

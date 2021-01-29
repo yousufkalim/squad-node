@@ -92,4 +92,8 @@ userRouter.route('/peoplearound')
     .get([validate.verifyToken], (req, res) => {
         actions.peoplearound(req, res)
     })
+userRouter.route('/invitepeople')
+    .post([validate.verifyToken], (req, res) => {
+        actions.invitepeople(req, res)
+    })
 module.exports = userRouter;

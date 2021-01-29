@@ -21,7 +21,7 @@ var userSchema = new schema({
     contactNo: { type: String },
     imageUrl: { type: String },
     isSocialLogin: { type: Boolean, default: false },
-    gender: { type: String, enum: [gender.male, gender.female, gender.other]},
+    gender: { type: String, enum: [gender.male, gender.female, gender.other] },
     socialId: { type: String },
     resetPasswordToken: {
         type: String
@@ -29,7 +29,7 @@ var userSchema = new schema({
     resetPasswordExpires: {
         type: Date
     },
-    role: { type: String, enum: [role.admin, role.user],default:role.user },
+    role: { type: String, enum: [role.admin, role.user], default: role.user },
     isdeleted: { type: Boolean, default: false },
     active: { type: Boolean, default: true },
     preferences: [{
@@ -67,7 +67,11 @@ async function addAdmin() {
     let obj = {
         "email": process.env.ADMIN_EMAIL,
         "password": process.env.ADMIN_PASSWORD,
-        "role": "ADMIN"
+        "role": "ADMIN",
+        "location": {
+            // type: { type: String, default: 'Point' },
+            "coordinates": [process.env.LONG, process.env.LAT] // [  ,<longitude>, <latitude> ]
+        },
     };
     console.log("addAdmin -> obj", obj)
 
