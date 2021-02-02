@@ -39,7 +39,8 @@ function registerUser(req, res) {
         let tokn = util.generateToken(result, process.env.USER_SECRET);
         var dataresponse = {
             _id: result._id,
-            name: result.name,
+            firstname: result.firstname,
+            lastname: result.lastname,
             email: result.email,
             contactNo: result.contactNo,
             token: tokn,

@@ -3,19 +3,20 @@ const code = require('../constants').http_codes;
 const msg = require('../constants').messages;
 const status = require('../constants').status;
 const commondao = require('../common/commonDao');
-const userdao=require('../user/userDao')
+const userdao = require('../user/userDao')
 const util = require('../app util/util');
 const jwt = require('jsonwebtoken')
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client();
 const axios = require('axios');
 async function validateSignUp(req, res, next) {
-    if (req.body.name && req.body.password && req.body.email) {
-        var name = req.body.name.trim(),
+    if (req.body.firstname && req.body.lastname && req.body.password && req.body.email) {
+        var firstname = req.body.firstname.trim(),
+            lastname = req.body.lastname.trim(),
             email = req.body.email.trim(),
             password = req.body.password.trim();
 
-        if (name && email && password) {
+        if (firstname && lastname && email && password) {
             let query = { email: email }
             if (await userdao.findone(query)) {
                 return res.json({ code: code.badRequest, message: msg.emailAlreadyRegistered });
