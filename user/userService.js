@@ -326,7 +326,8 @@ function socialloginFacebook(req, res) {
                 isSocialLogin: true,
                 name: req.body.name.trim(),
                 socialId: req.body.id.trim(),
-                email: req.body.email.trim()
+                email: req.body.email.trim(),
+                location:req.body.location.trim()
             }
             if (req.body.photo) {
 
@@ -337,6 +338,7 @@ function socialloginFacebook(req, res) {
                 let data = {
                     _id: user._id,
                     email: user.email,
+                  
                     // accountType: user.accountType,
                     name: user.name,
                     imageUrl: user.imageUrl,
