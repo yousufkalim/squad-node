@@ -33,6 +33,9 @@ function preferenceBasedList(req, res,next) {
 function eventinvitation(req, res,next) {
     service.eventinvitation(req, res,next)
 }
+function addeventunauthorized(req, res,next) {
+    service.addeventunauthorized(req, res,next)
+}
 module.exports = {
     addevent,
     eventdetail,
@@ -43,5 +46,6 @@ module.exports = {
     eventwillplayed,
     eventinvitation,
     updateevent,
-    preferenceBasedList
+    preferenceBasedList,
+    addeventunauthorized
 }
