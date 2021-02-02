@@ -238,11 +238,12 @@ function resetpassword(req, res) {
 }
 function socialloginGmail(req, res) {
     // const { id, email, name } = req.body;
-    const name = req.body.name.trim(),
-        socialId = req.body.id.trim(),
+    const firstname = req.body.firstName.trim(),
+        lastname = req.body.lastName.trim()
+    socialId = req.body.id.trim(),
         email = req.body.email.trim(),
         fcmToken = req.body.fcm,
-        location=req.body.location
+        location = req.body.location
     if (req.body.photo) {
 
         imageUrl = req.body.photo.trim()
@@ -254,7 +255,7 @@ function socialloginGmail(req, res) {
 
 
     let query = { $or: [{ socialId: socialId }, { email: email }] },
-        update = { $set: { email: email, name: name, isSocialLogin: true, imageUrl: imageUrl, fcmToken: fcmToken,location:location } },
+        update = { $set: { email: email, firstname: firstname, lastname: lastname, isSocialLogin: true, imageUrl: imageUrl, fcmToken: fcmToken, location: location } },
         options = { new: true }
     return userdao.findOneAndUpdate(query, update, options).then(async (result) => {
         if (!result) {
@@ -263,10 +264,11 @@ function socialloginGmail(req, res) {
             // req.body.accountType = accountType.CUSTOMER
             const data = {
                 isSocialLogin: true,
-                name: req.body.name.trim(),
+                firstname: req.body.firstname.trim(),
+                lastname: req.body.lastname.trim(),
                 socialId: req.body.id.trim(),
                 email: req.body.email.trim(),
-                location:req.body.location
+                location: req.body.location
             }
             if (req.body.photo) {
 
@@ -278,7 +280,8 @@ function socialloginGmail(req, res) {
                 let data = {
                     _id: user._id,
                     email: user.email,
-                    name: user.name,
+                    firstname: user.firstname,
+                    lastname: user.lastname,
                     imageUrl: user.imageUrl,
                     token: token
                 }
@@ -292,7 +295,8 @@ function socialloginGmail(req, res) {
                 _id: result._id,
                 email: result.email,
                 // accountType: result.accountType,
-                name: result.name,
+                firstname: result.firstname,
+                lastname: result.lastname,
                 imageUrl: result.imageUrl,
                 token: token
             }
@@ -305,11 +309,12 @@ function socialloginGmail(req, res) {
 }
 function socialloginFacebook(req, res) {
     // const { id, email, name } = req.body;
-    const name = req.body.name.trim(),
+    const firstname = req.body.firstName.trim(),
+        lastname = req.body.lastName.trim(),
         socialId = req.body.id.trim(),
         email = req.body.email.trim(),
         fcmToken = req.body.fcm,
-        location=req.body.location
+        location = req.body.location
     if (req.body.imageUrl) {
 
         imageUrl = req.body.photo.trim()
@@ -319,7 +324,7 @@ function socialloginFacebook(req, res) {
     }
 
     let query = { $or: [{ socialId: socialId }, { email: email }] },
-        update = { $set: { email: email, name: name, isSocialLogin: true, imageUrl: imageUrl, fcmToken: fcmToken,location:location } },
+        update = { $set: { email: email, firstname: firstname, lastname: lastname, isSocialLogin: true, imageUrl: imageUrl, fcmToken: fcmToken, location: location } },
         options = { new: true }
     return userdao.findOneAndUpdate(query, update, options).then(async (result) => {
         if (!result) {
@@ -327,10 +332,11 @@ function socialloginFacebook(req, res) {
             // req.body.accountType = accountType.CUSTOMER
             const data = {
                 isSocialLogin: true,
-                name: req.body.name.trim(),
+                firstname: req.body.firstname.trim(),
+                lastname: req.body.lastname.trim(),
                 socialId: req.body.id.trim(),
                 email: req.body.email.trim(),
-                location:req.body.location
+                location: req.body.location
             }
             if (req.body.photo) {
 
@@ -341,9 +347,10 @@ function socialloginFacebook(req, res) {
                 let data = {
                     _id: user._id,
                     email: user.email,
-                  
+
                     // accountType: user.accountType,
-                    name: user.name,
+                    firstname: user.firstname,
+                    lastname: user.lastname,
                     imageUrl: user.imageUrl,
                     token: token
                 }
@@ -357,7 +364,8 @@ function socialloginFacebook(req, res) {
                 _id: result._id,
                 email: result.email,
                 // accountType: result.accountType,
-                name: result.name,
+                firstname: result.firstname,
+                lastname: result.lastname,
                 imageUrl: result.imageUrl,
                 token: token
             }
@@ -372,11 +380,12 @@ function socialloginFacebook(req, res) {
 }
 function socialloginLinkedin(req, res) {
     console.log("socialloginLinkedin -> req=================================================", req.body)
-    const name = req.body.firstName.trim(),
+    const firstname = req.body.firstName.trim(),
+        lastname = req.body.lastName.trim(),
         socialId = req.body.socialId.trim(),
         email = req.body.email.trim(),
         fcmToken = req.body.fcm,
-        location=req.body.location
+        location = req.body.location
     if (req.body.imageUrl) {
 
         imageUrl = req.body.imageUrl.trim()
@@ -386,7 +395,7 @@ function socialloginLinkedin(req, res) {
     }
 
     let query = { $or: [{ socialId: socialId }, { email: email }] },
-        update = { $set: { email: email, name: name, isSocialLogin: true, imageUrl: imageUrl, fcmToken: fcmToken,location:location } },
+        update = { $set: { email: email, firstname: firstname, lastname: lastname, isSocialLogin: true, imageUrl: imageUrl, fcmToken: fcmToken, location: location } },
         options = { new: true }
     return userdao.findOneAndUpdate(query, update, options).then(async (result) => {
         if (!result) {
@@ -394,10 +403,11 @@ function socialloginLinkedin(req, res) {
             // req.body.accountType = accountType.CUSTOMER
             const data = {
                 isSocialLogin: true,
-                name: req.body.firstName.trim(),
+                firstname: req.body.firstName.trim(),
+                lastname: req.body.lastname.trim(),
                 socialId: req.body.socialId.trim(),
                 email: req.body.email.trim(),
-                location:req.body.location
+                location: req.body.location
             }
             if (req.body.imageUrl) {
 
@@ -408,8 +418,8 @@ function socialloginLinkedin(req, res) {
                 let data = {
                     _id: user._id,
                     email: user.email,
-                    // accountType: user.accountType,
-                    name: user.name,
+                    firstname: user.firstName,
+                    lastname: user.lastname,
                     imageUrl: user.imageUrl,
                     token: token
                 }
@@ -422,8 +432,8 @@ function socialloginLinkedin(req, res) {
             let data = {
                 _id: result._id,
                 email: result.email,
-                // accountType: result.accountType,
-                name: result.name,
+                firstname: result.firstName,
+                lastname: result.lastname,
                 imageUrl: result.imageUrl,
                 token: token
             }
