@@ -327,7 +327,7 @@ function socialloginFacebook(req, res) {
                 name: req.body.name.trim(),
                 socialId: req.body.id.trim(),
                 email: req.body.email.trim(),
-                location:req.body.location.trim()
+                location:req.body.location
             }
             if (req.body.photo) {
 
