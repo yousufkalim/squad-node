@@ -239,8 +239,8 @@ function resetpassword(req, res) {
 }
 function socialloginGmail(req, res) {
     // const { id, email, name } = req.body;
-    const firstname = req.body.firstName.trim(),
-        lastname = req.body.lastName.trim()
+    const firstname = req.body.firstname.trim(),
+        lastname = req.body.lastname.trim()
     socialId = req.body.id.trim(),
         email = req.body.email.trim(),
         fcmToken = req.body.fcm,
@@ -310,8 +310,8 @@ function socialloginGmail(req, res) {
 }
 function socialloginFacebook(req, res) {
     // const { id, email, name } = req.body;
-    const firstname = req.body.firstName.trim(),
-        lastname = req.body.lastName.trim(),
+    const firstname = req.body.firstname.trim(),
+        lastname = req.body.lastname.trim(),
         socialId = req.body.id.trim(),
         email = req.body.email.trim(),
         fcmToken = req.body.fcm,
@@ -381,8 +381,8 @@ function socialloginFacebook(req, res) {
 }
 function socialloginLinkedin(req, res) {
     console.log("socialloginLinkedin -> req=================================================", req.body)
-    const firstname = req.body.firstName.trim(),
-        lastname = req.body.lastName.trim(),
+    const firstname = req.body.firstname.trim(),
+        lastname = req.body.lastname.trim(),
         socialId = req.body.socialId.trim(),
         email = req.body.email.trim(),
         fcmToken = req.body.fcm,
@@ -404,7 +404,7 @@ function socialloginLinkedin(req, res) {
             // req.body.accountType = accountType.CUSTOMER
             const data = {
                 isSocialLogin: true,
-                firstname: req.body.firstName.trim(),
+                firstname: req.body.firstname.trim(),
                 lastname: req.body.lastname.trim(),
                 socialId: req.body.socialId.trim(),
                 email: req.body.email.trim(),
@@ -419,7 +419,7 @@ function socialloginLinkedin(req, res) {
                 let data = {
                     _id: user._id,
                     email: user.email,
-                    firstname: user.firstName,
+                    firstname: user.firstname,
                     lastname: user.lastname,
                     imageUrl: user.imageUrl,
                     token: token
@@ -433,7 +433,7 @@ function socialloginLinkedin(req, res) {
             let data = {
                 _id: result._id,
                 email: result.email,
-                firstname: result.firstName,
+                firstname: result.firstname,
                 lastname: result.lastname,
                 imageUrl: result.imageUrl,
                 token: token

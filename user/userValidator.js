@@ -106,7 +106,7 @@ async function validateSocialLogin(req, res, next) {
                     res.json({ code: code.badRequest, message: msg.invalidBody });
                 }
             }).catch((err) => {
-                return res.json({ code: code.badRequest, message: msg.invalidtoken })
+                return res.json({ code: code.badRequest, message: msg.invalidToken })
 
             })
         }
@@ -119,13 +119,14 @@ async function validateSocialLogin(req, res, next) {
     }
 }
 async function validateSocialLoginFace(req, res, next) {
-    if (req.body.accessToken && req.body.id && req.body.email && req.body.name) {
-        let name = req.body.name.trim(),
+    if (req.body.accessToken && req.body.id && req.body.email && req.body.firstname) {
+        let firstname = req.body.firstname.trim(),
+            lastname = req.body.lastname.trim(),
             socialId = req.body.id.trim(),
             email = req.body.email.trim()
         idToken = req.body.accessToken.trim()
 
-        if (name && socialId && email && idToken) {
+        if (firstname && lastname && socialId && email && idToken) {
             await axios({
                 url: 'https://graph.facebook.com/me',
                 method: 'get',
@@ -139,10 +140,10 @@ async function validateSocialLoginFace(req, res, next) {
                 if (valid == true) {
                     next()
                 } else {
-                    res.json({ code: code.badRequest, message: msg.invalidtoken });
+                    res.json({ code: code.badRequest, message: msg.invalidToken });
                 }
             }).catch((err) => {
-                return res.json({ code: code.badRequest, message: msg.invalidtoken })
+                return res.json({ code: code.badRequest, message: msg.invalidToken })
             });
 
         }
@@ -167,7 +168,7 @@ async function validateSocialLoginLinkedin(req, res, next) {
             // console.log("validateSocialLoginLinkedin -> result",)
             var imageUrl = result.data.profilePicture['displayImage~'].elements[0].identifiers[0].identifier
             if (result.status == 401) {
-                return res.json({ code: code.badRequest, message: msg.invalidtoken })
+                return res.json({ code: code.badRequest, message: msg.invalidToken })
             }
             await axios({
                 url: "https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))",
@@ -187,7 +188,7 @@ async function validateSocialLoginLinkedin(req, res, next) {
             })
         }).catch((err) => {
             console.log("validateSocialLoginLinkedin -> err", err)
-            return res.json({ code: code.badRequest, message: msg.invalidtoken })
+            return res.json({ code: code.badRequest, message: msg.invalidToken })
         });
     }
 }
