@@ -106,7 +106,8 @@ function loginUser(req, res) {
                     contactNo: result.contactNo,
                     token: tokn,
                     role: result.role,
-                    gender: (result.gender) ? result.gender : ""
+                    gender: (result.gender) ? result.gender : "",
+                    imageUrl:(result.imageUrl)?result.imageUrl:""
                 }
                 return res.json({ code: code.ok, data: data })
             } else {
