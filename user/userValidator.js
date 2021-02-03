@@ -9,6 +9,7 @@ const jwt = require('jsonwebtoken')
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client();
 const axios = require('axios');
+const { role } = require('../constants');
 async function validateSignUp(req, res, next) {
     if (req.body.firstname && req.body.lastname && req.body.password && req.body.email) {
         var firstname = req.body.firstname.trim(),
@@ -78,8 +79,8 @@ async function verifyToken(req, res, next) {
     })
 }
 async function validateUpdate(req, res, next) {
-    const { email, role } = req.body;
-    if (!email && !role) {
+    const { email,password,role} = req.body;
+    if (!email && !password & !role) {
         next()
     }
     else {

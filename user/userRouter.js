@@ -45,7 +45,7 @@ userRouter.route('/getprofile')
         actions.getprofile(req, res)
     })
 userRouter.route('/update')
-    .put([validate.verifyToken], (req, res) => {
+    .put([validate.verifyToken,validate.validateUpdate], (req, res) => {
         actions.update(req, res)
     })
 userRouter.route('/sportlist')
