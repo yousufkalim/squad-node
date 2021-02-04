@@ -130,7 +130,6 @@ function preferenceBasedList(req, res) {
                 let query = {//db.events.createIndex( {location: "2dsphere" } )
 
                     location: {
-
                         $nearSphere: {
                             $geometry: {
                                 type: "Point",
@@ -139,12 +138,19 @@ function preferenceBasedList(req, res) {
                             $maxDistance: parseFloat(el.radius) * 1000
                         }
                     },
+
                     sport: el.sportId,
-                    level: el.level
+                    // level: { $in: el.level }
+
+                    level:
+                        { $eq: el.level }
+
+                    // level: el.level
 
                 };
+           
                 event.find(query).then((eventdata) => {
-                    eventlist.push(eventdata[0])
+                    (eventdata[0] != null) ? eventlist.push(eventdata[0]) : '';
                     if (index == (data.preferences.length - 1)) {
                         res.json({ code: code.ok, data: eventlist })
                     }

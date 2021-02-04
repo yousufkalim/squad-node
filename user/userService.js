@@ -107,7 +107,7 @@ function loginUser(req, res) {
                     token: tokn,
                     role: result.role,
                     gender: (result.gender) ? result.gender : "",
-                    imageUrl:(result.imageUrl)?result.imageUrl:""
+                    imageUrl: (result.imageUrl) ? result.imageUrl : ""
                 }
                 return res.json({ code: code.ok, data: data })
             } else {
@@ -479,6 +479,7 @@ function update(req, res) {
     userdao.findOneAndUpdate(query, update, options).then((data) => {
         return res.json({ code: code.ok, data: data })
     }).catch((err) => {
+        console.log("update -> err", err)
         return res.json({ code: code.ineternalError, messages: msg.internalServerError })
     })
 }

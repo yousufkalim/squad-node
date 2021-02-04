@@ -58,7 +58,8 @@ role = {
 level = {
     beginner: "BEGINNER",
     intermediate:"INTERMEDIATE",
-    advanced:"ADVANCED"
+    advanced:"ADVANCED",
+    all:"ALL"
 }
 gender={
     men:"MEN",
