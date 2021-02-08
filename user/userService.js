@@ -465,7 +465,10 @@ function getprofile(req, res) {
             contactNo: data.contactNo,
             imageUrl: data.imageUrl,
             role: data.role,
-            gender: data.gender
+            gender: data.gender,
+            rating: 0,
+            events: 0,
+            Calendercount: 0
         }
         res.json({ code: code.ok, data: response })
     }).catch((err) => {
