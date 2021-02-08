@@ -68,18 +68,7 @@ function eventlist(req, res) {
     } else {
         var sorttype = '';
     }
-    // event.aggregate([
-    //     {
-    //         total:
-    //         {
-    //             $subtract: [{
-    //                 $add: ["$seats", "$participants.length()"]
-    //             }
-    //         },{
-
-    //         }
-
-    // ])
+   
     return event.find(query).sort({ starttime: sorttype }).then((data) => {
         req, res
         res.json({ code: code.ok, data: data })
@@ -128,7 +117,6 @@ function preferenceBasedList(req, res) {
         if (data.preferences) {
             data.preferences.map((el, index) => {
                 let query = {//db.events.createIndex( {location: "2dsphere" } )
-
                     location: {
                         $nearSphere: {
                             $geometry: {
@@ -157,7 +145,8 @@ function preferenceBasedList(req, res) {
                 })
             })
         } else {
-            res.json({ code: code.ok, data: eventlist })
+            this.eventlist(req,res)
+            // res.json({ code: code.ok, data: eventlist })
         }
 
     }).catch((err) => {

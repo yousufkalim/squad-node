@@ -466,6 +466,7 @@ function getprofile(req, res) {
             imageUrl: data.imageUrl,
             role: data.role,
             gender: data.gender,
+            //default
             rating: 0,
             events: 0,
             Calendercount: 0
