@@ -144,9 +144,11 @@ function preferenceBasedList(req, res) {
                     }
                 })
             })
-        } else if (data.preferences == []) {
+        } else if (data.preferences == null) {
             this.eventlist(req, res)
             // res.json({ code: code.ok, data: eventlist })
+        }else{
+            console.log("===================in else=====================")
         }
 
     }).catch((err) => {
