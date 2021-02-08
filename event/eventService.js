@@ -68,9 +68,9 @@ function eventlist(req, res) {
     } else {
         var sorttype = '';
     }
-   
+
     return event.find(query).sort({ starttime: sorttype }).then((data) => {
-        req, res
+        // req, res
         res.json({ code: code.ok, data: data })
     }).catch((err) => {
         console.log("eventlist -> err", err)
@@ -136,7 +136,7 @@ function preferenceBasedList(req, res) {
                     // level: el.level
 
                 };
-           
+
                 event.find(query).then((eventdata) => {
                     (eventdata[0] != null) ? eventlist.push(eventdata[0]) : '';
                     if (index == (data.preferences.length - 1)) {
@@ -144,8 +144,8 @@ function preferenceBasedList(req, res) {
                     }
                 })
             })
-        } else {
-            this.eventlist(req,res)
+        } else if (data.preferences == []) {
+            this.eventlist(req, res)
             // res.json({ code: code.ok, data: eventlist })
         }
 
