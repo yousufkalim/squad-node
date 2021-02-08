@@ -114,8 +114,8 @@ function preferenceBasedList(req, res) {
     let obj = util.decodeToken(token)
     var eventlist = [];
     user.findById(obj.id).then((data) => {
-        console.log("preferenceBasedList -> data.preferences", data.preferences,data.preferences.length)
-        if (data.preferences !=null) {
+        console.log("preferenceBasedList -> data.preferences", data.preferences, data.preferences.length)
+        if (data.preferences.length >= 1) {
             console.log("preferenceBasedList -> if")
             data.preferences.map((el, index) => {
                 let query = {//db.events.createIndex( {location: "2dsphere" } )
@@ -146,12 +146,12 @@ function preferenceBasedList(req, res) {
                     }
                 })
             })
-        } else if (data.preferences == null) {
+        } else if (data.preferences == 0) {
             console.log("preferenceBasedList ->  else if")
             this.eventlist(req, res)
             // res.json({ code: code.ok, data: eventlist })
-        }else{
-        
+        } else {
+
             console.log("===================in else=====================")
         }
 
