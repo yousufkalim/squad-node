@@ -114,6 +114,7 @@ function preferenceBasedList(req, res) {
     let obj = util.decodeToken(token)
     var eventlist = [];
     user.findById(obj.id).then((data) => {
+        console.log("preferenceBasedList -> data.preferences", data.preferences,data.preferences.length)
         if (data.preferences !=null) {
             console.log("preferenceBasedList -> if")
             data.preferences.map((el, index) => {
