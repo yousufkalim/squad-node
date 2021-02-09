@@ -69,7 +69,7 @@ function eventlist(req, res) {
         var sorttype = '';
     }
 
-    return event.find(query).sort({ starttime: sorttype }).then((data) => {
+    return event.find(query).populate('participants','_id imageUrl').sort({ starttime: sorttype }).then((data) => {
         // req, res
         res.json({ code: code.ok, data: data })
     }).catch((err) => {
