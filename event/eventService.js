@@ -61,6 +61,7 @@ function myevents(req, res) {
 function eventlist(req, res) {
     console.log("eventlist -> req.query.order", req.query.order)
     let query = (req.query.date) ? { date: req.query.date } : {};
+    let radius = (req.query.radius) ? req.query.radius : 100;
     if (req.query.order == "Asce") {
         var sorttype = -1
     } else if (req.query.order == "Desc") {
@@ -68,9 +69,20 @@ function eventlist(req, res) {
     } else {
         var sorttype = '';
     }
-
-    return event.find(query).populate('participants','_id imageUrl').sort({ starttime: sorttype }).then((data) => {
-        // req, res
+    (req.query.long && req.query.lat) ? query.location = {
+        $nearSphere: {
+            $geometry: {
+                type: "Point",
+                coordinates: [req.query.long, req.query.lat]
+            },
+            $maxDistance: parseFloat(radius) * 1000
+        }
+    } : '';
+    (req.body.level) ?
+        query.level = { $in: req.body.level } : '';
+    (req.body.sport) ? query.sport = { $in: req.body.sport } : '';
+    console.log("eventlist -> query", query)
+    return event.find(query).populate('participants', '_id imageUrl').sort({ starttime: sorttype }).then((data) => {
         res.json({ code: code.ok, data: data })
     }).catch((err) => {
         console.log("eventlist -> err", err)
