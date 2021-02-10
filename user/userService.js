@@ -305,7 +305,7 @@ function socialloginGmail(req, res) {
             return res.json({ code: code.ok, message: msg.loggedIn, data: data })
         }
     }).catch((err) => {
-        console.log("socialloginGmail -> err", err)
+        console.log("socialloginGmail -> err==================", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }

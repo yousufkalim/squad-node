@@ -12,6 +12,7 @@ var eventSchema = new schema({
     starttime: { type: Date },
     endtime: { type: Date },
     Address: { type: String },
+  
     location: {
         type: { type: String, default: 'Point' },
         coordinates: [Number] // [  ,<longitude (value < -90 || value > 90)>, <latitude(value < -180 || value > 180)> ]
@@ -23,7 +24,8 @@ var eventSchema = new schema({
     public: { type: Boolean, default: false },
     participate: { type: Boolean, default: false },
     createdby: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
-    participants: [{ type: mongoose.Schema.Types.ObjectId, ref: schmaName.user }]
+    participants: [{ type: mongoose.Schema.Types.ObjectId, ref: schmaName.user }],
+    note: { type: String },
 });
 
 
