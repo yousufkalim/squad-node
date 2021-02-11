@@ -239,45 +239,39 @@ function resetpassword(req, res) {
     })
 }
 function socialloginGmail(req, res) {
-    // const { id, email, name } = req.body;
-    const firstname = req.body.firstname.trim(),
-        lastname = req.body.lastname.trim()
-    socialId = req.body.id.trim(),
-        email = req.body.email.trim(),
-        fcmToken = req.body.fcm,
-        location = req.body.location
-    if (req.body.photo) {
-
-        imageUrl = req.body.photo.trim()
-    }
-    else {
-        imageUrl = ""
-    }
-    console.log("socialloginGmail -> req.body.name======================>", req.body)
-
-
-    let query = { $or: [{ socialId: socialId }, { email: email }] },
-        update = { $set: { email: email, firstname: firstname, lastname: lastname, isSocialLogin: true, imageUrl: imageUrl, fcmToken: fcmToken, location: location } },
-        options = { new: true }
-    return userdao.findOneAndUpdate(query, update, options).then(async (result) => {
-        if (!result) {
-            console.log("no result")
-            req.body.isSocialLogin = true
-            // req.body.accountType = accountType.CUSTOMER
-            const data = {
-                isSocialLogin: true,
-                firstname: req.body.firstname.trim(),
-                lastname: req.body.lastname.trim(),
-                socialId: req.body.id.trim(),
-                email: req.body.email.trim(),
-                location: req.body.location
+    const socialId = req.body.id.trim(),
+        email = req.body.email.trim();
+    let query = { $or: [{ socialId: socialId }, { email: email }] };
+    return userdao.findone(query).then((user) => {
+        if (user) {
+            let token = util.generateToken(user, process.env.USER_SECRET)
+            let data = {
+                _id: user._id,
+                email: user.email,
+                firstname: user.firstname,
+                lastname: user.lastname,
+                imageUrl: user.imageUrl,
+                token: token
+            }
+            return res.json({ code: code.ok, message: msg.loggedIn, data: data })
+        } else {
+            let addobj = {
+                firstname : req.body.firstname.trim(),
+                lastname : req.body.lastname.trim(),
+                socialId : req.body.id.trim(),
+                email : req.body.email.trim(),
+                fcmToken : req.body.fcm,
+                location : req.body.location,
+                isSocialLogin : true
             }
             if (req.body.photo) {
 
-                data.imageUrl = req.body.photo;
+                addobj.imageUrl = req.body.photo.trim()
             }
-            return userdao.create(data).then((user) => {
-                console.log("socialloginGmail -> result", user)
+            else {
+                addobj.imageUrl = ""
+            }
+            return userdao.create(addobj).then((user) => {
                 let token = util.generateToken(user, process.env.USER_SECRET)
                 let data = {
                     _id: user._id,
@@ -290,163 +284,243 @@ function socialloginGmail(req, res) {
                 return res.json({ code: code.ok, message: msg.loggedIn, data: data })
             })
         }
-        else {
-            console.log(" result")
-            let token = util.generateToken(result, process.env.USER_SECRET)
-            let data = {
-                _id: result._id,
-                email: result.email,
-                // accountType: result.accountType,
-                firstname: result.firstname,
-                lastname: result.lastname,
-                imageUrl: result.imageUrl,
-                token: token
-            }
-            return res.json({ code: code.ok, message: msg.loggedIn, data: data })
-        }
     }).catch((err) => {
-        console.log("socialloginGmail -> err==================", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
 function socialloginFacebook(req, res) {
-    // const { id, email, name } = req.body;
-    const firstname = req.body.firstname.trim(),
-        lastname = req.body.lastname.trim(),
-        socialId = req.body.id.trim(),
-        email = req.body.email.trim(),
-        fcmToken = req.body.fcm,
-        location = req.body.location
-    if (req.body.imageUrl) {
-
-        imageUrl = req.body.photo.trim()
-    }
-    else {
-        imageUrl = ""
-    }
-
-    let query = { $or: [{ socialId: socialId }, { email: email }] },
-        update = { $set: { email: email, firstname: firstname, lastname: lastname, isSocialLogin: true, imageUrl: imageUrl, fcmToken: fcmToken, location: location } },
-        options = { new: true }
-    return userdao.findOneAndUpdate(query, update, options).then(async (result) => {
-        if (!result) {
-            req.body.isSocialLogin = true
-            // req.body.accountType = accountType.CUSTOMER
-            const data = {
-                isSocialLogin: true,
-                firstname: req.body.firstname.trim(),
-                lastname: req.body.lastname.trim(),
-                socialId: req.body.id.trim(),
-                email: req.body.email.trim(),
-                location: req.body.location
+    const socialId = req.body.id.trim(),
+        email = req.body.email.trim();
+    let query = { $or: [{ socialId: socialId }, { email: email }] };
+    return userdao.findone(query).then((user) => {
+        if (user) {
+            let token = util.generateToken(user, process.env.USER_SECRET)
+            let data = {
+                _id: user._id,
+                email: user.email,
+                firstname: user.firstname,
+                lastname: user.lastname,
+                imageUrl: user.imageUrl,
+                token: token
+            }
+            return res.json({ code: code.ok, message: msg.loggedIn, data: data })
+        } else {
+            let addobj = {
+                firstname : req.body.firstname.trim(),
+                lastname : req.body.lastname.trim(),
+                socialId : req.body.id.trim(),
+                email : req.body.email.trim(),
+                fcmToken : req.body.fcm,
+                location : req.body.location,
+                isSocialLogin : true
             }
             if (req.body.photo) {
 
-                data.imageUrl = req.body.photo;
+                addobj.imageUrl = req.body.photo.trim()
             }
-            return userdao.create(data).then((user) => {
+            else {
+                addobj.imageUrl = ""
+            }
+            return userdao.create(addobj).then((user) => {
                 let token = util.generateToken(user, process.env.USER_SECRET)
                 let data = {
                     _id: user._id,
                     email: user.email,
-
-                    // accountType: user.accountType,
                     firstname: user.firstname,
                     lastname: user.lastname,
                     imageUrl: user.imageUrl,
                     token: token
                 }
-                console.log("socialloginFacebook -> data", data)
                 return res.json({ code: code.ok, message: msg.loggedIn, data: data })
             })
         }
-        else {
-            let token = util.generateToken(result, process.env.USER_SECRET)
-            let data = {
-                _id: result._id,
-                email: result.email,
-                // accountType: result.accountType,
-                firstname: result.firstname,
-                lastname: result.lastname,
-                imageUrl: result.imageUrl,
-                token: token
-            }
-            console.log("socialloginFacebook -> data", data)
-            return res.json({ code: code.ok, message: msg.loggedIn, data: data })
-        }
     }).catch((err) => {
-        console.log("socialloginFacebook -> catch", err)
-
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
+    // const firstname = req.body.firstname.trim(),
+    //     lastname = req.body.lastname.trim(),
+    //     socialId = req.body.id.trim(),
+    //     email = req.body.email.trim(),
+    //     fcmToken = req.body.fcm,
+    //     location = req.body.location
+    // if (req.body.imageUrl) {
+
+    //     imageUrl = req.body.photo.trim()
+    // }
+    // else {
+    //     imageUrl = ""
+    // }
+
+    // let query = { $or: [{ socialId: socialId }, { email: email }] },
+    //     update = { $set: { email: email, firstname: firstname, lastname: lastname, isSocialLogin: true, imageUrl: imageUrl, fcmToken: fcmToken, location: location } },
+    //     options = { new: true }
+    // return userdao.findOneAndUpdate(query, update, options).then(async (result) => {
+    //     if (!result) {
+    //         req.body.isSocialLogin = true
+    //         // req.body.accountType = accountType.CUSTOMER
+    //         const data = {
+    //             isSocialLogin: true,
+    //             firstname: req.body.firstname.trim(),
+    //             lastname: req.body.lastname.trim(),
+    //             socialId: req.body.id.trim(),
+    //             email: req.body.email.trim(),
+    //             location: req.body.location
+    //         }
+    //         if (req.body.photo) {
+
+    //             data.imageUrl = req.body.photo;
+    //         }
+    //         return userdao.create(data).then((user) => {
+    //             let token = util.generateToken(user, process.env.USER_SECRET)
+    //             let data = {
+    //                 _id: user._id,
+    //                 email: user.email,
+
+    //                 // accountType: user.accountType,
+    //                 firstname: user.firstname,
+    //                 lastname: user.lastname,
+    //                 imageUrl: user.imageUrl,
+    //                 token: token
+    //             }
+    //             console.log("socialloginFacebook -> data", data)
+    //             return res.json({ code: code.ok, message: msg.loggedIn, data: data })
+    //         })
+    //     }
+    //     else {
+    //         let token = util.generateToken(result, process.env.USER_SECRET)
+    //         let data = {
+    //             _id: result._id,
+    //             email: result.email,
+    //             // accountType: result.accountType,
+    //             firstname: result.firstname,
+    //             lastname: result.lastname,
+    //             imageUrl: result.imageUrl,
+    //             token: token
+    //         }
+    //         console.log("socialloginFacebook -> data", data)
+    //         return res.json({ code: code.ok, message: msg.loggedIn, data: data })
+    //     }
+    // }).catch((err) => {
+    //     console.log("socialloginFacebook -> catch", err)
+
+    //     res.json({ code: code.ineternalError, message: msg.internalServerError })
+    // })
 }
 function socialloginLinkedin(req, res) {
-    console.log("socialloginLinkedin -> req=================================================", req.body)
-    const firstname = req.body.firstname.trim(),
-        lastname = req.body.lastname.trim(),
-        socialId = req.body.socialId.trim(),
-        email = req.body.email.trim(),
-        fcmToken = req.body.fcm,
-        location = req.body.location
-    if (req.body.imageUrl) {
+    const socialId = req.body.id.trim(),
+    email = req.body.email.trim();
+let query = { $or: [{ socialId: socialId }, { email: email }] };
+return userdao.findone(query).then((user) => {
+    if (user) {
+        let token = util.generateToken(user, process.env.USER_SECRET)
+        let data = {
+            _id: user._id,
+            email: user.email,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            imageUrl: user.imageUrl,
+            token: token
+        }
+        return res.json({ code: code.ok, message: msg.loggedIn, data: data })
+    } else {
+        let addobj = {
+            firstname : req.body.firstname.trim(),
+            lastname : req.body.lastname.trim(),
+            socialId : req.body.id.trim(),
+            email : req.body.email.trim(),
+            fcmToken : req.body.fcm,
+            location : req.body.location,
+            isSocialLogin : true
+        }
+        if (req.body.photo) {
 
-        imageUrl = req.body.imageUrl.trim()
-    }
-    else {
-        imageUrl = ""
-    }
-
-    let query = { $or: [{ socialId: socialId }, { email: email }] },
-        update = { $set: { email: email, firstname: firstname, lastname: lastname, isSocialLogin: true, imageUrl: imageUrl, fcmToken: fcmToken, location: location } },
-        options = { new: true }
-    return userdao.findOneAndUpdate(query, update, options).then(async (result) => {
-        if (!result) {
-            req.body.isSocialLogin = true
-            // req.body.accountType = accountType.CUSTOMER
-            const data = {
-                isSocialLogin: true,
-                firstname: req.body.firstname.trim(),
-                lastname: req.body.lastname.trim(),
-                socialId: req.body.socialId.trim(),
-                email: req.body.email.trim(),
-                location: req.body.location
-            }
-            if (req.body.imageUrl) {
-
-                data.imageUrl = req.body.imageUrl;
-            }
-            return userdao.create(data).then((user) => {
-                let token = util.generateToken(user, process.env.USER_SECRET)
-                let data = {
-                    _id: user._id,
-                    email: user.email,
-                    firstname: user.firstname,
-                    lastname: user.lastname,
-                    imageUrl: user.imageUrl,
-                    token: token
-                }
-                console.log("socialloginlinkedin -> data----------create", data)
-                return res.json({ code: code.ok, message: msg.loggedIn, data: data })
-            })
+            addobj.imageUrl = req.body.photo.trim()
         }
         else {
-            let token = util.generateToken(result, process.env.USER_SECRET)
+            addobj.imageUrl = ""
+        }
+        return userdao.create(addobj).then((user) => {
+            let token = util.generateToken(user, process.env.USER_SECRET)
             let data = {
-                _id: result._id,
-                email: result.email,
-                firstname: result.firstname,
-                lastname: result.lastname,
-                imageUrl: result.imageUrl,
+                _id: user._id,
+                email: user.email,
+                firstname: user.firstname,
+                lastname: user.lastname,
+                imageUrl: user.imageUrl,
                 token: token
             }
-            console.log("socialloginlinkedin -> data------------login", data)
             return res.json({ code: code.ok, message: msg.loggedIn, data: data })
-        }
-    }).catch((err) => {
-        console.log("socialloginlinkedin -> catch", err)
+        })
+    }
+}).catch((err) => {
+    res.json({ code: code.ineternalError, message: msg.internalServerError })
+})
+    // console.log("socialloginLinkedin -> req=================================================", req.body)
+    // const firstname = req.body.firstname.trim(),
+    //     lastname = req.body.lastname.trim(),
+    //     socialId = req.body.socialId.trim(),
+    //     email = req.body.email.trim(),
+    //     fcmToken = req.body.fcm,
+    //     location = req.body.location
+    // if (req.body.imageUrl) {
 
-        res.json({ code: code.ineternalError, message: msg.internalServerError })
-    })
+    //     imageUrl = req.body.imageUrl.trim()
+    // }
+    // else {
+    //     imageUrl = ""
+    // }
+
+    // let query = { $or: [{ socialId: socialId }, { email: email }] },
+    //     update = { $set: { email: email, firstname: firstname, lastname: lastname, isSocialLogin: true, imageUrl: imageUrl, fcmToken: fcmToken, location: location } },
+    //     options = { new: true }
+    // return userdao.findOneAndUpdate(query, update, options).then(async (result) => {
+    //     if (!result) {
+    //         req.body.isSocialLogin = true
+    //         // req.body.accountType = accountType.CUSTOMER
+    //         const data = {
+    //             isSocialLogin: true,
+    //             firstname: req.body.firstname.trim(),
+    //             lastname: req.body.lastname.trim(),
+    //             socialId: req.body.socialId.trim(),
+    //             email: req.body.email.trim(),
+    //             location: req.body.location
+    //         }
+    //         if (req.body.imageUrl) {
+
+    //             data.imageUrl = req.body.imageUrl;
+    //         }
+    //         return userdao.create(data).then((user) => {
+    //             let token = util.generateToken(user, process.env.USER_SECRET)
+    //             let data = {
+    //                 _id: user._id,
+    //                 email: user.email,
+    //                 firstname: user.firstname,
+    //                 lastname: user.lastname,
+    //                 imageUrl: user.imageUrl,
+    //                 token: token
+    //             }
+    //             console.log("socialloginlinkedin -> data----------create", data)
+    //             return res.json({ code: code.ok, message: msg.loggedIn, data: data })
+    //         })
+    //     }
+    //     else {
+    //         let token = util.generateToken(result, process.env.USER_SECRET)
+    //         let data = {
+    //             _id: result._id,
+    //             email: result.email,
+    //             firstname: result.firstname,
+    //             lastname: result.lastname,
+    //             imageUrl: result.imageUrl,
+    //             token: token
+    //         }
+    //         console.log("socialloginlinkedin -> data------------login", data)
+    //         return res.json({ code: code.ok, message: msg.loggedIn, data: data })
+    //     }
+    // }).catch((err) => {
+    //     console.log("socialloginlinkedin -> catch", err)
+
+    //     res.json({ code: code.ineternalError, message: msg.internalServerError })
+    // })
 }
 function getprofile(req, res) {
     let token = req.headers['authorization']
