@@ -81,7 +81,7 @@ function eventlist(req, res) {
         query.level = { $in: req.body.level } : '';
     (req.body.sport) ? query.sport = { $in: req.body.sport } : '';
     console.log("eventlist -> query", query)
-    return event.find(query).populate('participants', '_id imageUrl').sort({ starttime: sorttype }).then((data) => {
+    return event.find(query).populate('participants', '_id imageUrl firstname lastname').sort({ starttime: sorttype }).then((data) => {
         res.json({ code: code.ok, data: data })
     }).catch((err) => {
         console.log("eventlist -> err", err)
@@ -150,7 +150,7 @@ function preferenceBasedList(req, res) {
 
                 };
 
-                event.find(query).then((eventdata) => {
+                event.find(query).populate('participants', '_id imageUrl firstname lastname').then((eventdata) => {
                     (eventdata[0] != null) ? eventlist.push(eventdata[0]) : '';
                     if (index == (data.preferences.length - 1)) {
                         res.json({ code: code.ok, data: eventlist })
