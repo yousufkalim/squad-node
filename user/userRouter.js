@@ -24,6 +24,10 @@ userRouter.route('/verifyToken')
     .get([], (req, res) => {
         actions.verifyToken(req, res)
     })
+userRouter.route('/peoplecount')
+    .get([], (req, res) => {
+        actions.peoplecount(req, res)
+    })
 userRouter.route('/reset/:token')
     .get([], (req, res) => {
         actions.getresetpassword(req, res)
@@ -45,7 +49,7 @@ userRouter.route('/getprofile')
         actions.getprofile(req, res)
     })
 userRouter.route('/update')
-    .put([validate.verifyToken,validate.validateUpdate], (req, res) => {
+    .put([validate.verifyToken, validate.validateUpdate], (req, res) => {
         actions.update(req, res)
     })
 userRouter.route('/sportlist')

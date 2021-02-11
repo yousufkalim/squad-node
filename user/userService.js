@@ -11,6 +11,7 @@ const { role } = require('../constants');
 const env = require('dotenv').config();
 const UAParser = require('ua-parser-js');
 var FCM = require('fcm-node');
+const { response } = require('express');
 var serverKey = process.env.SERVER_KEY;
 var fcm = new FCM(serverKey);
 var ObjectId = require('mongodb').ObjectID;
@@ -256,13 +257,13 @@ function socialloginGmail(req, res) {
             return res.json({ code: code.ok, message: msg.loggedIn, data: data })
         } else {
             let addobj = {
-                firstname : req.body.firstname.trim(),
-                lastname : req.body.lastname.trim(),
-                socialId : req.body.id.trim(),
-                email : req.body.email.trim(),
-                fcmToken : req.body.fcm,
-                location : req.body.location,
-                isSocialLogin : true
+                firstname: req.body.firstname.trim(),
+                lastname: req.body.lastname.trim(),
+                socialId: req.body.id.trim(),
+                email: req.body.email.trim(),
+                fcmToken: req.body.fcm,
+                location: req.body.location,
+                isSocialLogin: true
             }
             if (req.body.photo) {
 
@@ -306,13 +307,13 @@ function socialloginFacebook(req, res) {
             return res.json({ code: code.ok, message: msg.loggedIn, data: data })
         } else {
             let addobj = {
-                firstname : req.body.firstname.trim(),
-                lastname : req.body.lastname.trim(),
-                socialId : req.body.id.trim(),
-                email : req.body.email.trim(),
-                fcmToken : req.body.fcm,
-                location : req.body.location,
-                isSocialLogin : true
+                firstname: req.body.firstname.trim(),
+                lastname: req.body.lastname.trim(),
+                socialId: req.body.id.trim(),
+                email: req.body.email.trim(),
+                fcmToken: req.body.fcm,
+                location: req.body.location,
+                isSocialLogin: true
             }
             if (req.body.photo) {
 
@@ -408,38 +409,10 @@ function socialloginFacebook(req, res) {
 }
 function socialloginLinkedin(req, res) {
     const socialId = req.body.id.trim(),
-    email = req.body.email.trim();
-let query = { $or: [{ socialId: socialId }, { email: email }] };
-return userdao.findone(query).then((user) => {
-    if (user) {
-        let token = util.generateToken(user, process.env.USER_SECRET)
-        let data = {
-            _id: user._id,
-            email: user.email,
-            firstname: user.firstname,
-            lastname: user.lastname,
-            imageUrl: user.imageUrl,
-            token: token
-        }
-        return res.json({ code: code.ok, message: msg.loggedIn, data: data })
-    } else {
-        let addobj = {
-            firstname : req.body.firstname.trim(),
-            lastname : req.body.lastname.trim(),
-            socialId : req.body.id.trim(),
-            email : req.body.email.trim(),
-            fcmToken : req.body.fcm,
-            location : req.body.location,
-            isSocialLogin : true
-        }
-        if (req.body.photo) {
-
-            addobj.imageUrl = req.body.photo.trim()
-        }
-        else {
-            addobj.imageUrl = ""
-        }
-        return userdao.create(addobj).then((user) => {
+        email = req.body.email.trim();
+    let query = { $or: [{ socialId: socialId }, { email: email }] };
+    return userdao.findone(query).then((user) => {
+        if (user) {
             let token = util.generateToken(user, process.env.USER_SECRET)
             let data = {
                 _id: user._id,
@@ -450,11 +423,39 @@ return userdao.findone(query).then((user) => {
                 token: token
             }
             return res.json({ code: code.ok, message: msg.loggedIn, data: data })
-        })
-    }
-}).catch((err) => {
-    res.json({ code: code.ineternalError, message: msg.internalServerError })
-})
+        } else {
+            let addobj = {
+                firstname: req.body.firstname.trim(),
+                lastname: req.body.lastname.trim(),
+                socialId: req.body.id.trim(),
+                email: req.body.email.trim(),
+                fcmToken: req.body.fcm,
+                location: req.body.location,
+                isSocialLogin: true
+            }
+            if (req.body.photo) {
+
+                addobj.imageUrl = req.body.photo.trim()
+            }
+            else {
+                addobj.imageUrl = ""
+            }
+            return userdao.create(addobj).then((user) => {
+                let token = util.generateToken(user, process.env.USER_SECRET)
+                let data = {
+                    _id: user._id,
+                    email: user.email,
+                    firstname: user.firstname,
+                    lastname: user.lastname,
+                    imageUrl: user.imageUrl,
+                    token: token
+                }
+                return res.json({ code: code.ok, message: msg.loggedIn, data: data })
+            })
+        }
+    }).catch((err) => {
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
     // console.log("socialloginLinkedin -> req=================================================", req.body)
     // const firstname = req.body.firstname.trim(),
     //     lastname = req.body.lastname.trim(),
@@ -793,6 +794,15 @@ async function invitemail(users, res, eventlink) {
         })
     })
 }
+async function peoplecount(req, res) {
+    let responseObj= {
+        myFriends: 0,
+        peopleImet: 0,
+        peopleAround: 10,
+        newToSquad: 2,
+    }
+    return res.json({ code: code.ok, data:responseObj })
+}
 module.exports = {
     registerUser,
     // updateProfile,
@@ -816,5 +826,6 @@ module.exports = {
     removepreference,
     peoplearound,
     invitepeople,
-    invitemail
+    invitemail,
+    peoplecount
 }

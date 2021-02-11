@@ -65,6 +65,9 @@ function peoplearound(req, res) {
 function invitepeople(req, res) {
     service.invitepeople(req, res)
 }
+function peoplecount(req, res) {
+    service.peoplecount(req, res)
+}
 module.exports = {
     registerUser,
     loginUser,
@@ -86,5 +89,6 @@ module.exports = {
     validateemail,
     removepreference,
     peoplearound,
-    invitepeople
+    invitepeople,
+    peoplecount
 }
