@@ -81,15 +81,17 @@ function eventlist(req, res) {
     (req.body.sport) ? query.sport = { $in: req.body.sport } : '';
     return event.find(query).populate('participants', '_id imageUrl firstname lastname')
         .sort({ starttime: sorttype }).then(async (data) => {
-            data.map((el) => {
-                // el.participants['friend'] = false
+            data.map((el, inx) => {
                 if (el.participants.length != 0) {
-                    el.participants.map((par) => {
-                        par.friend = false
+                    el.participants.map((par, i) => {
+                        console.log("eventlist -> par", par)
+                        par[i].friend = false
                     })
                 }
+                if ((data.length-1) == inx) {
+                    await res.json({ code: code.ok, data: data })
+                }
             })
-            await res.json({ code: code.ok, data: data })
         }).catch((err) => {
             console.log("eventlist -> err", err)
             res.json({ code: code.ineternalError, message: msg.internalServerError })
