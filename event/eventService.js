@@ -80,22 +80,26 @@ function eventlist(req, res) {
         query.level = { $in: req.body.level } : '';
     (req.body.sport) ? query.sport = { $in: req.body.sport } : '';
     return event.find(query).populate('participants', '_id imageUrl firstname lastname')
-        .sort({ starttime: sorttype }).then(async (data) => {
+        .sort({ starttime: sorttype }).then((data) => {
             data.map((el, inx) => {
-                if (el.participants.length != 0) {
+                if (el.participants.length >= 1) {
                     el.participants.map((par, i) => {
                         console.log("eventlist -> par", par)
-                        // par[i].friend = false
-                        par[i] = {
-                            ...par,
+                        // par['friend'] = false
+                        // console.log("eventlist -> par", par)
+                        let obj = {
+                            ...par._doc,
                             friend: false
                         }
+                        el.participants[i] = obj
                     })
                 }
+
                 if ((data.length - 1) == inx) {
                     res.json({ code: code.ok, data: data })
                 }
             })
+            // res.json({ code: code.ok, data: data })
         }).catch((err) => {
             console.log("eventlist -> err", err)
             res.json({ code: code.ineternalError, message: msg.internalServerError })
