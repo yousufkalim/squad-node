@@ -85,7 +85,11 @@ function eventlist(req, res) {
                 if (el.participants.length != 0) {
                     el.participants.map((par, i) => {
                         console.log("eventlist -> par", par)
-                        par[i].friend = false
+                        // par[i].friend = false
+                        par[i] = {
+                            ...par,
+                            friend: false
+                        }
                     })
                 }
                 if ((data.length - 1) == inx) {
