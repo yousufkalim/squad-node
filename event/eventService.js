@@ -81,9 +81,13 @@ function eventlist(req, res) {
     (req.body.sport) ? query.sport = { $in: req.body.sport } : '';
     return event.find(query).populate('participants', '_id imageUrl firstname lastname')
         .sort({ starttime: sorttype }).then(async (data) => {
-            data.participants.map((el) => {
-            console.log("eventlist -> el", el)
-                el.friend = false
+            data.map((el) => {
+                // el.participants['friend'] = false
+                if (el.participants != []) {
+                    el.participants.map((par) => {
+                        par.friend = false
+                    })
+                }
             })
             await res.json({ code: code.ok, data: data })
         }).catch((err) => {
