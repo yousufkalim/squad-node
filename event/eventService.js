@@ -58,7 +58,6 @@ function myevents(req, res) {
     })
 }
 function eventlist(req, res) {
-    console.log("eventlist -> req.query.order", req.query.order)
     let query = (req.query.date) ? { date: req.query.date } : {};
     let radius = (req.query.radius) ? req.query.radius : 100;
     if (req.query.order == "Asce") {
@@ -80,13 +79,16 @@ function eventlist(req, res) {
     (req.body.level) ?
         query.level = { $in: req.body.level } : '';
     (req.body.sport) ? query.sport = { $in: req.body.sport } : '';
-    console.log("eventlist -> query", query)
-    return event.find(query).populate('participants', '_id imageUrl firstname lastname').sort({ starttime: sorttype }).then((data) => {
-        res.json({ code: code.ok, data: data })
-    }).catch((err) => {
-        console.log("eventlist -> err", err)
-        res.json({ code: code.ineternalError, message: msg.internalServerError })
-    })
+    return event.find(query).populate('participants', '_id imageUrl firstname lastname')
+        .sort({ starttime: sorttype }).then(async (data) => {
+            data.map((el) => {
+                el.participants.friend = false
+            })
+            await res.json({ code: code.ok, data: data })
+        }).catch((err) => {
+            console.log("eventlist -> err", err)
+            res.json({ code: code.ineternalError, message: msg.internalServerError })
+        })
 }
 function joinevent(req, res) {
     let token = req.headers['authorization']
