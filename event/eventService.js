@@ -83,7 +83,7 @@ function eventlist(req, res) {
         .sort({ starttime: sorttype }).then(async (data) => {
             data.map((el) => {
                 // el.participants['friend'] = false
-                if (el.participants != []) {
+                if (el.participants.length != 0) {
                     el.participants.map((par) => {
                         par.friend = false
                     })
