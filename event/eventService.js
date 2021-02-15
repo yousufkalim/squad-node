@@ -88,8 +88,8 @@ function eventlist(req, res) {
                         par[i].friend = false
                     })
                 }
-                if ((data.length-1) == inx) {
-                    await res.json({ code: code.ok, data: data })
+                if ((data.length - 1) == inx) {
+                    res.json({ code: code.ok, data: data })
                 }
             })
         }).catch((err) => {
