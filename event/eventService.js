@@ -7,6 +7,7 @@ const event = require('../schema/event');
 const user = require('../schema/user');
 const userService = require('../user/userService');
 
+
 function addeventunauthorized(req, res) {
     const data = req.body;
     console.log("addevent -> data==============================>", data)
@@ -62,7 +63,7 @@ function eventlist(req, res) {
     var sorttype = '';
     let query = {};
     let radius = (req.query.radius) ? req.query.radius : 100;
-     (req.query.date) ? (query.date=req.query.date+"T00:00:00.000Z") :'';
+    (req.query.date) ? (query.date = req.query.date + "T00:00:00.000Z") : '';
     if (req.query.order == "Asce") {
         sorttype = -1
     } else if (req.query.order == "Desc") {
@@ -83,12 +84,12 @@ function eventlist(req, res) {
         query.level = { $in: req.body.level } : '';
     (req.body.sport) ? query.sport = { $in: req.body.sport } : '';
     console.log("eventlist -> query", query);
-  
+
 
     return event.find(query).populate('participants', '_id imageUrl firstname lastname')
         .sort({ starttime: sorttype }).then((data) => {
             console.log("eventlist -> data", data.length)
-            if(data.length==0){
+            if (data.length == 0) {
                 res.json({ code: code.ok, data: data })
             }
             data.map((el, inx) => {
@@ -118,18 +119,26 @@ function joinevent(req, res) {
     let query = { _id: req.query.eventId },
         update = { $push: { participants: obj.id } },
         options = { new: true };
-    return eventdao.findOneAndUpdate(query, update, options).then((data) => {
-        // console.log("joinevent -> data===============================", data.participants.length, data.seats,data.createdby)
-        if (data.participants.length == data.seats) {
-            userService.eventfullnotification(data.createdby, data.id)
-        }
+    eventdao.findone(query).then((data) => {
+        if ((data.participants.length + 1) == data.seats || (data.participants.length + 1) > data.seats) {
+            return res.json({ code: code.badRequest, msg: msg.eventfull })
+        } else {
+            return eventdao.findOneAndUpdate(query, update, options).then((data) => {
+                // console.log("joinevent -> data===============================", data.participants.length, data.seats,data.createdby)
+                if (data.participants.length == data.seats) {
+                    userService.eventfullnotification(data.createdby, data.id)
 
-        userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
-        res.json({ code: code.ok, msg: msg.eventjoin })
+                }
+
+                userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
+                 res.json({ code: code.ok, msg: msg.eventjoin })
+            })
+        }
     }).catch((err) => {
         console.log("joinevent -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
+
 }
 function eventplayed(req, res) {
     let token = req.headers['authorization']

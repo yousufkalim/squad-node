@@ -22,33 +22,34 @@ function registerUser(req, res) {
     const data = req.body
 
     return userdao.create(data).then(async (result) => {
-        // let link = "http://" + req.headers.host + "/user/validateemail/" + result._id;
+        let link = "http://" + req.headers.host + "/user/validateemail/" + result._id;
 
-        // let data = {
-        //     username: result.name,
-        //     subject: "Validate Your EmailID for SQUAD",
-        //     html: `Hi ${result.name} \n 
-        //     Please click on ${link} to Validate Your EmailID. \n\n 
-        //     If you did not request this, please ignore this email.\n`
-        // }
-        // await util.sendEMail(result.email, data).then((data) => {
-        // return (data == true) ? res.json({ code: code.ok, message: `Link send on ${result.email}` })
-        //     : res.json({ code: code.notImplemented, message: msg.mailNotSent })
-        //     res.json({ code: code.created, message: msg.registered + " " + `Validation Link send on ${result.email}` })
-        // })
-        // if (data == true) {
-        let tokn = util.generateToken(result, process.env.USER_SECRET);
-        var dataresponse = {
-            _id: result._id,
-            firstname: result.firstname,
-            lastname: result.lastname,
-            email: result.email,
-            contactNo: result.contactNo,
-            token: tokn,
-            role: result.role
+        let data = {
+            username: result.name,
+            subject: "Validate Your EmailID for SQUAD",
+            html: `Hi ${result.name} \n 
+            Please click on ${link} to Validate Your EmailID. \n\n 
+            If you did not request this, please ignore this email.\n`
         }
+        await util.sendEMail(result.email, data).then((data) => {
 
-        // }
+            (data == true) ? res.json({ code: code.ok, message: `Link send on ${result.email}` })
+                : res.json({ code: code.notImplemented, message: msg.mailNotSent })
+            res.json({ code: code.created, message: msg.registered + " " + `Validation Link send on ${result.email}` })
+        })
+        if (data == true) {
+            let tokn = util.generateToken(result, process.env.USER_SECRET);
+            var dataresponse = {
+                _id: result._id,
+                firstname: result.firstname,
+                lastname: result.lastname,
+                email: result.email,
+                contactNo: result.contactNo,
+                token: tokn,
+                role: result.role
+            }
+
+        }
         res.json({ code: code.created, message: msg.registered, data: dataresponse })
 
     }).catch((err) => {
@@ -60,7 +61,7 @@ function registerUser(req, res) {
 
 function loginUser(req, res) {
     console.log("loginUser ->   req.body.fcm", req.body.fcm)
-    const fcmToken = req.body.fcm
+    const fcmToken = (req.body.fcm) ? req.body.fcm:'';
     return user.findOne({ email: req.body.email }).then(async (result) => {
         if (result) {
             if (result.active == false) {
@@ -73,29 +74,7 @@ function loginUser(req, res) {
                     update = { $set: { fcmToken: fcmToken } },
                     options = { new: true }
                 user.findOneAndUpdate(query, update, options).then((updateddata) => {
-                    //fcm push notification
-                    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
-                        to: updateddata.fcmToken,//'registration_token',//fcm token
-                        // collapse_key: 'your_collapse_key',
-
-                        notification: {
-                            title: 'Title of your push notification',
-                            body: 'Body of your push notification'
-                        },
-
-                        data: {  //you can send only notification or only data(or include both)
-                            my_key: 'CODERSOCOTH',
-                            my_another_key: 'my another value'
-                        }
-                    };
-                    fcm.send(message, function (err, response) {
-                        if (err) {
-                            console.log("loginUser -> err============================================>", err)
-                            console.log("Something has gone wrong!");
-                        } else {
-                            console.log("Successfully sent with response: ", response);
-                        }
-                    });
+                console.log("loginUser -> updateddata", updateddata)
                 })
                 let tokn = util.generateToken(result, process.env.USER_SECRET)
                 var data = {
@@ -110,7 +89,11 @@ function loginUser(req, res) {
                     gender: (result.gender) ? result.gender : "",
                     imageUrl: (result.imageUrl) ? result.imageUrl : ""
                 }
-                return res.json({ code: code.ok, data: data })
+                if (result.emailvalidate == true) {
+                    return res.json({ code: code.ok, data: data })
+                } else if (result.emailvalidate == false) {
+                    return res.json({ code: code.badRequest, message: msg.validatefirst })
+                }
             } else {
                 return res.json({ code: code.badRequest, message: msg.incorrectpass })
             }
@@ -800,6 +783,7 @@ function rateyounotification(fcmToken) {
     });
 }
 function eventfullnotification(creatorId, eventId) {//sent to event creator
+    console.log("eventfullnotification -> eventfullnotification")
     //creatorId,eventId
     userdao.findone({ _id: creatorId }).then((userdata) => {
         if (userdata.fcmToken) {
@@ -903,6 +887,7 @@ function eventhappens(fcmToken) {//sent to all participants
     });
 }
 function joinevent(creatorsid, usersid, eventsid) {
+    console.log("joinevent -> joinevent")
     userdao.findone({ _id: creatorsid }).then((creatordata) => {
         if (creatordata.fcmToken) {
             userdao.findone({ _id: usersid }).then((userdata) => {
@@ -934,25 +919,6 @@ function joinevent(creatorsid, usersid, eventsid) {
     }).catch((err) => {
 
     })
-    //creatorsid,usersid,eventsid
-    // var message = {
-    //     to: fcmToken,
-    //     notification: {
-    //         title: `${joiner} join ${eventname}`,
-    //     },
-    //     data: {
-    //         my_key: 'CODERSCOTCH',
-    //         my_another_key: 'my another value'
-    //     }
-    // };
-    // fcm.send(message, function (err, response) {
-    //     if (err) {
-    //         console.log("loginUser -> err============================================>", err)
-    //         console.log("Something has gone wrong!");
-    //     } else {
-    //         console.log("Successfully sent with response: ", response);
-    //     }
-    // });
 }
 module.exports = {
     registerUser,
