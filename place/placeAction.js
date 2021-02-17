@@ -7,8 +7,12 @@ function addplace(req, res, next) {
 function placelist(req, res, next) {
     service.placelist(req, res, next)
 }
+function addRating(req, res, next) {
+    service.addRating(req, res, next)
+}
 
 module.exports = {
     addplace,
-    placelist
+    placelist,
+    addRating
 }

@@ -39,7 +39,15 @@ var userSchema = new schema({
     }],
     fcmToken: { type: String },
     friends: [{ type: mongoose.Schema.Types.ObjectId, ref: schmaName.user }],
-    friendRequest: [{ type: mongoose.Schema.Types.ObjectId, ref: schmaName.user }]
+    friendRequest: [{ type: mongoose.Schema.Types.ObjectId, ref: schmaName.user }],
+    rateasplayer: [{
+        ratedwith: { type: Number, min: 0, max: 5 },
+        by: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
+    }],
+    rateasorganizer: [{
+        ratedwith: { type: Number, min: 0, max: 5 },
+        by: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
+    }]
 });
 
 Users = module.exports = mongoose.model(schemaName.user, userSchema)

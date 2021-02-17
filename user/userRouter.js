@@ -100,4 +100,13 @@ userRouter.route('/invitepeople')
     .post([validate.verifyToken], (req, res) => {
         actions.invitepeople(req, res)
     })
+////////////////rate
+userRouter.route('/add/playerrating')
+    .post([validate.verifyToken], (req, res) => {
+        actions.addRatingasplayer(req, res)
+    })
+userRouter.route('/add/organizerrating')
+    .post([validate.verifyToken], (req, res) => {
+        actions.addRatingasorganizer(req, res)
+    })
 module.exports = userRouter;

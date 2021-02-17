@@ -5,6 +5,7 @@ const eventdao = require('./eventDao');
 const event = require('../schema/event');
 // const { options } = require('./eventRouter');
 const user = require('../schema/user');
+const userService = require('../user/userService');
 
 function addeventunauthorized(req, res) {
     const data = req.body;
@@ -58,19 +59,21 @@ function myevents(req, res) {
     })
 }
 function eventlist(req, res) {
-    let query = (req.query.date) ? { date: req.query.date } : {};
+    var sorttype = '';
+    let query = {};
     let radius = (req.query.radius) ? req.query.radius : 100;
+     (req.query.date) ? (query.date=req.query.date+"T00:00:00.000Z") :'';
     if (req.query.order == "Asce") {
-        var sorttype = -1
+        sorttype = -1
     } else if (req.query.order == "Desc") {
-        var sorttype = 1
+        sorttype = 1
     } else {
-        var sorttype = '';
+        sorttype = '';
     }
     (req.query.long && req.query.lat) ? query.location = {
         $nearSphere: {
             $geometry: {
-                type: "Point",
+                type: 'Point',
                 coordinates: [req.query.long, req.query.lat]
             },
             $maxDistance: parseFloat(radius) * 1000
@@ -79,14 +82,19 @@ function eventlist(req, res) {
     (req.body.level) ?
         query.level = { $in: req.body.level } : '';
     (req.body.sport) ? query.sport = { $in: req.body.sport } : '';
+    console.log("eventlist -> query", query);
+  
+
     return event.find(query).populate('participants', '_id imageUrl firstname lastname')
         .sort({ starttime: sorttype }).then((data) => {
+            console.log("eventlist -> data", data.length)
+            if(data.length==0){
+                res.json({ code: code.ok, data: data })
+            }
             data.map((el, inx) => {
                 if (el.participants.length >= 1) {
                     el.participants.map((par, i) => {
                         console.log("eventlist -> par", par)
-                        // par['friend'] = false
-                        // console.log("eventlist -> par", par)
                         let obj = {
                             ...par._doc,
                             friend: false
@@ -99,9 +107,8 @@ function eventlist(req, res) {
                     res.json({ code: code.ok, data: data })
                 }
             })
-            // res.json({ code: code.ok, data: data })
         }).catch((err) => {
-            console.log("eventlist -> err", err)
+            console.log("eventlist -> err========================>", err)
             res.json({ code: code.ineternalError, message: msg.internalServerError })
         })
 }
@@ -112,8 +119,15 @@ function joinevent(req, res) {
         update = { $push: { participants: obj.id } },
         options = { new: true };
     return eventdao.findOneAndUpdate(query, update, options).then((data) => {
+        // console.log("joinevent -> data===============================", data.participants.length, data.seats,data.createdby)
+        if (data.participants.length == data.seats) {
+            userService.eventfullnotification(data.createdby, data.id)
+        }
+
+        userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
         res.json({ code: code.ok, msg: msg.eventjoin })
     }).catch((err) => {
+        console.log("joinevent -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }

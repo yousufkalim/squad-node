@@ -11,6 +11,10 @@ var placeSchema = new schema({
         type: { type: String, default: 'Point' },
         coordinates: [Number] // [  ,<longitude>, <latitude> ]
     },
+    rates: [{
+        ratedwith: { type: Number, min: 0, max: 5 },
+        by: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
+    }],
   
   
 });

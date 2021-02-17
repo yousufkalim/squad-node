@@ -12,5 +12,9 @@ placeRouter.route('/list')
     .get([validate.verifyToken], (req, res, next) => {
         actions.placelist(req, res, next)
     });
+placeRouter.route('/add/rating')
+    .post([validate.verifyToken], (req, res, next) => {
+        actions.addRating(req, res, next)
+    });
 
 module.exports = placeRouter;

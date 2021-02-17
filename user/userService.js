@@ -165,10 +165,15 @@ function forgotPassword(req, res) {
 
                 let data = {
                     username: user.firstname,
-                    subject: "Reset Password Link",
-                    html: `Hi ${user.firstname} \n 
-                    Please click on ${link} to reset your password. \n\n 
-                    If you did not request this, please ignore this email and your password will remain unchanged.\n`
+                    subject: "Reset password instructions",
+                    html: `Hello ${user.firstname}! <br>
+                    Someone has requested a link to change your password.
+                    You can do this through the link below. <br>
+                   
+                    ${link} <br>
+                    If you didn't request this, please ignore this email. <br>
+                    Your password won't change until you access the link above and create a new one.`
+
                 }
                 await util.sendEMail(user.email, data).then((data) => {
                     return (data == true) ? res.json({ code: code.ok, message: `Link send on ${result.email}` })
@@ -203,7 +208,6 @@ function getresetpassword(req, res) {
                     res.redirect('squad://reset/' + user.resetPasswordToken)
                     res.render('reset.jade', { user });
                 }
-
             }
         })
         .catch(err => {
@@ -338,74 +342,7 @@ function socialloginFacebook(req, res) {
     }).catch((err) => {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
-    // const firstname = req.body.firstname.trim(),
-    //     lastname = req.body.lastname.trim(),
-    //     socialId = req.body.id.trim(),
-    //     email = req.body.email.trim(),
-    //     fcmToken = req.body.fcm,
-    //     location = req.body.location
-    // if (req.body.imageUrl) {
 
-    //     imageUrl = req.body.photo.trim()
-    // }
-    // else {
-    //     imageUrl = ""
-    // }
-
-    // let query = { $or: [{ socialId: socialId }, { email: email }] },
-    //     update = { $set: { email: email, firstname: firstname, lastname: lastname, isSocialLogin: true, imageUrl: imageUrl, fcmToken: fcmToken, location: location } },
-    //     options = { new: true }
-    // return userdao.findOneAndUpdate(query, update, options).then(async (result) => {
-    //     if (!result) {
-    //         req.body.isSocialLogin = true
-    //         // req.body.accountType = accountType.CUSTOMER
-    //         const data = {
-    //             isSocialLogin: true,
-    //             firstname: req.body.firstname.trim(),
-    //             lastname: req.body.lastname.trim(),
-    //             socialId: req.body.id.trim(),
-    //             email: req.body.email.trim(),
-    //             location: req.body.location
-    //         }
-    //         if (req.body.photo) {
-
-    //             data.imageUrl = req.body.photo;
-    //         }
-    //         return userdao.create(data).then((user) => {
-    //             let token = util.generateToken(user, process.env.USER_SECRET)
-    //             let data = {
-    //                 _id: user._id,
-    //                 email: user.email,
-
-    //                 // accountType: user.accountType,
-    //                 firstname: user.firstname,
-    //                 lastname: user.lastname,
-    //                 imageUrl: user.imageUrl,
-    //                 token: token
-    //             }
-    //             console.log("socialloginFacebook -> data", data)
-    //             return res.json({ code: code.ok, message: msg.loggedIn, data: data })
-    //         })
-    //     }
-    //     else {
-    //         let token = util.generateToken(result, process.env.USER_SECRET)
-    //         let data = {
-    //             _id: result._id,
-    //             email: result.email,
-    //             // accountType: result.accountType,
-    //             firstname: result.firstname,
-    //             lastname: result.lastname,
-    //             imageUrl: result.imageUrl,
-    //             token: token
-    //         }
-    //         console.log("socialloginFacebook -> data", data)
-    //         return res.json({ code: code.ok, message: msg.loggedIn, data: data })
-    //     }
-    // }).catch((err) => {
-    //     console.log("socialloginFacebook -> catch", err)
-
-    //     res.json({ code: code.ineternalError, message: msg.internalServerError })
-    // })
 }
 function socialloginLinkedin(req, res) {
     const socialId = req.body.id.trim(),
@@ -456,79 +393,24 @@ function socialloginLinkedin(req, res) {
     }).catch((err) => {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
-    // console.log("socialloginLinkedin -> req=================================================", req.body)
-    // const firstname = req.body.firstname.trim(),
-    //     lastname = req.body.lastname.trim(),
-    //     socialId = req.body.socialId.trim(),
-    //     email = req.body.email.trim(),
-    //     fcmToken = req.body.fcm,
-    //     location = req.body.location
-    // if (req.body.imageUrl) {
 
-    //     imageUrl = req.body.imageUrl.trim()
-    // }
-    // else {
-    //     imageUrl = ""
-    // }
-
-    // let query = { $or: [{ socialId: socialId }, { email: email }] },
-    //     update = { $set: { email: email, firstname: firstname, lastname: lastname, isSocialLogin: true, imageUrl: imageUrl, fcmToken: fcmToken, location: location } },
-    //     options = { new: true }
-    // return userdao.findOneAndUpdate(query, update, options).then(async (result) => {
-    //     if (!result) {
-    //         req.body.isSocialLogin = true
-    //         // req.body.accountType = accountType.CUSTOMER
-    //         const data = {
-    //             isSocialLogin: true,
-    //             firstname: req.body.firstname.trim(),
-    //             lastname: req.body.lastname.trim(),
-    //             socialId: req.body.socialId.trim(),
-    //             email: req.body.email.trim(),
-    //             location: req.body.location
-    //         }
-    //         if (req.body.imageUrl) {
-
-    //             data.imageUrl = req.body.imageUrl;
-    //         }
-    //         return userdao.create(data).then((user) => {
-    //             let token = util.generateToken(user, process.env.USER_SECRET)
-    //             let data = {
-    //                 _id: user._id,
-    //                 email: user.email,
-    //                 firstname: user.firstname,
-    //                 lastname: user.lastname,
-    //                 imageUrl: user.imageUrl,
-    //                 token: token
-    //             }
-    //             console.log("socialloginlinkedin -> data----------create", data)
-    //             return res.json({ code: code.ok, message: msg.loggedIn, data: data })
-    //         })
-    //     }
-    //     else {
-    //         let token = util.generateToken(result, process.env.USER_SECRET)
-    //         let data = {
-    //             _id: result._id,
-    //             email: result.email,
-    //             firstname: result.firstname,
-    //             lastname: result.lastname,
-    //             imageUrl: result.imageUrl,
-    //             token: token
-    //         }
-    //         console.log("socialloginlinkedin -> data------------login", data)
-    //         return res.json({ code: code.ok, message: msg.loggedIn, data: data })
-    //     }
-    // }).catch((err) => {
-    //     console.log("socialloginlinkedin -> catch", err)
-
-    //     res.json({ code: code.ineternalError, message: msg.internalServerError })
-    // })
 }
 function getprofile(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
 
     let query = { _id: obj.id }
-    userdao.findone(query).then((data) => {
+    userdao.findone(query).then(async (data) => {
+        let avgrage = 0,
+            rates = (data.rateasplayer) ? data.rateasplayer : [];
+
+        Array.prototype.push.apply(rates, data.rateasorganizer);
+        console.log("getprofile -> rates", rates)
+
+        await rates.forEach(element => {
+            avgrage += element.ratedwith;
+        });
+        console.log("getprofile -> avgrate", avgrage)
         let response = {
             firstname: data.firstname,
             lastname: data.lastname,
@@ -541,13 +423,15 @@ function getprofile(req, res) {
             imageUrl: data.imageUrl,
             role: data.role,
             gender: data.gender,
+
+            rating: (avgrage / rates.length).toFixed(1),
             //default
-            rating: 0,
             events: 0,
             Calendercount: 0
         }
         res.json({ code: code.ok, data: response })
     }).catch((err) => {
+        console.log("getprofile -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
@@ -787,7 +671,7 @@ async function invitemail(users, res, eventlink) {
            Someone invites you to the event click on these link and join ${link}`
         }
         await util.sendEMail(el.email, data).then((data) => {
-
+            invitenotification(users.fcmToken)
             if ((data == true) && (i == (users.length - 1))) {
                 return res.json({ code: code.ok, msg: `Invitation send to ${usersemail}` })
             }
@@ -795,13 +679,280 @@ async function invitemail(users, res, eventlink) {
     })
 }
 async function peoplecount(req, res) {
-    let responseObj= {
+    let responseObj = {
         myFriends: 0,
         peopleImet: 0,
         peopleAround: 10,
         newToSquad: 2,
     }
-    return res.json({ code: code.ok, data:responseObj })
+    return res.json({ code: code.ok, data: responseObj })
+}
+
+
+function addRatingasplayer(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token)
+    const { rate, userId } = req.body;
+    let rating = {
+        by: obj.id,
+        ratedwith: rate
+    }
+    let query = { _id: userId },
+        update = { $push: { "rateasplayer": rating } },
+        options = { new: true };
+    userdao.findOneAndUpdate(query, update, options).then((userdata) => {
+        (userdata.fcmToken) ? rateyounotification(userdata.fcmToken) : '';
+        return res.json({ code: code.ok, msg: msg.addrate })
+    }).catch((err) => {
+        console.log("addRating -> err", err)
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
+
+}
+function addRatingasorganizer(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token)
+    const { rate, userId } = req.body;
+    let rating = {
+        by: obj.id,
+        ratedwith: rate
+    }
+    let query = { _id: userId },
+        update = { $push: { "rateasorganizer": rating } },
+        options = { new: true };
+    userdao.findOneAndUpdate(query, update, options).then((userdata) => {
+        (userdata.fcmToken) ? rateyounotification(userdata.fcmToken) : '';
+        return res.json({ code: code.ok, msg: msg.addrate })
+    }).catch((err) => {
+        console.log("addRating -> err", err)
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function invitenotification(users) {//sent to user
+    var message = {
+        to: users.fcmToken,//fcm token whom you want to notify
+        notification: {
+            title: 'Someone invites you in a game',
+            // body: 'Body of your push notification'
+        },
+        data: {
+            my_key: 'CODERSCOTCH',
+            my_another_key: 'my another value'
+        }
+    };
+    fcm.send(message, function (err, response) {
+        if (err) {
+            console.log("Something has gone wrong!");
+        } else {
+            console.log("Successfully sent with response: ", response);
+        }
+    });
+    // users.map((email) => {
+    //     userdao.findone({ email: email }).then((userdata) => {
+    //         if (userdata.fcmToken) {
+
+    //         }
+    //     }).catch((err) => {
+
+    //     })
+    // })
+
+}
+function rateyounotification(fcmToken) {
+    var message = {
+        to: fcmToken,//fcm token of event creator
+        // collapse_key: 'your_collapse_key',
+
+        notification: {
+            title: 'Someone rate you',
+            // body: 'Body of your push notification'
+        },
+
+        data: {
+            my_key: 'CODERSCOTCH',
+            my_another_key: 'my another value'
+        }
+    };
+    fcm.send(message, function (err, response) {
+        if (err) {
+            console.log("loginUser -> err============================================>", err)
+            console.log("Something has gone wrong!");
+        } else {
+            console.log("Successfully sent with response: ", response);
+        }
+    });
+}
+function eventfullnotification(creatorId, eventId) {//sent to event creator
+    //creatorId,eventId
+    userdao.findone({ _id: creatorId }).then((userdata) => {
+        if (userdata.fcmToken) {
+            var message = {
+                to: userdata.fcmToken,//fcm token of event creator
+                notification: {
+                    title: 'one of your events is full',
+
+                },
+                data: {
+                    my_key: 'CODERSCOTCH',
+                    my_another_key: 'my another value'
+                }
+            };
+            fcm.send(message, function (err, response) {
+                if (err) {
+                    console.log("loginUser -> err============================================>", err)
+                    console.log("Something has gone wrong!");
+                } else {
+                    console.log("Successfully sent with response: ", response);
+                }
+            });
+        }
+
+    }).catch((err) => {
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
+
+}
+
+function ratenotification(fcmToken) {
+    var message = {
+        to: fcmToken,
+        // collapse_key: 'your_collapse_key',
+
+        notification: {
+            title: 'Rate vanue/organizer/playes',
+            // body: 'Body of your push notification'
+        },
+
+        data: {
+            my_key: 'CODERSCOTCH',
+            my_another_key: 'my another value'
+        }
+    };
+    fcm.send(message, function (err, response) {
+        if (err) {
+            console.log("loginUser -> err============================================>", err)
+            console.log("Something has gone wrong!");
+        } else {
+            console.log("Successfully sent with response: ", response);
+        }
+    });
+}
+function eventhournotification(fcmToken, hours) {//sent to event owner
+    var message = {
+        to: fcmToken,//fcm token of event creator
+        // collapse_key: 'your_collapse_key',
+
+        notification: {
+            title: `Event is in ${hours} hourse make youe event public`,
+            // body: 'Body of your push notification'
+        },
+
+        data: {
+            my_key: 'CODERSCOTCH',
+            my_another_key: 'my another value'
+        }
+    };
+    fcm.send(message, function (err, response) {
+        if (err) {
+            console.log("loginUser -> err============================================>", err)
+            console.log("Something has gone wrong!");
+        } else {
+            console.log("Successfully sent with response: ", response);
+        }
+    });
+}
+function eventhappens(fcmToken) {//sent to all participants
+    var message = {
+        to: fcmToken,//fcm token of event creator
+        // collapse_key: 'your_collapse_key',
+
+        notification: {
+            title: 'Event started',
+            // body: 'Body of your push notification'
+        },
+
+        data: {
+            my_key: 'CODERSCOTCH',
+            my_another_key: 'my another value'
+        }
+    };
+    fcm.send(message, function (err, response) {
+        if (err) {
+            console.log("loginUser -> err============================================>", err)
+            console.log("Something has gone wrong!");
+        } else {
+            console.log("Successfully sent with response: ", response);
+        }
+    });
+}
+function joinevent(creatorsid, usersid, eventsid) {
+    userdao.findone({ _id: creatorsid }).then((creatordata) => {
+        if (creatordata.fcmToken) {
+            userdao.findone({ _id: usersid }).then((userdata) => {
+                if (userdata) {
+                    var username = (userdata.firstname) ? userdata.firstname : "Someone";
+                    var message = {
+                        to: creatordata.fcmToken,
+                        notification: {
+
+                            title: `${username} join your event`,
+                        },
+                        data: {
+                            my_key: 'CODERSCOTCH',
+                            my_another_key: 'my another value'
+                        }
+                    };
+                    fcm.send(message, function (err, response) {
+                        if (err) {
+                            console.log("loginUser -> err============================================>", err)
+                            console.log("Something has gone wrong!");
+                        } else {
+                            console.log("Successfully sent with response: ", response);
+                        }
+                    });
+                }
+            })
+        }
+
+    }).catch((err) => {
+
+    })
+    //creatorsid,usersid,eventsid
+    // var message = {
+    //     to: fcmToken,
+    //     notification: {
+    //         title: `${joiner} join ${eventname}`,
+    //     },
+    //     data: {
+    //         my_key: 'CODERSCOTCH',
+    //         my_another_key: 'my another value'
+    //     }
+    // };
+    // fcm.send(message, function (err, response) {
+    //     if (err) {
+    //         console.log("loginUser -> err============================================>", err)
+    //         console.log("Something has gone wrong!");
+    //     } else {
+    //         console.log("Successfully sent with response: ", response);
+    //     }
+    // });
 }
 module.exports = {
     registerUser,
@@ -827,5 +978,11 @@ module.exports = {
     peoplearound,
     invitepeople,
     invitemail,
-    peoplecount
+    peoplecount,
+    invitenotification,
+    rateyounotification,
+    addRatingasplayer,
+    addRatingasorganizer,
+    joinevent,
+    eventfullnotification
 }

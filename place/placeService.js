@@ -13,17 +13,38 @@ function addplace(req, res) {
     })
 }
 function placelist(req, res) {
-    let query = { sportId: req.query.sportId }
+    let query = (req.query.sportId) ? { sportId: req.query.sportId } : {};
     return placedao.find(query).then((data) => {
         res.json({ code: code.ok, data: data })
     }).catch((err) => {
+        console.log("placelist -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
 
+function addRating(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token)
+    const { rate, placeId } = req.body;
+    let rating = {
+        by: obj.id,
+        ratedwith: rate
+    }
+    let query = { _id: placeId },
+        update = { $push: { "rates": rating } },
+        options = { new: true };
+    placedao.findOneAndUpdate(query, update, options).then((userdata) => {
+        (userdata.fcmToken) ? rateyounotification(userdata.fcmToken) : '';
+        return res.json({ code: code.ok, msg: msg.addrate })
+    }).catch((err) => {
+        console.log("addRating -> err", err)
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
 
+}
 module.exports = {
     addplace,
-    placelist
+    placelist,
+    addRating
 
 }

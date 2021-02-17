@@ -68,6 +68,12 @@ function invitepeople(req, res) {
 function peoplecount(req, res) {
     service.peoplecount(req, res)
 }
+function addRatingasplayer(req, res) {
+    service.addRatingasplayer(req, res)
+}
+function addRatingasorganizer(req, res) {
+    service.addRatingasorganizer(req, res)
+}
 module.exports = {
     registerUser,
     loginUser,
@@ -90,5 +96,7 @@ module.exports = {
     removepreference,
     peoplearound,
     invitepeople,
-    peoplecount
+    peoplecount,
+    addRatingasplayer,
+    addRatingasorganizer
 }

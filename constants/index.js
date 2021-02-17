@@ -35,6 +35,7 @@ messages = {
     latlongincorrect:"longitude/latitude is out of bounds",
     preferancedeleted:"Preferance Removed",
     placeadded:"Place added",
+    addrate:"Rating Added",
     invalidEmailPass: "Email or Password is incorrect"//'Invalid email or password, Email_format:standard email format. Password_format: between 8 to 20 character with number and special character eg. Superm@n123',
 }
 schemas = {
