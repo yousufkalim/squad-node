@@ -61,7 +61,7 @@ function registerUser(req, res) {
 
 function loginUser(req, res) {
     console.log("loginUser ->   req.body.fcm", req.body.fcm)
-    const fcmToken = (req.body.fcm) ? req.body.fcm:'';
+    const fcmToken = (req.body.fcm) ? req.body.fcm : '';
     return user.findOne({ email: req.body.email }).then(async (result) => {
         if (result) {
             if (result.active == false) {
@@ -74,7 +74,7 @@ function loginUser(req, res) {
                     update = { $set: { fcmToken: fcmToken } },
                     options = { new: true }
                 user.findOneAndUpdate(query, update, options).then((updateddata) => {
-                console.log("loginUser -> updateddata", updateddata)
+                    console.log("loginUser -> updateddata", updateddata)
                 })
                 let tokn = util.generateToken(result, process.env.USER_SECRET)
                 var data = {
@@ -551,7 +551,10 @@ function getvalidateemail(req, res) {
     userdao.findone(query)
         .then((user) => {
             if (!user) return res.json({ code: code.unAuthorized, message: msg.notFound })
-            else res.render('validateemail.jade', { user });
+            else {
+                res.redirect('squad://authenticate/' + user._id)
+                res.render('validateemail.jade', { user });
+            }
         })
         .catch(err => {
             console.log("getresetpassword -> err", err)
