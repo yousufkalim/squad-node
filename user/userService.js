@@ -184,18 +184,19 @@ function getresetpassword(req, res) {
             if (!user) return res.json({ code: code.unAuthorized, message: msg.tokeninvalidorexpire })
             else {
                 console.log("getresetpassword -> user.resetPasswordToken", user.resetPasswordToken)
-                if (browserName == "Firefox") {
-                    res.redirect('squad://reset/' + user.resetPasswordToken)
-                    res.render('reset.jade', { user });
+                res.redirect('squad://reset/' + user.resetPasswordToken)
+                // if (browserName == "Firefox") {
+                //     res.redirect('squad://reset/' + user.resetPasswordToken)
+                //     res.render('reset.jade', { user });
 
-                } else if (browserName == "Chrome") {
-                    res.redirect('intent://reset/' + user.resetPasswordToken + '/#Intent;scheme=squad;package=com.squadxyz')
+                // } else if (browserName == "Chrome") {
+                //     res.redirect('intent://reset/' + user.resetPasswordToken + '/#Intent;scheme=squad;package=com.squadxyz')
 
-                    res.render('reset.jade', { user });
-                } else {
-                    res.redirect('squad://reset/' + user.resetPasswordToken)
-                    res.render('reset.jade', { user });
-                }
+                //     res.render('reset.jade', { user });
+                // } else {
+                //     res.redirect('squad://reset/' + user.resetPasswordToken)
+                //     res.render('reset.jade', { user });
+                // }
             }
         })
         .catch(err => {
@@ -616,25 +617,6 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
             }
         ],
     }
-    // let query = {};
-    // let radius = (req.query.radius) ? req.query.radius : 100;
-    // (req.query.long && req.query.lat) ? query.location = {
-    //     $nearSphere: {
-    //         $geometry: {
-    //             type: 'Point',
-    //             coordinates: [req.query.long, req.query.lat]
-    //         },
-    //         $maxDistance: parseFloat(radius) * 1000
-    //     }
-    // } : '';
-    // (req.body.level) ?
-    //     query.level = { $elemMatch: { "level": level } } : '';
-    // (req.body.sportId) ? query.preferences = {
-    //     $elemMatch: { "sportId": sportId }
-    // } : '';
-    // (req.body.gender) ? query.gender = req.body.gender : '';
-    // console.log("eventlist -> query", query);
-
     user.find(query).exec((err, data) => {
         if (err) {
             console.log("peoplearound -> err", err)
