@@ -2,7 +2,8 @@ const express = require("express")
 const app = express();
 const mongoose = require("mongoose")
 const morgan = require('morgan');
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
+const eventservice = require('./event/eventService')
 var cors = require('cors')
 const env = require('dotenv').config()
 app.use(cors({ credentials: true, origin: true }))
@@ -38,6 +39,15 @@ const whitelist = ['http://localhost:4200'];
 var socket = require('socket.io')(http);
 const io = socket.listen(server)
 require('./socket/socketHandler')(io)
+const intervalObj = setInterval(() => {
+    eventservice.eventsnotification()
+    console.log('interviewing the interval');
+}, 60000);
+// function eventnotification() {
+//     console.log("called")
+//     // eventservice.eventsnotification()
+// }
 
-
+// setTimeout(eventnotification, 1500);
+// clearInterval(intervalObj);
 

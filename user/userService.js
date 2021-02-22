@@ -15,6 +15,11 @@ const { response } = require('express');
 var serverKey = process.env.SERVER_KEY;
 var fcm = new FCM(serverKey);
 var ObjectId = require('mongodb').ObjectID;
+
+
+
+
+
 function registerUser(req, res) {
     // const newpass = util.generateRandomPassword().toUpperCase()
     const hash = bcrypt.hashSync(req.body.password, bcrypt.genSaltSync(10))
@@ -150,7 +155,7 @@ function forgotPassword(req, res) {
                     username: user.firstname,
                     subject: "Reset password instructions",
                     html: `Hello ${user.firstname}! <br>
-                    Someone has requested a link to change your password.
+                    Someone has requested to change your password.
                     You can do this through the link below. <br>
                    
                     ${link} <br>
@@ -597,23 +602,40 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
         req.query.radius = 100
     }
     let query = {
-        $and: [{ preferences: { $elemMatch: { "sportId": sportId } } },
-        { preferences: { $elemMatch: { "level": level } } },
-        { gender: gender },
-        {
-            location: {
-                $nearSphere: {
-                    $geometry: { type: "Point", coordinates: [req.query.long, req.query.lat] },
-                    $maxDistance: parseFloat(req.query.radius) * 1000
+        $and: [
+            // { preferences: { $elemMatch: { "sportId": { $in: sportId } } } },
+            { preferences: { $elemMatch: { "level": { $in: level } } } },
+            { gender: gender },
+            {
+                location: {
+                    $nearSphere: {
+                        $geometry: { type: "Point", coordinates: [req.query.long, req.query.lat] },
+                        $maxDistance: parseFloat(req.query.radius) * 1000
+                    }
                 }
             }
-        }
-
         ],
-
     }
-    user.find(query
-    ).exec((err, data) => {
+    // let query = {};
+    // let radius = (req.query.radius) ? req.query.radius : 100;
+    // (req.query.long && req.query.lat) ? query.location = {
+    //     $nearSphere: {
+    //         $geometry: {
+    //             type: 'Point',
+    //             coordinates: [req.query.long, req.query.lat]
+    //         },
+    //         $maxDistance: parseFloat(radius) * 1000
+    //     }
+    // } : '';
+    // (req.body.level) ?
+    //     query.level = { $elemMatch: { "level": level } } : '';
+    // (req.body.sportId) ? query.preferences = {
+    //     $elemMatch: { "sportId": sportId }
+    // } : '';
+    // (req.body.gender) ? query.gender = req.body.gender : '';
+    // console.log("eventlist -> query", query);
+
+    user.find(query).exec((err, data) => {
         if (err) {
             console.log("peoplearound -> err", err)
             return res.json({ code: code.internalError, message: msg.internalServerError })
@@ -658,7 +680,7 @@ async function invitemail(res, req, users, eventId, userId) {
            Someone invites you to the event click on these link and join ${link}`
         }
         await util.sendEMail(el.email, data).then((data) => {
-            let fcm_token=(users.fcmToken)?users.fcmToken:'';
+            let fcm_token = (users.fcmToken) ? users.fcmToken : '';
             invitenotification(fcm_token)
             if ((data == true) && (i == (users.length - 1))) {
                 return res.json({ code: code.ok, msg: `Invitation send to ${usersemail}` })
@@ -815,78 +837,32 @@ function eventfullnotification(creatorId, eventId) {//sent to event creator
     })
 
 }
+function eventhournotification(adminId, hours) {//sent to event owner
+    user.findById({ _id: adminId }).then((data) => {
+        let fcmtoken = (data.fcmToken) ? data.fcmToken : ""
+        console.log("eventhournotification -> data", fcmtoken)
+        var message = {
+            to: fcmtoken,
+            notification: {
+                title: `Event is in ${hours} hourse make your event public`,
+            },
+            data: {
+                my_key: 'CODERSCOTCH',
+                my_another_key: 'my another value'
+            }
+        };
+        fcm.send(message, function (err, response) {
+            if (err) {
+                console.log("loginUser -> err============================================>", err)
+                console.log("Something has gone wrong!");
+            } else {
+                console.log("Successfully sent with response: ", response);
+            }
+        });
+    }).catch((err) => {
 
-function ratenotification(fcmToken) {
-    var message = {
-        to: fcmToken,
-        // collapse_key: 'your_collapse_key',
+    })
 
-        notification: {
-            title: 'Rate vanue/organizer/playes',
-            // body: 'Body of your push notification'
-        },
-
-        data: {
-            my_key: 'CODERSCOTCH',
-            my_another_key: 'my another value'
-        }
-    };
-    fcm.send(message, function (err, response) {
-        if (err) {
-            console.log("loginUser -> err============================================>", err)
-            console.log("Something has gone wrong!");
-        } else {
-            console.log("Successfully sent with response: ", response);
-        }
-    });
-}
-function eventhournotification(fcmToken, hours) {//sent to event owner
-    var message = {
-        to: fcmToken,//fcm token of event creator
-        // collapse_key: 'your_collapse_key',
-
-        notification: {
-            title: `Event is in ${hours} hourse make youe event public`,
-            // body: 'Body of your push notification'
-        },
-
-        data: {
-            my_key: 'CODERSCOTCH',
-            my_another_key: 'my another value'
-        }
-    };
-    fcm.send(message, function (err, response) {
-        if (err) {
-            console.log("loginUser -> err============================================>", err)
-            console.log("Something has gone wrong!");
-        } else {
-            console.log("Successfully sent with response: ", response);
-        }
-    });
-}
-function eventhappens(fcmToken) {//sent to all participants
-    var message = {
-        to: fcmToken,//fcm token of event creator
-        // collapse_key: 'your_collapse_key',
-
-        notification: {
-            title: 'Event started',
-            // body: 'Body of your push notification'
-        },
-
-        data: {
-            my_key: 'CODERSCOTCH',
-            my_another_key: 'my another value'
-        }
-    };
-    fcm.send(message, function (err, response) {
-        if (err) {
-            console.log("loginUser -> err============================================>", err)
-            console.log("Something has gone wrong!");
-        } else {
-            console.log("Successfully sent with response: ", response);
-        }
-    });
 }
 function joinevent(creatorsid, usersid, eventsid) {
     console.log("joinevent -> joinevent")
@@ -922,6 +898,60 @@ function joinevent(creatorsid, usersid, eventsid) {
 
     })
 }
+function ratenotification(fcmToken) {
+    var message = {
+        to: fcmToken,
+        // collapse_key: 'your_collapse_key',
+
+        notification: {
+            title: 'Rate vanue/organizer/playes',
+            // body: 'Body of your push notification'
+        },
+
+        data: {
+            my_key: 'CODERSCOTCH',
+            my_another_key: 'my another value'
+        }
+    };
+    fcm.send(message, function (err, response) {
+        if (err) {
+            console.log("loginUser -> err============================================>", err)
+            console.log("Something has gone wrong!");
+        } else {
+            console.log("Successfully sent with response: ", response);
+        }
+    });
+}
+
+function eventhappens(participantIds) {//sent to all participants
+    // participantIds
+    participantIds.map((usr) => {
+        user.findById({ _id: usr }).then((dta) => {
+            var message = {
+                to: (dta.fcmToken) ? dta.fcmToken : '',
+                notification: {
+                    title: 'One of your events started',
+                },
+                data: {
+                    my_key: 'CODERSCOTCH',
+                    my_another_key: 'my another value'
+                }
+            };
+            fcm.send(message, function (err, response) {
+                if (err) {
+                    console.log("loginUser -> err============================================>", err)
+                    console.log("Something has gone wrong!");
+                } else {
+                    console.log("Successfully sent with response: ", response);
+                }
+            });
+        }).catch((err) => {
+
+        })
+    })
+
+}
+
 module.exports = {
     registerUser,
     // updateProfile,
@@ -953,5 +983,8 @@ module.exports = {
     addRatingasorganizer,
     joinevent,
     eventfullnotification,
-    getinvite
+    getinvite,
+    eventhournotification,
+    ratenotification,
+    eventhappens
 }

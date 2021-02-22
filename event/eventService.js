@@ -3,9 +3,10 @@ const code = require('../constants').http_codes;
 const msg = require('../constants').messages;
 const eventdao = require('./eventDao');
 const event = require('../schema/event');
-// const { options } = require('./eventRouter');
+
 const user = require('../schema/user');
 const userService = require('../user/userService');
+const { json } = require('express');
 
 
 function addeventunauthorized(req, res) {
@@ -131,7 +132,7 @@ function joinevent(req, res) {
                 }
 
                 userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
-                 res.json({ code: code.ok, msg: msg.eventjoin })
+                res.json({ code: code.ok, msg: msg.eventjoin })
             })
         }
     }).catch((err) => {
@@ -215,7 +216,44 @@ function eventinvitation(req, res) {
     console.log("eventinvitation", req.body)
 
 }
-
+function eventsnotification(req, re) {
+    return eventdao.find().then((evetlist) => {
+        evetlist.map((eve) => {
+            let date = parseISOString(eve.starttime),
+                d = new Date(date),
+                twoDaysAgo = d.setDate(d.getDate() - 2),
+                oneDaysAgo = d.setDate(d.getDate() - 1);
+            twoDaysAgo = new Date(twoDaysAgo).toISOString();
+            oneDaysAgo = new Date(oneDaysAgo).toISOString();
+            var currentdate = new Date();
+            currentdate = currentdate.toISOString();
+            if (twoDaysAgo == currentdate) {
+                userService.eventhournotification(eve.createdby, 48)
+                console.log("------------------------------", eve.createdby)
+                //notification of 48 hours
+            }
+            else if (oneDaysAgo == currentdate) {
+                userService.eventhournotification(eve.createdby, 24)
+                console.log("------------------------------", eve.createdby)
+                //notification of 24 hours
+            }
+            else if (d == currentdate) {
+                userService.eventhappens(eve.participants)
+                console.log("------------------------------", eve.participants)
+            }
+            else {
+                console.log("------------------------------", eve.createdby)
+            }
+        })
+    }).catch((err) => {
+        console.log("eventsnotification -> err", err)
+    })
+}
+function parseISOString(s) {
+    var date = new Date(s);
+    let finaldate = date.toString()
+    return finaldate;
+}
 module.exports = {
     addevent,
     eventdetail,
@@ -227,5 +265,7 @@ module.exports = {
     eventinvitation,
     updateevent,
     preferenceBasedList,
-    addeventunauthorized
+    addeventunauthorized,
+    parseISOString,
+    eventsnotification
 }
