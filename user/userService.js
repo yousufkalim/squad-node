@@ -658,8 +658,8 @@ async function invitemail(res, req, users, eventId, userId) {
            Someone invites you to the event click on these link and join ${link}`
         }
         await util.sendEMail(el.email, data).then((data) => {
-
-            this.invitenotification(users.fcmToken)
+            let fcm_token=(users.fcmToken)?users.fcmToken:'';
+            invitenotification(fcm_token)
             if ((data == true) && (i == (users.length - 1))) {
                 return res.json({ code: code.ok, msg: `Invitation send to ${usersemail}` })
             }
