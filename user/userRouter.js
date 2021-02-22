@@ -109,4 +109,8 @@ userRouter.route('/add/organizerrating')
     .post([validate.verifyToken], (req, res) => {
         actions.addRatingasorganizer(req, res)
     })
+userRouter.route('/getinvite/:eventId/:userId')
+    .get([], (req, res) => {
+        actions.getinvite(req, res)
+    })
 module.exports = userRouter;

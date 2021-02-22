@@ -636,7 +636,7 @@ function invitepeople(req, res) {
             }
             obj.push(info)
             if (i == (users.length - 1)) {
-                this.invitemail(obj, res, req.body.eventlink)
+                this.invitemail(res, req, obj, eventId, data._id)
 
                 // return obj
             }
@@ -645,11 +645,12 @@ function invitepeople(req, res) {
         })
     })
 }
-async function invitemail(users, res, eventlink) {
-    let usersemail = []
+async function invitemail(res, req, users, eventId, userId) {
+    let usersemail = [];
+    let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + userId;
     users.map(async (el, i) => {
         usersemail.push(el.email)
-        let link = eventlink;
+        // let link = eventlink;
         let data = {
             username: el.firstname,
             subject: "Invitation Link",
@@ -657,13 +658,20 @@ async function invitemail(users, res, eventlink) {
            Someone invites you to the event click on these link and join ${link}`
         }
         await util.sendEMail(el.email, data).then((data) => {
-            invitenotification(users.fcmToken)
+
+            this.invitenotification(users.fcmToken)
             if ((data == true) && (i == (users.length - 1))) {
                 return res.json({ code: code.ok, msg: `Invitation send to ${usersemail}` })
             }
         })
     })
 }
+async function getinvite(req, res) {
+    console.log("getinvite -> req.headers.eventId", req.params.eventId, req.params.userId)
+    res.redirect('squad://join/' + req.params.userId + '/' + req.params.eventId)//deeplinking url for join event
+}
+
+
 async function peoplecount(req, res) {
     let responseObj = {
         myFriends: 0,
@@ -732,8 +740,9 @@ function addRatingasorganizer(req, res) {
 
 
 function invitenotification(users) {//sent to user
+    console.log("invitenotification -> users", users)
     var message = {
-        to: users.fcmToken,//fcm token whom you want to notify
+        to: (users.fcmToken) ? users.fcmToken : '',//fcm token whom you want to notify
         notification: {
             title: 'Someone invites you in a game',
             // body: 'Body of your push notification'
@@ -750,16 +759,6 @@ function invitenotification(users) {//sent to user
             console.log("Successfully sent with response: ", response);
         }
     });
-    // users.map((email) => {
-    //     userdao.findone({ email: email }).then((userdata) => {
-    //         if (userdata.fcmToken) {
-
-    //         }
-    //     }).catch((err) => {
-
-    //     })
-    // })
-
 }
 function rateyounotification(fcmToken) {
     var message = {
@@ -953,5 +952,6 @@ module.exports = {
     addRatingasplayer,
     addRatingasorganizer,
     joinevent,
-    eventfullnotification
+    eventfullnotification,
+    getinvite
 }

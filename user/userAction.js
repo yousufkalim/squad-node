@@ -74,6 +74,9 @@ function addRatingasplayer(req, res) {
 function addRatingasorganizer(req, res) {
     service.addRatingasorganizer(req, res)
 }
+function getinvite(req, res) {
+    service.getinvite(req, res)
+}
 module.exports = {
     registerUser,
     loginUser,
@@ -98,5 +101,6 @@ module.exports = {
     invitepeople,
     peoplecount,
     addRatingasplayer,
-    addRatingasorganizer
+    addRatingasorganizer,
+    getinvite
 }
