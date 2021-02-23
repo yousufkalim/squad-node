@@ -834,7 +834,6 @@ function acceptrequest(req, res) {
 function declinerequest(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);//removefrom friendreques 
-        obj.id="60228c925888e11ddb204918"
     const { userId } = req.body;//whome request user ant to decline remove from sent
     let query = { _id: obj.id },
         update = { $pull: { friendRequest: userId } },
