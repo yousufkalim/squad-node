@@ -734,7 +734,27 @@ function peoplenewtosquad(req, res) {
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
 }
+function peopleimet(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token);
+    let query = { _id: obj.id };
+    let userIds = []
+    user.findOne(query).populate('participatedin.eventId', '_id participants').then((userdata) => {
+        userdata.participatedin.map((el) => {
+            el.eventId.participants.map((userid) => {
+                userIds.push(userid)
+            })
+        })
+        let unique = userIds.filter((it, i, ar) => ar.indexOf(it) === i);
+        user.find({ _id: { $in: unique } },'_id firstname lastname imageUrl email').then((users) => {
+            return res.json({ code: code.ok, data: users })
+        })
 
+
+    }).catch((err) => {
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
+}
 
 
 
@@ -974,5 +994,6 @@ module.exports = {
     eventhournotification,
     ratenotification,
     eventhappens,
-    peoplenewtosquad
+    peoplenewtosquad,
+    peopleimet
 }

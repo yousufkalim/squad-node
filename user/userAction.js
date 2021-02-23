@@ -80,6 +80,9 @@ function getinvite(req, res) {
 function peoplenewtosquad(req, res) {
     service.peoplenewtosquad(req, res)
 }
+function peopleimet(req, res) {
+    service.peopleimet(req, res)
+}
 module.exports = {
     registerUser,
     loginUser,
@@ -106,5 +109,6 @@ module.exports = {
     addRatingasplayer,
     addRatingasorganizer,
     getinvite,
-    peoplenewtosquad
+    peoplenewtosquad,
+    peopleimet
 }
