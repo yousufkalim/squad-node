@@ -746,7 +746,8 @@ function peopleimet(req, res) {
             })
         })
         let unique = userIds.filter((it, i, ar) => ar.indexOf(it) === i);
-        user.find({ _id: { $in: unique } },'_id firstname lastname imageUrl email').then((users) => {
+        unique = removeItemOnce(unique, obj._id)
+        user.find({ _id: { $in: unique } }, '_id firstname lastname imageUrl email').then((users) => {
             return res.json({ code: code.ok, data: users })
         })
 
@@ -755,7 +756,13 @@ function peopleimet(req, res) {
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
 }
-
+function removeItemOnce(arr, value) {
+    var index = arr.indexOf(value);
+    if (index > -1) {
+        arr.splice(index, 1);
+    }
+    return arr;
+}
 
 
 
