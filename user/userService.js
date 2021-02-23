@@ -748,7 +748,7 @@ function peopleimet(req, res) {
                 userIds = removeItemOnce(userIds, obj.id)
             }
         })
-        let unique = unique.filter((it, i, ar) => ar.indexOf(it) === i);
+        let unique = userIds.filter((it, i, ar) => ar.indexOf(it) === i);
         user.find({ _id: { $in: unique } }, '_id firstname lastname imageUrl email').then((users) => {
             return res.json({ code: code.ok, data: users })
         })
