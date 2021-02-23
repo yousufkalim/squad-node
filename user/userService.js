@@ -764,17 +764,15 @@ function peopleimet(req, res) {
 function listforfriendrequest(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);
+    let excludeIds = [];
     userdao.findone({ _id: obj.id }).then((data) => {
-        console.log("listforfriendrequest -> data", data.friends)
-        if (data.friends = []) {
-            user.find({ _id: { $nin: obj.id } }, '_id firstname lastname imageUrl').then((userdata) => {
-                return res.json({ code: code.ok, data: userdata })
-            })
-        } else {
-            user.find({ _id: { $nin: [data.friends, obj.id] } }, '_id firstname lastname imageUrl').then((userdata) => {
-                return res.json({ code: code.ok, data: userdata })
-            })
-        }
+        excludeIds.push(ObjectId(obj.id))
+        data.friends.map(id => excludeIds.push(ObjectId(id)))
+        data.sentRequest.map(id => excludeIds.push(ObjectId(id)))
+        data.friendRequest.map(id => excludeIds.push(ObjectId(id)))
+        user.find({ _id: { $nin: excludeIds } }, '_id firstname lastname imageUrl').then((userdata) => {
+            return res.json({ code: code.ok, data: userdata })
+        })
     }).catch((err) => {
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
