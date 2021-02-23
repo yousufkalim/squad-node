@@ -47,6 +47,9 @@ var userSchema = new schema({
     rateasorganizer: [{
         ratedwith: { type: Number, min: 0, max: 5 },
         by: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
+    }],
+    participatedin: [{
+        eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event }
     }]
 });
 

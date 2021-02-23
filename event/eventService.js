@@ -7,6 +7,7 @@ const event = require('../schema/event');
 const user = require('../schema/user');
 const userService = require('../user/userService');
 const { json } = require('express');
+const userDao = require('../user/userDao');
 
 
 function addeventunauthorized(req, res) {
@@ -125,14 +126,18 @@ function joinevent(req, res) {
             return res.json({ code: code.badRequest, msg: msg.eventfull })
         } else {
             return eventdao.findOneAndUpdate(query, update, options).then((data) => {
-                // console.log("joinevent -> data===============================", data.participants.length, data.seats,data.createdby)
                 if (data.participants.length == data.seats) {
                     userService.eventfullnotification(data.createdby, data.id)
-
                 }
-
-                userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
-                res.json({ code: code.ok, msg: msg.eventjoin })
+                //have to event id in users as well
+                let query1 = { _id: obj.id },
+                    update1 = { $push: { participatedin: { eventId: data._id } } },
+                    options1 = { new: true };
+                userDao.findOneAndUpdate(query1, update1, options1).then((userdata) => {
+                    console.log("joinevent -> userdata", userdata)
+                    userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
+                    res.json({ code: code.ok, msg: msg.eventjoin })
+                })
             })
         }
     }).catch((err) => {

@@ -96,6 +96,10 @@ userRouter.route('/peoplearound')
     .get([validate.verifyToken], (req, res) => {
         actions.peoplearound(req, res)
     })
+userRouter.route('/peoplenewtosquad')
+    .get([validate.verifyToken], (req, res) => {
+        actions.peoplenewtosquad(req, res)
+    })
 userRouter.route('/invitepeople')
     .post([validate.verifyToken], (req, res) => {
         actions.invitepeople(req, res)

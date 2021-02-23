@@ -596,15 +596,13 @@ async function removepreference(req, res) {
     })
 }
 async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsphere" } )
-
-
-    const { sportId, level, gender } = req.body;
+    const { eventId, level, gender } = req.body;
     if (!req.query.radius) {
         req.query.radius = 100
     }
     let query = {
         $and: [
-            // { preferences: { $elemMatch: { "sportId": { $in: sportId } } } },
+            { participatedin: { $elemMatch: { "eventId": { $nin: eventId } } } },
             { preferences: { $elemMatch: { "level": { $in: level } } } },
             { gender: gender },
             {
@@ -674,8 +672,6 @@ async function getinvite(req, res) {
     console.log("getinvite -> req.headers.eventId", req.params.eventId, req.params.userId)
     res.redirect('squad://join/' + req.params.userId + '/' + req.params.eventId)//deeplinking url for join event
 }
-
-
 async function peoplecount(req, res) {
     let responseObj = {
         myFriends: 0,
@@ -685,8 +681,6 @@ async function peoplecount(req, res) {
     }
     return res.json({ code: code.ok, data: responseObj })
 }
-
-
 function addRatingasplayer(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token)
@@ -727,7 +721,19 @@ function addRatingasorganizer(req, res) {
     })
 
 }
+function peoplenewtosquad(req, res) {
+    let query = {
+        participatedin: { $exists: true, $size: 0 }
+    };
+    userdao.find(query).then((userdata) => {
+        console.log("peoplenewtosquad -> userdata", userdata)
+        return res.json({ code: code.ok, data: userdata, count: userdata.length })
 
+    }).catch((err) => {
+        console.log("peoplenewtosquad -> err", err)
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
+}
 
 
 
@@ -847,7 +853,6 @@ function eventhournotification(adminId, hours) {//sent to event owner
 
 }
 function joinevent(creatorsid, usersid, eventsid) {
-    console.log("joinevent -> joinevent")
     userdao.findone({ _id: creatorsid }).then((creatordata) => {
         if (creatordata.fcmToken) {
             userdao.findone({ _id: usersid }).then((userdata) => {
@@ -968,5 +973,6 @@ module.exports = {
     getinvite,
     eventhournotification,
     ratenotification,
-    eventhappens
+    eventhappens,
+    peoplenewtosquad
 }

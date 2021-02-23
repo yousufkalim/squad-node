@@ -13,7 +13,10 @@ app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }))
 mongoose.connect(process.env.DBURL, { useNewUrlParser: true, useUnifiedTopology: true }, function (err) {
     if (err) {
         console.log("err-----------------------------------------", err)
-
+        
+    }else{
+        console.log("process.env.DBURL", process.env.DBURL)
+        
     }
 });
 app.use(morgan('combined'));
@@ -23,11 +26,13 @@ app.set('views', './views');
 app.set('view-engine', 'jade');
 const http = require('http');
 const chat = require("./schema/chat");
+// const eventDao = require("./event/eventDao");
+// const userDao = require("./user/userDao");
 const port = process.env.PORT;
 console.log('Magic happens on port', process.env.PORT);
 var server = app.listen(port);
 var router = express.Router();
-
+// var ObjectId = require('mongodb').ObjectID;
 // var io = require('socket.io').listen(server);
 const whitelist = ['http://localhost:4200'];
 //app.use(cors({credentials: true, origin: true}))
@@ -39,15 +44,10 @@ const whitelist = ['http://localhost:4200'];
 var socket = require('socket.io')(http);
 const io = socket.listen(server)
 require('./socket/socketHandler')(io)
-const intervalObj = setInterval(() => {
-    eventservice.eventsnotification()
-    console.log('interviewing the interval');
-}, 60000);
-// function eventnotification() {
-//     console.log("called")
-//     // eventservice.eventsnotification()
-// }
 
-// setTimeout(eventnotification, 1500);
-// clearInterval(intervalObj);
+//notification for event happening 
+// const intervalObj = setInterval(() => {
+//     eventservice.eventsnotification()
+//     console.log('interviewing the interval');
+// }, 60000);
 
