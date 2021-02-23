@@ -684,22 +684,27 @@ async function peoplecount(req, res) {
 function addRatingasplayer(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token)
-    const { rate, userId } = req.body;
-    let rating = {
-        by: obj.id,
-        ratedwith: rate
-    }
-    let query = { _id: userId },
-        update = { $push: { "rateasplayer": rating } },
-        options = { new: true };
-    userdao.findOneAndUpdate(query, update, options).then((userdata) => {
-        (userdata.fcmToken) ? rateyounotification(userdata.fcmToken) : '';
-        return res.json({ code: code.ok, msg: msg.addrate })
-    }).catch((err) => {
-        console.log("addRating -> err", err)
-        return res.json({ code: code.internalError, message: msg.internalServerError })
+    const { ratearray } = req.body;
+    ratearray.map((ele, index) => {
+        console.log("addRatingasplayer -> ele", ratearray.length, index + 1)
+        let rating = {
+            by: obj.id,
+            ratedwith: ele.rate
+        }
+        let query = { _id: ele.userId },
+            update = { $push: { "rateasplayer": rating } },
+            options = { new: true };
+        userdao.findOneAndUpdate(query, update, options).then((userdata) => {
+            (userdata.fcmToken) ? rateyounotification(userdata.fcmToken) : '';
+            // return res.json({ code: code.ok, msg: msg.addrate })
+        }).catch((err) => {
+            console.log("addRating -> err", err)
+            // return res.json({ code: code.internalError, message: msg.internalServerError })
+        })
+        if (ratearray.length == index + 1) {
+            return res.json({ code: code.ok, msg: msg.addrate })
+        }
     })
-
 }
 function addRatingasorganizer(req, res) {
     let token = req.headers['authorization'],
@@ -840,7 +845,7 @@ function declinerequest(req, res) {
         options = { new: true };
     userdao.findOneAndUpdate(query, update, options).then((acceptby) => {
         let query1 = { _id: userId },
-            update1 = {$pull: { sentRequest: obj.id } },
+            update1 = { $pull: { sentRequest: obj.id } },
             options1 = { new: true };
         userdao.findOneAndUpdate(query1, update1, options1).then((acceptof) => {
             return res.json({ code: code.ok, msg: "request declined" })
