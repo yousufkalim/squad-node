@@ -740,19 +740,21 @@ function peopleimet(req, res) {
     let query = { _id: obj.id };
     let userIds = []
     user.findOne(query).populate('participatedin.eventId', '_id participants').then((userdata) => {
-        userdata.participatedin.map((el) => {
+        userdata.participatedin.map((el, index) => {
             el.eventId.participants.map((userid) => {
                 userIds.push(userid)
             })
+            if (userdata.participatedin.length == index + 1) {
+                unique = removeItemOnce(unique, obj.id)
+            }
         })
-        let unique = removeItemOnce(unique, obj.id).filter((it, i, ar) => ar.indexOf(it) === i);
+        let unique = unique.filter((it, i, ar) => ar.indexOf(it) === i);
         // unique = removeItemOnce(unique, obj.id)
         user.find({ _id: { $in: unique } }, '_id firstname lastname imageUrl email').then((users) => {
             return res.json({ code: code.ok, data: users })
         })
-
-
     }).catch((err) => {
+        console.log("peopleimet -> err", err)
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
 }
