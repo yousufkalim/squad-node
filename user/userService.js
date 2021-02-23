@@ -742,11 +742,13 @@ function peopleimet(req, res) {
     user.findOne(query).populate('participatedin.eventId', '_id participants').then((userdata) => {
         userdata.participatedin.map((el, index) => {
             el.eventId.participants.map((userid) => {
-                userIds.push(userid)
+                if (userid != obj.id) {
+                    userIds.push(userid)
+                }
             })
-            if (userdata.participatedin.length == index + 1) {
-                userIds = removeItemOnce(userIds, obj.id)
-            }
+            // if (userdata.participatedin.length == index + 1) {
+            //     userIds = removeItemOnce(userIds, obj.id)
+            // }
         })
         let unique = userIds.filter((it, i, ar) => ar.indexOf(it) === i);
         user.find({ _id: { $in: unique } }, '_id firstname lastname imageUrl email').then((users) => {
