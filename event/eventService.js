@@ -150,7 +150,7 @@ function eventplayed(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     let query = { date: { "$lt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
-    return eventdao.find(query).then((data) => {
+    return event.find(query).poppulate('placeId','_id sportId').then((data) => {
         res.json({ code: code.ok, data: data })
     }).catch((err) => {
         res.json({ code: code.ineternalError, message: msg.internalServerError })

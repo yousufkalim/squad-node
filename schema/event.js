@@ -6,13 +6,13 @@ const gender = require('../constants').gender;
 const eventType = require('../constants/index').eventType;
 var eventSchema = new schema({
     sport: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.sport },
-    level: [{ type: String, enum: [level.beginner, level.intermediate, level.advanced,level.all] }],
+    level: [{ type: String, enum: [level.beginner, level.intermediate, level.advanced, level.all] }],
     gender: { type: String, enum: [gender.men, gender.women, gender.both] },
     date: { type: Date },
     starttime: { type: Date },
     endtime: { type: Date },
     Address: { type: String },
-  
+    placeId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.place },
     location: {
         type: { type: String, default: 'Point' },
         coordinates: [Number] // [  ,<longitude (value < -90 || value > 90)>, <latitude(value < -180 || value > 180)> ]
