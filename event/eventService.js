@@ -225,29 +225,39 @@ function eventsnotification(req, re) {
     return eventdao.find().then((evetlist) => {
         evetlist.map((eve) => {
             let date = parseISOString(eve.starttime),
+                endtime = parseISOString(eve.endtime),
                 d = new Date(date),
+                endtme = new Date(endtime),
                 twoDaysAgo = d.setDate(d.getDate() - 2),
-                oneDaysAgo = d.setDate(d.getDate() - 1);
+                oneDaysAgo = d.setDate(d.getDate() - 1),
+                oneMinAfter = endtme.setDate(endtme.getTime() + 1 * 60000);;
             twoDaysAgo = new Date(twoDaysAgo).toISOString();
             oneDaysAgo = new Date(oneDaysAgo).toISOString();
+            oneMinAfter = new Date(oneMinAfter).toISOString()
             var currentdate = new Date();
             currentdate = currentdate.toISOString();
             if (twoDaysAgo == currentdate) {
                 userService.eventhournotification(eve.createdby, 48)
-                console.log("------------------------------", eve.createdby)
+                // console.log("------------------------------", eve.createdby)
                 //notification of 48 hours
             }
             else if (oneDaysAgo == currentdate) {
                 userService.eventhournotification(eve.createdby, 24)
-                console.log("------------------------------", eve.createdby)
+                // console.log("------------------------------", eve.createdby)
                 //notification of 24 hours
             }
             else if (d == currentdate) {
                 userService.eventhappens(eve.participants)
-                console.log("------------------------------", eve.participants)
+                // console.log("------------------------------", eve.participants)
             }
             else {
                 console.log("------------------------------", eve.createdby)
+            }
+            if (oneMinAfter == currentdate) {
+                //rate notification to participants
+                userService.ratenotification(eve.participants)
+                userService.rateplayernotification(eve.createdby, eve._id)
+                // console.log("------------------------------", eve.participants)
             }
         })
     }).catch((err) => {

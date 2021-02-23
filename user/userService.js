@@ -746,9 +746,6 @@ function peopleimet(req, res) {
                     userIds.push(userid)
                 }
             })
-            // if (userdata.participatedin.length == index + 1) {
-            //     userIds = removeItemOnce(userIds, obj.id)
-            // }
         })
         let unique = userIds.filter((it, i, ar) => ar.indexOf(it) === i);
         user.find({ _id: { $in: unique } }, '_id firstname lastname imageUrl email').then((users) => {
@@ -759,17 +756,101 @@ function peopleimet(req, res) {
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
 }
-function removeItemOnce(arr, value) {
-    var index = arr.indexOf(value);
-    if (index > -1) {
-        arr.splice(index, 1);
-    }
-    return arr;
+function listforfriendrequest(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token);
+    userdao.findone({ _id: obj.id }).then((data) => {
+        console.log("listforfriendrequest -> data", data.friends)
+        if (data.friends = []) {
+            user.find({ _id: { $nin: obj.id } }, '_id firstname lastname imageUrl').then((userdata) => {
+                return res.json({ code: code.ok, data: userdata })
+            })
+        } else {
+            user.find({ _id: { $nin: [data.friends, obj.id] } }, '_id firstname lastname imageUrl').then((userdata) => {
+                return res.json({ code: code.ok, data: userdata })
+            })
+        }
+    }).catch((err) => {
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
 }
 
+function sendrequest(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token)//will push userId to sentrequest 
+    const { userId } = req.body;//whome you want to send request push obj.id to friend request
+    let query = { _id: userId },
+        update = { $push: { friendRequest: obj.id } },
+        options = { new: true };
+    userdao.findOneAndUpdate(query, update, options).then((receiverdata) => {
+        friendrequestnotif(receiverdata);
+        let query1 = { _id: obj.id },
+            update1 = { $push: { sentRequest: userId } },
+            options1 = { new: true };
+        userdao.findOneAndUpdate(query1, update1, options1).then((senderdata) => {
+            return res.json({ code: code.ok, msg: "request sent" })
+        })
+    }).catch((err) => {
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
+}
+function requestlist(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token);
+    user.findOne({ _id: obj.id }).populate('friendRequest', '_id firstname lastname imageUrl').then((data) => {
+        return res.json({ code: code.ok, data: data.friendRequest })
+    }).catch((err) => {
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
+}
+function friendlist(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token);
+    user.findOne({ _id: obj.id }).populate('friends', '_id firstname lastname imageUrl').then((data) => {
+        return res.json({ code: code.ok, data: data.friends })
+    }).catch((err) => {
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
+}
+function acceptrequest(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token);//removefrom friendreques add to friend
+    const { userId } = req.body;//whome request user ant to accept remove from sent and add to friend
+    let query = { _id: obj.id },
+        update = { $push: { friends: userId }, $pull: { friendRequest: userId } },
+        options = { new: true };
+    userdao.findOneAndUpdate(query, update, options).then((acceptby) => {
+        let query1 = { _id: userId },
+            update1 = { $push: { friends: obj.id }, $pull: { sentRequest: obj.id } },
+            options1 = { new: true };
+        userdao.findOneAndUpdate(query1, update1, options1).then((acceptof) => {
+            return res.json({ code: code.ok, msg: "request accepted" })
+        })
+    }).catch((err) => {
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
 
+}
+function declinerequest(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token);//removefrom friendreques 
+        obj.id="60228c925888e11ddb204918"
+    const { userId } = req.body;//whome request user ant to decline remove from sent
+    let query = { _id: obj.id },
+        update = { $pull: { friendRequest: userId } },
+        options = { new: true };
+    userdao.findOneAndUpdate(query, update, options).then((acceptby) => {
+        let query1 = { _id: userId },
+            update1 = {$pull: { sentRequest: obj.id } },
+            options1 = { new: true };
+        userdao.findOneAndUpdate(query1, update1, options1).then((acceptof) => {
+            return res.json({ code: code.ok, msg: "request declined" })
+        })
+    }).catch((err) => {
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
 
-
+}
 
 
 
@@ -825,7 +906,6 @@ function rateyounotification(fcmToken) {
     });
 }
 function eventfullnotification(creatorId, eventId) {//sent to event creator
-    console.log("eventfullnotification -> eventfullnotification")
     //creatorId,eventId
     userdao.findone({ _id: creatorId }).then((userdata) => {
         if (userdata.fcmToken) {
@@ -915,31 +995,62 @@ function joinevent(creatorsid, usersid, eventsid) {
 
     })
 }
-function ratenotification(fcmToken) {
-    var message = {
-        to: fcmToken,
-        // collapse_key: 'your_collapse_key',
+function ratenotification(participantIds) {
+    participantIds.map((usr) => {
+        user.findById({ _id: usr }).then((dta) => {
+            var message = {
+                to: (dta.fcmToken) ? dta.fcmToken : '',
+                notification: {
+                    title: 'Rate Vanue/Organizer',
+                },
+                data: {
+                    my_key: 'CODERSCOTCH',
+                    my_another_key: 'my another value'
+                }
+            };
+            fcm.send(message, function (err, response) {
+                if (err) {
+                    console.log("loginUser -> err============================================>", err)
+                    console.log("Something has gone wrong!");
+                } else {
+                    console.log("Successfully sent with response: ", response);
+                }
+            });
+        }).catch((err) => {
 
-        notification: {
-            title: 'Rate vanue/organizer/playes',
-            // body: 'Body of your push notification'
-        },
-
-        data: {
-            my_key: 'CODERSCOTCH',
-            my_another_key: 'my another value'
-        }
-    };
-    fcm.send(message, function (err, response) {
-        if (err) {
-            console.log("loginUser -> err============================================>", err)
-            console.log("Something has gone wrong!");
-        } else {
-            console.log("Successfully sent with response: ", response);
-        }
-    });
+        })
+    })
 }
+function rateplayernotification(creatorId, eventId) {//sent to event creator
+    //creatorId,eventId
+    userdao.findone({ _id: creatorId }).then((userdata) => {
+        if (userdata.fcmToken) {
+            var message = {
+                to: userdata.fcmToken,//fcm token of event creator
+                notification: {
+                    title: 'Rate Player of your event',
 
+                },
+                data: {
+                    my_key: 'CODERSCOTCH',
+                    my_another_key: 'my another value'
+                }
+            };
+            fcm.send(message, function (err, response) {
+                if (err) {
+                    console.log("loginUser -> err============================================>", err)
+                    console.log("Something has gone wrong!");
+                } else {
+                    console.log("Successfully sent with response: ", response);
+                }
+            });
+        }
+
+    }).catch((err) => {
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
+
+}
 function eventhappens(participantIds) {//sent to all participants
     // participantIds
     participantIds.map((usr) => {
@@ -968,7 +1079,27 @@ function eventhappens(participantIds) {//sent to all participants
     })
 
 }
-
+function friendrequestnotif(users) {//sent to user
+    console.log("invitenotification -> users", users)
+    var message = {
+        to: (users.fcmToken) ? users.fcmToken : '',//fcm token whom you want to notify
+        notification: {
+            title: 'Someone wants to be your friend',
+            // body: 'Body of your push notification'
+        },
+        data: {
+            my_key: 'CODERSCOTCH',
+            my_another_key: 'my another value'
+        }
+    };
+    fcm.send(message, function (err, response) {
+        if (err) {
+            console.log("Something has gone wrong!");
+        } else {
+            console.log("Successfully sent with response: ", response);
+        }
+    });
+}
 module.exports = {
     registerUser,
     // updateProfile,
@@ -1005,5 +1136,13 @@ module.exports = {
     ratenotification,
     eventhappens,
     peoplenewtosquad,
-    peopleimet
+    peopleimet,
+    rateplayernotification,
+    listforfriendrequest,
+    sendrequest,
+    friendrequestnotif,
+    requestlist,
+    friendlist,
+    acceptrequest,
+    declinerequest
 }

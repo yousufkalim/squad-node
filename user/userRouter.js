@@ -121,4 +121,33 @@ userRouter.route('/getinvite/:eventId/:userId')
     .get([], (req, res) => {
         actions.getinvite(req, res)
     })
+
+
+
+//friends functionality 
+userRouter.route('/listforfriendrequest')
+    .get([validate.verifyToken], (req, res) => {
+        actions.listforfriendrequest(req, res)
+    })
+userRouter.route('/sendrequest')
+    .post([validate.verifyToken], (req, res) => {
+        actions.sendrequest(req, res)
+    })
+userRouter.route('/requestlist')
+    .get([validate.verifyToken], (req, res) => {
+        actions.requestlist(req, res)
+    })
+userRouter.route('/friendlist')
+    .get([validate.verifyToken], (req, res) => {
+        actions.friendlist(req, res)
+    })
+userRouter.route('/acceptrequest')
+    .post([validate.verifyToken], (req, res) => {
+        actions.acceptrequest(req, res)
+    })
+userRouter.route('/declinerequest')
+    .post([validate.verifyToken], (req, res) => {
+        actions.declinerequest(req, res)
+    })
+
 module.exports = userRouter;

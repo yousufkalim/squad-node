@@ -83,6 +83,24 @@ function peoplenewtosquad(req, res) {
 function peopleimet(req, res) {
     service.peopleimet(req, res)
 }
+function listforfriendrequest(req, res) {
+    service.listforfriendrequest(req, res)
+}
+function sendrequest(req, res) {
+    service.sendrequest(req, res)
+}
+function requestlist(req, res) {
+    service.requestlist(req, res)
+}
+function friendlist(req, res) {
+    service.friendlist(req, res)
+}
+function acceptrequest(req, res) {
+    service.acceptrequest(req, res)
+}
+function declinerequest(req, res) {
+    service.declinerequest(req, res)
+}
 module.exports = {
     registerUser,
     loginUser,
@@ -110,5 +128,11 @@ module.exports = {
     addRatingasorganizer,
     getinvite,
     peoplenewtosquad,
-    peopleimet
+    peopleimet,
+    listforfriendrequest,
+    sendrequest,
+    requestlist,
+    friendlist,
+    acceptrequest,
+    declinerequest
 }
