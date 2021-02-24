@@ -12,6 +12,7 @@ const env = require('dotenv').config();
 const UAParser = require('ua-parser-js');
 var FCM = require('fcm-node');
 const { response } = require('express');
+const { strict } = require('assert');
 var serverKey = process.env.SERVER_KEY;
 var fcm = new FCM(serverKey);
 var ObjectId = require('mongodb').ObjectID;
@@ -631,7 +632,7 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
                 }
                 finallist.push(userdata)
                 if (data.length == (index + 1)) {
-                    return res.json({ code: code.ok, data: finallist })
+                    return res.json({ code: code.ok, data: finallist, count: finallist.length })
                 }
             })
         }
@@ -686,11 +687,14 @@ async function getinvite(req, res) {
     res.redirect('squad://join/' + req.params.userId + '/' + req.params.eventId)//deeplinking url for join event
 }
 async function peoplecount(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token);
+    // newToSquad = await this.peoplenewtosquad(req, res, true);
     let responseObj = {
         myFriends: 0,
         peopleImet: 0,
         peopleAround: 10,
-        newToSquad: 2,
+        newToSquad: 0,
     }
     return res.json({ code: code.ok, data: responseObj })
 }
@@ -739,12 +743,16 @@ function addRatingasorganizer(req, res) {
     })
 
 }
-function peoplenewtosquad(req, res) {
+function peoplenewtosquad(req, res, count = false) {
     let query = {
         participatedin: { $exists: true, $size: 0 }
     };
     userdao.find(query).then((userdata) => {
-        console.log("peoplenewtosquad -> userdata", userdata)
+        // console.log("peoplenewtosquad -> userdata", userdata)
+        if (count == true) {
+            console.log("peoplenewtosquad -> userdata.length", userdata.length)
+            return userdata.length;
+        }
         return res.json({ code: code.ok, data: userdata, count: userdata.length })
 
     }).catch((err) => {
@@ -767,7 +775,7 @@ function peopleimet(req, res) {
         })
         let unique = userIds.filter((it, i, ar) => ar.indexOf(it) === i);
         user.find({ _id: { $in: unique } }, '_id firstname lastname imageUrl email').then((users) => {
-            return res.json({ code: code.ok, data: users })
+            return res.json({ code: code.ok, data: users, count: users.length })
         })
     }).catch((err) => {
         console.log("peopleimet -> err", err)
@@ -823,7 +831,7 @@ function friendlist(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);
     user.findOne({ _id: obj.id }).populate('friends', '_id firstname lastname imageUrl').then((data) => {
-        return res.json({ code: code.ok, data: data.friends })
+        return res.json({ code: code.ok, data: data.friends, count: friends.length })
     }).catch((err) => {
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })

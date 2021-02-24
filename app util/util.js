@@ -45,6 +45,7 @@ function generateToken(data, secret) {
     return jwt.sign(obj, secret, { expiresIn: '720hr' })
 }
 async function sendEMail(receiverid, data) {
+    console.log("sendEMail ->  process.env.MAIL_SERVICE",  process.env.MAIL_SERVICE,process.env.USERID,process.env.PASSWORD)
     var tansporter = nodemailer.createTransport({
         service: process.env.MAIL_SERVICE,
         auth: {
