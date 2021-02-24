@@ -689,14 +689,21 @@ async function getinvite(req, res) {
 async function peoplecount(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);
-    // newToSquad = await this.peoplenewtosquad(req, res, true);
+    const myPromise = new Promise((resolve, reject) => {
+    });
     let responseObj = {
-        myFriends: 0,
-        peopleImet: 0,
-        peopleAround: 10,
+        // myFriends: 0,
+        // peopleImet: 0,
+        // peopleAround: 10,
         newToSquad: 0,
     }
-    return res.json({ code: code.ok, data: responseObj })
+    // console.log("peoplecount -> responseObj", responseObj)
+    // return res.json({ code: code.ok, data: responseObj })
+    myPromise
+        .then((first) => responseObj.newToSquad = peoplenewtosquad(req, res, true))
+        .then((finalresult) => { return res.json({ code: code.ok, data: responseObj }) })
+        .catch(err => { console.log(err) })
+    // return res.json({ code: code.ok, data: myPromise })
 }
 function addRatingasplayer(req, res) {
     let token = req.headers['authorization'],
@@ -831,8 +838,9 @@ function friendlist(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);
     user.findOne({ _id: obj.id }).populate('friends', '_id firstname lastname imageUrl').then((data) => {
-        return res.json({ code: code.ok, data: data.friends, count: friends.length })
+        return res.json({ code: code.ok, data: data.friends, count: data.friends.length })
     }).catch((err) => {
+        console.log("friendlist -> err", err)
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
 }
