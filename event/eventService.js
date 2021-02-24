@@ -150,8 +150,35 @@ function eventplayed(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     let query = { date: { "$lt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
-    event.find(query).then((data) => {//.poppulate('placeId', '_id sportId')
-        return res.json({ code: code.ok, data: data })
+    event.find(query).populate('placeId', '_id sportId').populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer').then((data) => {//
+        data.map((events, index) => {
+            events.participants.map((userdata, i) => {
+                var fr = (userdata.friends) ? userdata.friends.includes(obj.id) : false,
+                    rateasplayer = 0,
+                    rateasorganizer = 0;
+                userdata.rateasplayer.map((rate) => {
+                    rateasplayer += rate.ratedwith
+                })
+                userdata.rateasorganizer.map((rate) => {
+                    rateasorganizer += rate.ratedwith
+                })
+                userdata = {
+                    // ...userdata._doc,
+                    _id: userdata._id,
+                    firstname: userdata.firstname,
+                    lastname: userdata.lastname,
+                    imageUrl: userdata.imageUrl,
+                    friend: fr,
+                    rateasplayer: (rateasplayer / userdata.rateasplayer.length),
+                    rateasorganizer: (rateasorganizer / userdata.rateasorganizer.length)
+                }
+                events.participants[i] = userdata;
+            })
+            if (data.length == (index + 1)) {
+                console.log("eventplayed -> finallist", data)
+                return res.json({ code: code.ok, data: data })
+            }
+        })
     }).catch((err) => {
         console.log("eventplayed -> err", err)
         return res.json({ code: code.ineternalError, message: msg.internalServerError })
@@ -161,8 +188,35 @@ function eventwillplayed(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     let query = { date: { "$gt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
-    return eventdao.find(query).then((data) => {
-        res.json({ code: code.ok, data: data })
+    return eventdao.find(query).populate('placeId', '_id sportId').populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer').then((data) => {
+        data.map((events, index) => {
+            events.participants.map((userdata, i) => {
+                var fr = (userdata.friends) ? userdata.friends.includes(obj.id) : false,
+                    rateasplayer = 0,
+                    rateasorganizer = 0;
+                userdata.rateasplayer.map((rate) => {
+                    rateasplayer += rate.ratedwith
+                })
+                userdata.rateasorganizer.map((rate) => {
+                    rateasorganizer += rate.ratedwith
+                })
+                userdata = {
+                    // ...userdata._doc,
+                    _id: userdata._id,
+                    firstname: userdata.firstname,
+                    lastname: userdata.lastname,
+                    imageUrl: userdata.imageUrl,
+                    friend: fr,
+                    rateasplayer: (rateasplayer / userdata.rateasplayer.length),
+                    rateasorganizer: (rateasorganizer / userdata.rateasorganizer.length)
+                }
+                events.participants[i] = userdata;
+            })
+            if (data.length == (index + 1)) {
+                console.log("eventplayed -> finallist", data)
+                return res.json({ code: code.ok, data: data })
+            }
+        })
     }).catch((err) => {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
