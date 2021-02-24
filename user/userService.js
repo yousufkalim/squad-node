@@ -596,6 +596,8 @@ async function removepreference(req, res) {
     })
 }
 async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsphere" } )
+    let token = req.headers['authorization']
+    let obj = util.decodeToken(token)
     const { eventId, level, gender } = req.body;
     if (!req.query.radius) {
         req.query.radius = 100
@@ -615,12 +617,23 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
             }
         ],
     }
-    user.find(query).exec((err, data) => {
+    user.find(query, '_id firstname lastname imageUrl').exec((err, data) => {//have to add friend flag here
         if (err) {
             console.log("peoplearound -> err", err)
             return res.json({ code: code.internalError, message: msg.internalServerError })
         } else {
-            return res.json({ code: code.ok, data: data })
+            let finallist = []
+            data.map((userdata, index) => {
+                var fr = (userdata.friends) ? userdata.friends.includes(obj.id) : false;
+                userdata = {
+                    ...userdata._doc,
+                    friend: fr
+                }
+                finallist.push(userdata)
+                if (data.length == (index + 1)) {
+                    return res.json({ code: code.ok, data: finallist })
+                }
+            })
         }
     })
 }

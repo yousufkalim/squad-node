@@ -150,10 +150,11 @@ function eventplayed(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     let query = { date: { "$lt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
-    return event.find(query).poppulate('placeId','_id sportId').then((data) => {
-        res.json({ code: code.ok, data: data })
+    event.find(query).then((data) => {//.poppulate('placeId', '_id sportId')
+        return res.json({ code: code.ok, data: data })
     }).catch((err) => {
-        res.json({ code: code.ineternalError, message: msg.internalServerError })
+        console.log("eventplayed -> err", err)
+        return res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
 function eventwillplayed(req, res) {
