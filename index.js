@@ -3,7 +3,8 @@ const app = express();
 const mongoose = require("mongoose")
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
-const eventservice = require('./event/eventService')
+const eventservice = require('./event/eventService');
+const cron = require('node-cron');
 var cors = require('cors')
 const env = require('dotenv').config()
 app.use(cors({ credentials: true, origin: true }))
@@ -13,10 +14,10 @@ app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }))
 mongoose.connect(process.env.DBURL, { useNewUrlParser: true, useUnifiedTopology: true }, function (err) {
     if (err) {
         console.log("err-----------------------------------------", err)
-        
-    }else{
+
+    } else {
         console.log("process.env.DBURL", process.env.DBURL)
-        
+
     }
 });
 app.use(morgan('combined'));
@@ -45,10 +46,15 @@ var socket = require('socket.io')(http);
 const io = socket.listen(server)
 require('./socket/socketHandler')(io)
 
-console.log("new Date()===================================================>", new Date())
-//notification for event happening 
-// const intervalObj = setInterval(() => {
-//     eventservice.eventsnotification()
-//     console.log('interviewing the interval');
-// }, 60000);
+cron.schedule('*/59 * * * *', function () {
+    console.log("<==========================running a task every  1 hour======================================>");
+    eventservice.twodaysbeforenotification()
+    eventservice.onedaysbeforenotification()
+});
+cron.schedule('* */1 * * *', function () {
+    console.log("<==========================running a task every  1 minute======================================>");
+    eventservice.oneminafternotification()
+    eventservice.eventhappennotification()
+});
+
 

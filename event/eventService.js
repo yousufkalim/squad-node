@@ -21,7 +21,6 @@ function addeventunauthorized(req, res) {
     })
 }
 function addevent(req, res) {
-    console.log("addevent -> req", req.body.starttime,req.body.endtime)
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     req.body.createdby = obj.id
@@ -116,7 +115,7 @@ function eventlist(req, res) {
                         var participatedinevent = (el.participants) ? el.participants.includes(user.id) : false;
                         console.log("eventlist -> participatedinevent", participatedinevent)
                         let obj = {
-                            ...el,
+                            ...el._doc,
                             participatedinevent: participatedinevent
                         }
                         data[i] = obj
@@ -290,53 +289,73 @@ function eventinvitation(req, res) {
     console.log("eventinvitation", req.body)
 
 }
-function eventsnotification(req, re) {
-    return eventdao.find().then((evetlist) => {
-        evetlist.map((eve) => {
-            let date = parseISOString(eve.starttime),
-                endtime = parseISOString(eve.endtime),
-                d = new Date(date),
-                endtme = new Date(endtime),
-                twoDaysAgo = d.setDate(d.getDate() - 2),
-                oneDaysAgo = d.setDate(d.getDate() - 1),
-                oneMinAfter = endtme.setDate(endtme.getTime() + 1 * 60000);;
-            twoDaysAgo = new Date(twoDaysAgo).toISOString();
-            oneDaysAgo = new Date(oneDaysAgo).toISOString();
-            oneMinAfter = new Date(oneMinAfter).toISOString()
-            var currentdate = new Date();
-            currentdate = currentdate.toISOString();
-            if (twoDaysAgo == currentdate) {
-                userService.eventhournotification(eve.createdby, 48)
-                // console.log("------------------------------", eve.createdby)
-                //notification of 48 hours
-            }
-            else if (oneDaysAgo == currentdate) {
-                userService.eventhournotification(eve.createdby, 24)
-                // console.log("------------------------------", eve.createdby)
-                //notification of 24 hours
-            }
-            else if (d == currentdate) {
-                userService.eventhappens(eve.participants)
-                // console.log("------------------------------", eve.participants)
-            }
-            else {
-                console.log("------------------------------", eve.createdby)
-            }
-            if (oneMinAfter == currentdate) {
-                //rate notification to participants
-                userService.ratenotification(eve.participants)
-                userService.rateplayernotification(eve.createdby, eve._id)
-                // console.log("------------------------------", eve.participants)
-            }
+function twodaysbeforenotification() {
+    const currentDate = new Date();
+    const afterTwoDaysDate = currentDate.addDays(2);//greater than this
+    const afterTwoDaysDateOneHour = afterTwoDaysDate.addHours(1);//less than this
+    console.log("twodaysbeforenotification ->currentDate afterTwoDaysDate afterTwoDaysDateOneHour",currentDate,afterTwoDaysDate, afterTwoDaysDateOneHour)
+    event.find({ "starttime": { $gt: afterTwoDaysDate, $lt: afterTwoDaysDateOneHour } }).then((eventlist) => {
+    console.log("twodaysbeforenotification -> eventlist", eventlist)
+        eventlist.map((eve) => {
+            userService.eventhournotification(eve.createdby, 48)
         })
     }).catch((err) => {
-        console.log("eventsnotification -> err", err)
+
     })
 }
-function parseISOString(s) {
-    var date = new Date(s);
-    let finaldate = date.toString()
-    return finaldate;
+function onedaysbeforenotification() {
+    const currentDate = new Date();
+    const afterOneDaysDate = currentDate.addDays(1);//greater than this
+    const afterOneDaysDateOneHour = afterOneDaysDate.addHours(1);//less than this
+    console.log("onedaysbeforenotification ->currentDate afterOneDaysDate  afterOneDaysDateOneHour", currentDate, afterOneDaysDate, afterOneDaysDateOneHour)
+    event.find({ "starttime": { $gt: afterOneDaysDate, $lt: afterOneDaysDateOneHour } }).then((eventlist) => {
+    console.log("onedaysbeforenotification -> eventlist", eventlist)
+        eventlist.map((eve) => {
+            userService.eventhournotification(eve.createdby, 24)
+        })
+    }).catch((err) => {
+
+    })
+}
+function oneminafternotification() {
+    const currentDate = new Date();
+    const beforeOneminutedate = currentDate.removeMinutes(1);
+    event.find({ "endtime": beforeOneminutedate }).then((eventlist) => {
+    console.log("oneminafternotification -> eventlist", eventlist)
+        eventlist.map((eve) => {
+            userService.ratenotification(eve.participants)
+            userService.rateplayernotification(eve.createdby, eve.createdby)
+        })
+    }).catch((err) => {
+
+    })
+}
+function eventhappennotification() {
+    const currentDate = new Date();
+    event.find({ "starttime": currentDate }).then((eventlist) => {
+        eventlist.map((eve) => {
+            userService.eventhappens(eve.participants)
+        })
+    }).catch((err) => {
+
+    })
+}
+Date.prototype.addDays = function (days) {
+    var date = new Date(this.valueOf());
+    date.setDate(date.getDate() + days);
+    return date;
+}
+
+Date.prototype.addHours = function (h) {
+    var date = new Date(this.valueOf());
+    date.setTime(date.getTime() + (h * 60 * 60 * 1000));
+    return date;
+}
+
+Date.prototype.removeMinutes = function (m) {
+    var date = new Date(this.valueOf());
+    date.setTime(date.getTime() - (m * 60 * 1000));
+    return date;
 }
 module.exports = {
     addevent,
@@ -350,6 +369,8 @@ module.exports = {
     updateevent,
     preferenceBasedList,
     addeventunauthorized,
-    parseISOString,
-    eventsnotification
+    twodaysbeforenotification,
+    onedaysbeforenotification,
+    oneminafternotification,
+    eventhappennotification
 }
