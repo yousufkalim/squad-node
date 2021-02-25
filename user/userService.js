@@ -648,23 +648,34 @@ function invitepeople(req, res) {
             let info = {
                 firstname: data.firstname,
                 email: data.email,
-                fcmToken: (data.fcmToken) ? data.fcmToken : ''
+                fcmToken: (data.fcmToken) ? data.fcmToken : '',
+                _id: data._id
             }
             obj.push(info)
             if (i == (users.length - 1)) {
-                this.invitemail(res, req, obj, eventId, data._id)
+                if (req.body.manualInvite) {
+                    var manualinv = req.body.manualInvite
+                    manualinv.map(async (el, index) => {
+                        el.fcmToken = (el.fcmToken) ? el.fcmToken : '';
+                        obj.push(el);
+                        if (index == (manualinv.length - 1)) {
+                            this.invitemail(res, req, obj, eventId);
+                        }
+                    })
+                }
 
-                // return obj
+
             }
         }).catch((err) => {
             console.log("invitepeople -> err", err)
         })
     })
 }
-async function invitemail(res, req, users, eventId, userId) {
+async function invitemail(res, req, users, eventId) {
+    console.log("invitemail -> users", users)
     let usersemail = [];
-    let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + userId;
     users.map(async (el, i) => {
+        let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + el._id;
         usersemail.push(el.email)
         // let link = eventlink;
         let data = {
@@ -679,6 +690,9 @@ async function invitemail(res, req, users, eventId, userId) {
             if ((data == true) && (i == (users.length - 1))) {
                 return res.json({ code: code.ok, msg: `Invitation send to ${usersemail}` })
             }
+        }).catch((err) => {
+            console.log("invitemail -> err", err)
+
         })
     })
 }
@@ -688,23 +702,71 @@ async function getinvite(req, res) {
 }
 async function peoplecount(req, res) {
     let token = req.headers['authorization'],
-        obj = util.decodeToken(token);
-    const myPromise = new Promise((resolve, reject) => {
-    });
-    let responseObj = {
-        // myFriends: 0,
-        // peopleImet: 0,
-        // peopleAround: 10,
-        newToSquad: 0,
-    }
-    // console.log("peoplecount -> responseObj", responseObj)
-    // return res.json({ code: code.ok, data: responseObj })
-    myPromise
-        .then((first) => responseObj.newToSquad = peoplenewtosquad(req, res, true))
-        .then((finalresult) => { return res.json({ code: code.ok, data: responseObj }) })
-        .catch(err => { console.log(err) })
-    // return res.json({ code: code.ok, data: myPromise })
+        obj = util.decodeToken(token),
+        myFriends = 0,
+        peopleImet = 0,
+        peopleAround = 0,
+        newToSquad = 0,
+        userdata;
+    let UserData = new Promise(function (myResolve, myReject) {
+        console.log("1")
+        user.findOne({ _id: obj.id }).then(userdat => {
+            myResolve(userdat)
+        })
+    })
+    let myPromise = new Promise(function (myResolve, myReject) {
+        console.log("2")
+        let query = {
+            participatedin: { $exists: true, $size: 0 }
+        };
+        userdao.find(query).then((userdata) => {
+            myResolve(userdata.length)
+        }).catch((err) => {
+            myReject(err)
+        })
+    })
+    let peoplearound = new Promise(function (myResolve, myReject) {
+        console.log("3")
+        console.log("UserData", UserData)
+        let query = {
+            $and: [
+                {
+                    location: {
+                        $nearSphere: {
+                            $geometry: { type: "Point", coordinates: [userdata.location.coordinates[0], userdata.location.coordinates[1]] },
+                            $maxDistance: parseFloat(100) * 1000
+                        }
+                    }
+                }
+            ],
+        }
+        userdao.find(query).then((err, data) => {//have to add friend flag here
+            if (err) {
+                myReject(err)
+            } else {
+                myResolve(data.length)
+            }
+        })
+    })
+    UserData.then((userele) => {
+        // userdata = userele
+        myPromise.then(data => {
+            // newToSquad = data;
+            peoplearound.then(peoplear => {
+                peopleAround = peoplear
+            })
+            console.log("peoplecount -> data", data, newToSquad, peopleAround)
+        })
+    })
+
+
 }
+//new to squad
+
+//peopleAround
+
+//peopleImet
+//myFriends
 function addRatingasplayer(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token)

@@ -62,6 +62,8 @@ function myevents(req, res) {
     })
 }
 function eventlist(req, res) {
+    let token = req.headers['authorization']
+    let user = util.decodeToken(token)
     var sorttype = '';
     let query = {};
     let radius = (req.query.radius) ? req.query.radius : 100;
@@ -85,19 +87,21 @@ function eventlist(req, res) {
     (req.body.level) ?
         query.level = { $in: req.body.level } : '';
     (req.body.sport) ? query.sport = { $in: req.body.sport } : '';
-    console.log("eventlist -> query", query);
+    // console.log("eventlist -> query", query);
 
 
     return event.find(query).populate('participants', '_id imageUrl firstname lastname')
         .sort({ starttime: sorttype }).then((data) => {
-            console.log("eventlist -> data", data.length)
+
             if (data.length == 0) {
                 res.json({ code: code.ok, data: data })
             }
             data.map((el, inx) => {
-                if (el.participants.length >= 1) {
+
+                if (el.participants && el.participants.length >= 1) {
+
                     el.participants.map((par, i) => {
-                        console.log("eventlist -> par", par)
+                        // console.log("eventlist -> par", par)
                         let obj = {
                             ...par._doc,
                             friend: false
@@ -107,6 +111,15 @@ function eventlist(req, res) {
                 }
 
                 if ((data.length - 1) == inx) {
+                    data.map((el, i) => {
+                        var participatedinevent = (el.participants) ? el.participants.includes(user.id) : false;
+                        console.log("eventlist -> participatedinevent", participatedinevent)
+                        let obj = {
+                            ...el,
+                            participatedinevent: participatedinevent
+                        }
+                        data[i] = obj
+                    })
                     res.json({ code: code.ok, data: data })
                 }
             })
