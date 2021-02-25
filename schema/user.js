@@ -51,6 +51,10 @@ var userSchema = new schema({
     }],
     participatedin: [{
         eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event }
+    }],
+    invitationtogame: [{
+        senderId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
+        eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event }
     }]
 });
 

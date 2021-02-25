@@ -150,4 +150,10 @@ userRouter.route('/declinerequest')
         actions.declinerequest(req, res)
     })
 
+// userRouter.route('/list/gamenotification')
+//     .get([validate.verifyToken], (req, res) => {
+//         actions.friendlist(req, res)
+//     })
+
+
 module.exports = userRouter;

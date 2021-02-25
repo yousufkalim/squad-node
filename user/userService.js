@@ -639,7 +639,8 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
     })
 }
 function invitepeople(req, res) {
-    let token = req.headers['authorization']
+    let token = req.headers['authorization'];
+    let userId = util.decodeToken(token)
     const { users, eventId } = req.body;
     var obj = []
     users.map((el, i) => {
@@ -649,7 +650,7 @@ function invitepeople(req, res) {
                 firstname: data.firstname,
                 email: data.email,
                 fcmToken: (data.fcmToken) ? data.fcmToken : '',
-                _id: data._id
+                userid: data._id
             }
             obj.push(info)
             if (i == (users.length - 1)) {
@@ -659,6 +660,8 @@ function invitepeople(req, res) {
                         el.fcmToken = (el.fcmToken) ? el.fcmToken : '';
                         obj.push(el);
                         if (index == (manualinv.length - 1)) {
+                            //add to invitation to user record
+                            addgameinvitation(obj, userId.id, eventId)
                             this.invitemail(res, req, obj, eventId);
                         }
                     })
@@ -671,11 +674,32 @@ function invitepeople(req, res) {
         })
     })
 }
+async function addgameinvitation(userlist, sederId, eventId) {
+    userlist.map((el) => {
+        let invitation = {
+            senderId: sederId,
+            eventId: eventId
+        };
+        if (el.userid) {
+            let query = { _id: el.userid },
+                update = { $push: { invitationtogame: invitation } },
+                options = { new: true };
+            user.findOneAndUpdate(query, update, options).then((data) => {
+                console.log("addgameinvitation -> data", data)
+
+            }).catch((err) => {
+                console.log("addgameinvitation -> err", err)
+
+            })
+        }
+    })
+}
 async function invitemail(res, req, users, eventId) {
     console.log("invitemail -> users", users)
     let usersemail = [];
     users.map(async (el, i) => {
-        let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + el._id;
+        let userId = (el.userid) ? el.userid : ''
+        let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + userId;
         usersemail.push(el.email)
         // let link = eventlink;
         let data = {
@@ -726,34 +750,38 @@ async function peoplecount(req, res) {
         })
     })
     let peoplearound = new Promise(function (myResolve, myReject) {
-        console.log("3")
-        console.log("UserData", UserData)
-        let query = {
-            $and: [
-                {
-                    location: {
-                        $nearSphere: {
-                            $geometry: { type: "Point", coordinates: [userdata.location.coordinates[0], userdata.location.coordinates[1]] },
-                            $maxDistance: parseFloat(100) * 1000
+        user.findOne({ _id: obj.id }).then(async userdat => {
+            let query = {
+                $and: [
+                    {
+                        location: {
+                            $nearSphere: {
+                                $geometry: { type: "Point", coordinates: [userdat.location.coordinates[0], userdat.location.coordinates[1]] },
+                                $maxDistance: parseFloat(100) * 1000
+                            }
                         }
                     }
-                }
-            ],
-        }
-        userdao.find(query).then((err, data) => {//have to add friend flag here
-            if (err) {
-                myReject(err)
-            } else {
-                myResolve(data.length)
+                ],
             }
+            await userdao.find(query).then(async (err, data) => {//have to add friend flag here
+                console.log("data", data)
+                await myResolve(data.length)
+                // if (err) {
+                //     console.log("err", err)
+                //     myReject(err)
+                // } else {
+                //     myResolve(data.length)
+                // }
+            })
         })
+
     })
     UserData.then((userele) => {
         // userdata = userele
         myPromise.then(data => {
-            // newToSquad = data;
-            peoplearound.then(peoplear => {
-                peopleAround = peoplear
+            newToSquad = data;
+            peoplearound.then(peoar => {
+                peopleAround = peoar
             })
             console.log("peoplecount -> data", data, newToSquad, peopleAround)
         })
@@ -1237,5 +1265,6 @@ module.exports = {
     requestlist,
     friendlist,
     acceptrequest,
-    declinerequest
+    declinerequest,
+    addgameinvitation
 }

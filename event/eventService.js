@@ -21,6 +21,7 @@ function addeventunauthorized(req, res) {
     })
 }
 function addevent(req, res) {
+    console.log("addevent -> req", req.body.starttime,req.body.endtime)
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     req.body.createdby = obj.id
