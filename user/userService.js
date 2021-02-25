@@ -13,6 +13,8 @@ const UAParser = require('ua-parser-js');
 var FCM = require('fcm-node');
 const { response } = require('express');
 const { strict } = require('assert');
+const { use } = require('../admin/adminRouter');
+const userDao = require('./userDao');
 var serverKey = process.env.SERVER_KEY;
 var fcm = new FCM(serverKey);
 var ObjectId = require('mongodb').ObjectID;
@@ -694,6 +696,31 @@ async function addgameinvitation(userlist, sederId, eventId) {
         }
     })
 }
+async function gamenotification(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token);
+    let query = { _id: obj.id };
+    await user.findOne(query)
+        .populate('invitationtogame.senderId', '_id firstname lastname imageUrl')
+        .populate('invitationtogame.eventId', '_id date starttime endtime Address').then((data) => {
+            console.log("gamenotification -> data", data)
+            res.json({ code: code.ok, data: data.invitationtogame })
+        }).catch((err) => {
+            res.json({ code: code.ineternalError, message: msg.internalServerError })
+        })
+}
+async function gamenotifdecline(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token);
+    let query = { _id:"60349c12e94ca718762847f2"},
+        update = { "$pull": { invitationtogame: { "_id": ObjectId(req.query.requestId) } } },
+        options = { new: true };
+    userDao.findOneAndUpdate(query, update, options).then((data) => {
+        return res.json({ code: code.ok, message: msg.invitatdec })
+    }).catch((err) => {
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
+}
 async function invitemail(res, req, users, eventId) {
     console.log("invitemail -> users", users)
     let usersemail = [];
@@ -766,12 +793,7 @@ async function peoplecount(req, res) {
             await userdao.find(query).then(async (err, data) => {//have to add friend flag here
                 console.log("data", data)
                 await myResolve(data.length)
-                // if (err) {
-                //     console.log("err", err)
-                //     myReject(err)
-                // } else {
-                //     myResolve(data.length)
-                // }
+
             })
         })
 
@@ -789,12 +811,6 @@ async function peoplecount(req, res) {
 
 
 }
-//new to squad
-
-//peopleAround
-
-//peopleImet
-//myFriends
 function addRatingasplayer(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token)
@@ -1266,5 +1282,7 @@ module.exports = {
     friendlist,
     acceptrequest,
     declinerequest,
-    addgameinvitation
+    addgameinvitation,
+    gamenotification,
+    gamenotifdecline
 }

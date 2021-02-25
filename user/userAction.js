@@ -101,6 +101,12 @@ function acceptrequest(req, res) {
 function declinerequest(req, res) {
     service.declinerequest(req, res)
 }
+function gamenotification(req, res) {
+    service.gamenotification(req, res)
+}
+function gamenotifdecline(req, res) {
+    service.gamenotifdecline(req, res)
+}
 module.exports = {
     registerUser,
     loginUser,
@@ -134,5 +140,7 @@ module.exports = {
     requestlist,
     friendlist,
     acceptrequest,
-    declinerequest
+    declinerequest,
+    gamenotification,
+    gamenotifdecline
 }
