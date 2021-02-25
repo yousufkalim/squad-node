@@ -712,7 +712,7 @@ async function gamenotification(req, res) {
 async function gamenotifdecline(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);
-    let query = { _id:"60349c12e94ca718762847f2"},
+    let query = { _id: "60349c12e94ca718762847f2" },
         update = { "$pull": { invitationtogame: { "_id": ObjectId(req.query.requestId) } } },
         options = { new: true };
     userDao.findOneAndUpdate(query, update, options).then((data) => {
@@ -804,6 +804,9 @@ async function peoplecount(req, res) {
             newToSquad = data;
             peoplearound.then(peoar => {
                 peopleAround = peoar
+            }).catch((err) => {
+                console.log("err", err)
+
             })
             console.log("peoplecount -> data", data, newToSquad, peopleAround)
         })

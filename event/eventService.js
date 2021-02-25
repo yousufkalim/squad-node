@@ -201,7 +201,7 @@ function eventwillplayed(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     let query = { date: { "$gt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
-    return eventdao.find(query).populate('placeId', '_id sportId').populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer').then((data) => {
+    return event.find(query).populate('placeId', '_id sportId').populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer').then((data) => {
         data.map((events, index) => {
             events.participants.map((userdata, i) => {
                 var fr = (userdata.friends) ? userdata.friends.includes(obj.id) : false,
@@ -293,9 +293,9 @@ function twodaysbeforenotification() {
     const currentDate = new Date();
     const afterTwoDaysDate = currentDate.addDays(2);//greater than this
     const afterTwoDaysDateOneHour = afterTwoDaysDate.addHours(1);//less than this
-    console.log("twodaysbeforenotification ->currentDate afterTwoDaysDate afterTwoDaysDateOneHour",currentDate,afterTwoDaysDate, afterTwoDaysDateOneHour)
+    console.log("twodaysbeforenotification ->currentDate afterTwoDaysDate afterTwoDaysDateOneHour", currentDate, afterTwoDaysDate, afterTwoDaysDateOneHour)
     event.find({ "starttime": { $gt: afterTwoDaysDate, $lt: afterTwoDaysDateOneHour } }).then((eventlist) => {
-    console.log("twodaysbeforenotification -> eventlist", eventlist)
+        console.log("twodaysbeforenotification -> eventlist", eventlist)
         eventlist.map((eve) => {
             userService.eventhournotification(eve.createdby, 48)
         })
@@ -309,7 +309,7 @@ function onedaysbeforenotification() {
     const afterOneDaysDateOneHour = afterOneDaysDate.addHours(1);//less than this
     console.log("onedaysbeforenotification ->currentDate afterOneDaysDate  afterOneDaysDateOneHour", currentDate, afterOneDaysDate, afterOneDaysDateOneHour)
     event.find({ "starttime": { $gt: afterOneDaysDate, $lt: afterOneDaysDateOneHour } }).then((eventlist) => {
-    console.log("onedaysbeforenotification -> eventlist", eventlist)
+        console.log("onedaysbeforenotification -> eventlist", eventlist)
         eventlist.map((eve) => {
             userService.eventhournotification(eve.createdby, 24)
         })
@@ -321,7 +321,7 @@ function oneminafternotification() {
     const currentDate = new Date();
     const beforeOneminutedate = currentDate.removeMinutes(1);
     event.find({ "endtime": beforeOneminutedate }).then((eventlist) => {
-    console.log("oneminafternotification -> eventlist", eventlist)
+        console.log("oneminafternotification -> eventlist", eventlist)
         eventlist.map((eve) => {
             userService.ratenotification(eve.participants)
             userService.rateplayernotification(eve.createdby, eve.createdby)
