@@ -45,6 +45,7 @@ var socket = require('socket.io')(http);
 const io = socket.listen(server)
 require('./socket/socketHandler')(io)
 
+console.log("new Date()===================================================>", new Date())
 //notification for event happening 
 // const intervalObj = setInterval(() => {
 //     eventservice.eventsnotification()
