@@ -712,7 +712,7 @@ async function gamenotification(req, res) {
 async function gamenotifdecline(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);
-    let query = { _id: "60349c12e94ca718762847f2" },
+    let query = { _id: obj.id },
         update = { "$pull": { invitationtogame: { "_id": ObjectId(req.query.requestId) } } },
         options = { new: true };
     userDao.findOneAndUpdate(query, update, options).then((data) => {

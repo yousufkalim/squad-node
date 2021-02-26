@@ -113,15 +113,20 @@ function eventlist(req, res) {
                 if ((data.length - 1) == inx) {
                     data.map((el, i) => {
                         var participatedinevent;
-                        console.log("eventlist -> participatedinevent", participatedinevent)
-                        console.log("eventlist -> el.participants", el.participants)
-                        console.log("eventlist -> el.participants.includes(user.id)", el.participants.includes(user.id))
-                        console.log("eventlist -> (el.participants) ? el.participants.includes(user.id) : false", (el.participants) ? el.participants.includes(user.id) : false)
-                        participatedinevent = (el.participants) ? el.participants.includes(user.id) : false;
+                        el.participants.map((ele) => {
+                            if (ele._id == user.id) {
+                                console.log("eventlist -> ele._id == user.id", ele._id , user.id)
+                                participatedinevent = true;
+                            } else {
+                                console.log("eventlist -> ele._id != user.id", ele._id , user.id)
+                                participatedinevent = false;
+                            }
+                        })
                         let obj = {
                             ...el._doc,
                             participatedinevent: participatedinevent
                         }
+                        console.log("eventlist -> obj", obj)
                         data[i] = obj
                     })
                     res.json({ code: code.ok, data: data })
