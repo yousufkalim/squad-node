@@ -115,10 +115,10 @@ function eventlist(req, res) {
                         var participatedinevent;
                         el.participants.map((ele) => {
                             if (ele._id == user.id) {
-                                console.log("eventlist -> ele._id == user.id", ele._id , user.id)
+                                console.log("eventlist -> ele._id == user.id", ele._id, user.id)
                                 participatedinevent = true;
                             } else {
-                                console.log("eventlist -> ele._id != user.id", ele._id , user.id)
+                                console.log("eventlist -> ele._id != user.id", ele._id, user.id)
                                 participatedinevent = false;
                             }
                         })
@@ -173,6 +173,9 @@ function eventplayed(req, res) {
     let obj = util.decodeToken(token)
     let query = { date: { "$lt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
     event.find(query).populate('placeId', '_id sportId').populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer').then((data) => {//
+        if (!data) {
+            return res.json({ code: code.ok, data: data })
+        }
         data.map((events, index) => {
             events.participants.map((userdata, i) => {
                 var fr = (userdata.friends) ? userdata.friends.includes(obj.id) : false,
