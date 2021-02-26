@@ -5,7 +5,11 @@ const actions = require('./placeAction')
 
 
 placeRouter.route('/add')
-    .post([validate.verifyAdminToken], (req, res, next) => {
+    .post(
+        [
+            // validate.verifyAdminToken
+        ]
+        , (req, res, next) => {
         actions.addplace(req, res, next)
     });
 placeRouter.route('/list')

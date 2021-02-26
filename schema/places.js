@@ -15,8 +15,6 @@ var placeSchema = new schema({
         ratedwith: { type: Number, min: 0, max: 5 },
         by: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
     }],
-  
-  
 });
 
 places = module.exports = mongoose.model(schemaName.place,placeSchema)
