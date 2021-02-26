@@ -46,15 +46,15 @@ var socket = require('socket.io')(http);
 const io = socket.listen(server)
 require('./socket/socketHandler')(io)
 
-// cron.schedule('*/59 * * * *', function () {
-//     console.log("<==========================running a task every  1 hour======================================>");
-//     eventservice.twodaysbeforenotification()
-//     eventservice.onedaysbeforenotification()
-// });
-// cron.schedule('* */1 * * *', function () {
-//     console.log("<==========================running a task every  1 minute======================================>");
-//     eventservice.oneminafternotification()
-//     eventservice.eventhappennotification()
-// });
+cron.schedule('*/59 * * * *', function () {
+    console.log("<==========================running a task every  1 hour======================================>");
+    eventservice.twodaysbeforenotification()
+    eventservice.onedaysbeforenotification()
+});
+cron.schedule('* */1 * * *', function () {
+    console.log("<==========================running a task every  1 minute======================================>");
+    eventservice.oneminafternotification()
+    eventservice.eventhappennotification()
+});
 
 
