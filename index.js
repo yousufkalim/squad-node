@@ -16,7 +16,7 @@ mongoose.connect(process.env.DBURL, { useNewUrlParser: true, useUnifiedTopology:
         console.log("err-----------------------------------------", err)
 
     } else {
-        // console.log("process.env.DBURL", process.env.DBURL)
+        console.log("process.env.DBURL", process.env.DBURL)
 
     }
 });

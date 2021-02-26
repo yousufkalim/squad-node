@@ -173,43 +173,74 @@ function eventplayed(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     let query = { date: { "$lt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
-    event.find(query).populate('placeId', '_id sportId').populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer').then((data) => {//
-        console.log("eventplayed -> data==================================>", data.length)
-        if (data.length == 0) {
-            return res.json({ code: code.ok, data: data })
-        }
-        data.map((events, index) => {
-            events.participants.map((userdata, i) => {
-                var fr = (userdata.friends) ? userdata.friends.includes(obj.id) : false,
-                    rateasplayer = 0,
-                    rateasorganizer = 0;
-                userdata.rateasplayer.map((rate) => {
-                    rateasplayer += rate.ratedwith
-                })
-                userdata.rateasorganizer.map((rate) => {
-                    rateasorganizer += rate.ratedwith
-                })
-                userdata = {
-                    // ...userdata._doc,
-                    _id: userdata._id,
-                    firstname: userdata.firstname,
-                    lastname: userdata.lastname,
-                    imageUrl: userdata.imageUrl,
-                    friend: fr,
-                    rateasplayer: (rateasplayer / userdata.rateasplayer.length),
-                    rateasorganizer: (rateasorganizer / userdata.rateasorganizer.length)
-                }
-                events.participants[i] = userdata;
-            })
-            if (data.length == (index + 1)) {
-                // console.log("eventplayed -> finallist", data)
+    event.find(query).populate('placeId', '_id sportId rates')
+        .populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer')
+        .populate('createdby', '_id rateasorganizer').then((data) => {//
+            // console.log("eventplayed -> data==================================>", data.length)
+            if (data.length == 0) {
                 return res.json({ code: code.ok, data: data })
             }
+            data.map((events, index) => {
+                var avrratvanue = 0,
+                    avrratorganizer = 0
+
+                //place average rate
+                if (!events.placeId) {
+                    avrratvanue = 0
+                } else {
+                    avrratvanue = 0;
+                    events.placeId.rates.map((placerate, pindex) => {
+                        avrratvanue += placerate.ratedwith
+                        if (events.placeId.rates.length == (pindex + 1)) {
+                            avrratvanue = avrratvanue / (pindex + 1)
+                        }
+                    })
+                }
+
+                events.createdby.rateasorganizer.map((organizerrate, oindex) => {
+                    avrratorganizer += organizerrate.ratedwith
+                    if (events.createdby.rateasorganizer.length == (oindex + 1)) {
+                        data[index] = {
+                            ...events._doc,
+                            "avrratorganizer": avrratorganizer / (oindex + 1),
+                            "avrratvanue": avrratvanue
+                        }
+                    }
+                })
+
+                // console.log("eventplayed -> events", events, avrratvanue, avrratorganizer)
+                //organizer average rate
+                events.participants.map((userdata, i) => {
+                    var fr = (userdata.friends) ? userdata.friends.includes(obj.id) : false,
+                        rateasplayer = 0,
+                        rateasorganizer = 0;
+                    userdata.rateasplayer.map((rate) => {
+                        rateasplayer += rate.ratedwith
+                    })
+                    userdata.rateasorganizer.map((rate) => {
+                        rateasorganizer += rate.ratedwith
+                    })
+                    userdata = {
+                        // ...userdata._doc,
+                        _id: userdata._id,
+                        firstname: userdata.firstname,
+                        lastname: userdata.lastname,
+                        imageUrl: userdata.imageUrl,
+                        friend: fr,
+                        rateasplayer: (rateasplayer / userdata.rateasplayer.length),
+                        rateasorganizer: (rateasorganizer / userdata.rateasorganizer.length)
+                    }
+                    events.participants[i] = userdata;
+                })
+                if (data.length == (index + 1)) {
+                    // console.log("eventplayed -> finallist", data)
+                    return res.json({ code: code.ok, data: data })
+                }
+            })
+        }).catch((err) => {
+            console.log("eventplayed -> err", err)
+            return res.json({ code: code.ineternalError, message: msg.internalServerError })
         })
-    }).catch((err) => {
-        console.log("eventplayed -> err", err)
-        return res.json({ code: code.ineternalError, message: msg.internalServerError })
-    })
 }
 function eventwillplayed(req, res) {
     let token = req.headers['authorization']
