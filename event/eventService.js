@@ -173,8 +173,8 @@ function eventplayed(req, res) {
     let obj = util.decodeToken(token)
     let query = { date: { "$lt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
     event.find(query).populate('placeId', '_id sportId').populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer').then((data) => {//
-        console.log("eventplayed -> data", data)
-        if (!data) {
+        console.log("eventplayed -> data", data.length())
+        if (data.length() == 0) {
             return res.json({ code: code.ok, data: data })
         }
         data.map((events, index) => {
