@@ -17,9 +17,11 @@ function uploadPhoto(req, res) {
             const files = req.files;
             let index, len;
             var filepathlist = []
+            console.log("uploadPhoto ->  process.env.IMAGEPREFIX",  process.env.IMAGEPREFIX)
             for (index = 0, len = files.length; index < len; ++index) {
-                console.log("uploadPhoto -> files[index].path", files[index].path)
+                // console.log("uploadPhoto -> files[index].path", files[index].path)
                 let filepath = process.env.IMAGEPREFIX + files[index].path.slice(4,);;
+                // console.log("uploadPhoto -> filepath", filepath)
                 filepathlist.push(filepath)
             }
             return res.json({ code: code.created, message: msg.ok, data: filepathlist })
