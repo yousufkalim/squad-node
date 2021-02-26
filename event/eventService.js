@@ -207,7 +207,7 @@ function eventplayed(req, res) {
             }
         })
     }).catch((err) => {
-        // console.log("eventplayed -> err", err)
+        console.log("eventplayed -> err", err)
         return res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
