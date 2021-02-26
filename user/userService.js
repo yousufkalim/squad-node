@@ -15,6 +15,7 @@ const { response } = require('express');
 const { strict } = require('assert');
 const { use } = require('../admin/adminRouter');
 const userDao = require('./userDao');
+const { promises } = require('fs');
 var serverKey = process.env.SERVER_KEY;
 var fcm = new FCM(serverKey);
 var ObjectId = require('mongodb').ObjectID;
@@ -753,20 +754,45 @@ async function getinvite(req, res) {
 }
 async function peoplecount(req, res) {
     let token = req.headers['authorization'],
-        obj = util.decodeToken(token),
-        myFriends = 0,
-        peopleImet = 0,
-        peopleAround = 0,
-        newToSquad = 0,
-        userdata;
-    let UserData = new Promise(function (myResolve, myReject) {
-        console.log("1")
-        user.findOne({ _id: obj.id }).then(userdat => {
-            myResolve(userdat)
+        obj = util.decodeToken(token);
+    let myPromise = new Promise(function (myResolve, myReject) {
+        let query = { _id: obj.id };
+        let userIds = []
+        user.findOne(query).populate('participatedin.eventId', '_id participants').then((userdata) => {
+            userdata.participatedin.map((el, index) => {
+                console.log("peoplecount -> el", el.eventId)
+                el.eventId.participants.map((userid) => {
+                    if (userid != obj.id) {
+                        userIds.push(userid)
+                    }
+                })
+            })
+            let unique = userIds.filter((it, i, ar) => ar.indexOf(it) === i);
+            user.find({ _id: { $in: unique } }).then((users) => {
+                myResolve(users.length)
+            })
+        }).catch((err) => {
+            myReject(err)
         })
     })
-    let myPromise = new Promise(function (myResolve, myReject) {
-        console.log("2")
+    let peoplearound = new Promise(function (myResolve, myReject) {
+        user.findOne({ _id: obj.id }).then(async (userdat) => {
+            let query = {
+                location: {
+                    $nearSphere: {
+                        $geometry: { type: "Point", coordinates: [userdat.location.coordinates[0], userdat.location.coordinates[1]] },
+                        $maxDistance: parseFloat(100) * 1000
+                    }
+                }
+            }
+            await user.find(query).then((data) => {
+                 myResolve(data.length)
+            }).catch((err) => {
+                myReject(err)
+            })
+        })
+    })
+    let newtosquad = new Promise(function (myResolve, myReject) {
         let query = {
             participatedin: { $exists: true, $size: 0 }
         };
@@ -776,42 +802,27 @@ async function peoplecount(req, res) {
             myReject(err)
         })
     })
-    let peoplearound = new Promise(function (myResolve, myReject) {
-        user.findOne({ _id: obj.id }).then(async userdat => {
-            let query = {
-                $and: [
-                    {
-                        location: {
-                            $nearSphere: {
-                                $geometry: { type: "Point", coordinates: [userdat.location.coordinates[0], userdat.location.coordinates[1]] },
-                                $maxDistance: parseFloat(100) * 1000
-                            }
-                        }
-                    }
-                ],
-            }
-            await userdao.find(query).then(async (err, data) => {//have to add friend flag here
-                console.log("data", data)
-                await myResolve(data.length)
-
-            })
-        })
-
-    })
-    UserData.then((userele) => {
-        // userdata = userele
-        myPromise.then(data => {
-            newToSquad = data;
-            peoplearound.then(peoar => {
-                peopleAround = peoar
-            }).catch((err) => {
-                console.log("err", err)
-
-            })
-            console.log("peoplecount -> data", data, newToSquad, peopleAround)
+    let friends = new Promise(function (myResolve, myReject) {
+        user.findOne({ _id: obj.id }).then((data) => {
+            myResolve(data.friends.length)
+        }).catch((err) => {
+            myReject(err)
         })
     })
-
+    Promise.all([myPromise, peoplearound, newtosquad, friends]).then((values) => {
+        print(values);
+    });
+    function print(data) {
+        console.log("print -> data", data)
+        let obj = {
+            //peopleimet,peoplearound,new,friends
+            peopleImet: data[0],
+            peopleAround: data[1],
+            newToSquad: data[2],
+            myFriends: data[3],
+        }
+        return res.json({ code: code.ok, data: obj })
+    }
 
 }
 function addRatingasplayer(req, res) {
@@ -859,18 +870,12 @@ function addRatingasorganizer(req, res) {
     })
 
 }
-function peoplenewtosquad(req, res, count = false) {
+function peoplenewtosquad(req, res) {
     let query = {
         participatedin: { $exists: true, $size: 0 }
     };
     userdao.find(query).then((userdata) => {
-        // console.log("peoplenewtosquad -> userdata", userdata)
-        if (count == true) {
-            console.log("peoplenewtosquad -> userdata.length", userdata.length)
-            return userdata.length;
-        }
         return res.json({ code: code.ok, data: userdata, count: userdata.length })
-
     }).catch((err) => {
         console.log("peoplenewtosquad -> err", err)
         return res.json({ code: code.internalError, message: msg.internalServerError })
