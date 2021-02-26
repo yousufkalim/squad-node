@@ -68,7 +68,7 @@ function deleteuser(req, res) {
     let query = { _id: req.query.userId }
 
     userdao.remove(query).then((data) => {
-        console.log("deleteuser -> data", data)
+        // console.log("deleteuser -> data", data)
         if (data.deletedCount == 1) {
             return res.json({ code: code.ok, messages: msg.userdeleted })
         }else{
@@ -97,7 +97,7 @@ function resetpassword(req, res) {
         })
         // res.json({ code: code.ok, message: msg.passwordreset })
     }).catch((err) => {
-        console.log("createUser -> err", err)
+        // console.log("createUser -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }

@@ -68,7 +68,7 @@ Users.countDocuments().then((data) => {
     else {
         Users.findOne({ role: "ADMIN" }).then((result) => {
             if (result == null) {
-                console.log("data but no admin")
+                // console.log("data but no admin")
                 addAdmin()
             }
             else {
@@ -89,7 +89,7 @@ async function addAdmin() {
             "coordinates": [process.env.LONG, process.env.LAT] // [  ,<longitude>, <latitude> ]
         },
     };
-    console.log("addAdmin -> obj", obj)
+    // console.log("addAdmin -> obj", obj)
 
     let updatedPass = await bcrypt.hashSync(obj.password, bcrypt.genSaltSync(10));
     obj.password = updatedPass;

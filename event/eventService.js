@@ -43,7 +43,7 @@ function updateevent(req, res) {
     })
 }
 function eventdetail(req, res) {
-    console.log("eventdetail -----------------------------", req.query.eventId)
+    // console.log("eventdetail -----------------------------", req.query.eventId)
     let query = { _id: req.query.eventId }
     return eventdao.findone(query).then((data) => {
         res.json({ code: code.ok, data: data })
@@ -112,8 +112,12 @@ function eventlist(req, res) {
 
                 if ((data.length - 1) == inx) {
                     data.map((el, i) => {
-                        var participatedinevent = (el.participants) ? el.participants.includes(user.id) : false;
+                        var participatedinevent;
                         console.log("eventlist -> participatedinevent", participatedinevent)
+                        console.log("eventlist -> el.participants", el.participants)
+                        console.log("eventlist -> el.participants.includes(user.id)", el.participants.includes(user.id))
+                        console.log("eventlist -> (el.participants) ? el.participants.includes(user.id) : false", (el.participants) ? el.participants.includes(user.id) : false)
+                        participatedinevent = (el.participants) ? el.participants.includes(user.id) : false;
                         let obj = {
                             ...el._doc,
                             participatedinevent: participatedinevent
@@ -147,7 +151,7 @@ function joinevent(req, res) {
                     update1 = { $push: { participatedin: { eventId: data._id } } },
                     options1 = { new: true };
                 userDao.findOneAndUpdate(query1, update1, options1).then((userdata) => {
-                    console.log("joinevent -> userdata", userdata)
+                    // console.log("joinevent -> userdata", userdata)
                     userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
                     res.json({ code: code.ok, msg: msg.eventjoin })
                 })
@@ -188,12 +192,12 @@ function eventplayed(req, res) {
                 events.participants[i] = userdata;
             })
             if (data.length == (index + 1)) {
-                console.log("eventplayed -> finallist", data)
+                // console.log("eventplayed -> finallist", data)
                 return res.json({ code: code.ok, data: data })
             }
         })
     }).catch((err) => {
-        console.log("eventplayed -> err", err)
+        // console.log("eventplayed -> err", err)
         return res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
@@ -226,7 +230,7 @@ function eventwillplayed(req, res) {
                 events.participants[i] = userdata;
             })
             if (data.length == (index + 1)) {
-                console.log("eventplayed -> finallist", data)
+                // console.log("eventplayed -> finallist", data)
                 return res.json({ code: code.ok, data: data })
             }
         })
@@ -239,9 +243,9 @@ function preferenceBasedList(req, res) {
     let obj = util.decodeToken(token)
     var eventlist = [];
     user.findById(obj.id).then((data) => {
-        console.log("preferenceBasedList -> data.preferences", data.preferences, data.preferences.length)
+        // console.log("preferenceBasedList -> data.preferences", data.preferences, data.preferences.length)
         if (data.preferences.length >= 1) {
-            console.log("preferenceBasedList -> if")
+            // console.log("preferenceBasedList -> if")
             data.preferences.map((el, index) => {
                 let query = {//db.events.createIndex( {location: "2dsphere" } )
                     location: {
@@ -272,12 +276,12 @@ function preferenceBasedList(req, res) {
                 })
             })
         } else if (data.preferences == 0) {
-            console.log("preferenceBasedList ->  else if")
+            // console.log("preferenceBasedList ->  else if")
             this.eventlist(req, res)
             // res.json({ code: code.ok, data: eventlist })
         } else {
 
-            console.log("===================in else=====================")
+            // console.log("===================in else=====================")
         }
 
     }).catch((err) => {
@@ -293,9 +297,9 @@ function twodaysbeforenotification() {
     const currentDate = new Date();
     const afterTwoDaysDate = currentDate.addDays(2);//greater than this
     const afterTwoDaysDateOneHour = afterTwoDaysDate.addHours(1);//less than this
-    console.log("twodaysbeforenotification ->currentDate afterTwoDaysDate afterTwoDaysDateOneHour", currentDate, afterTwoDaysDate, afterTwoDaysDateOneHour)
+    // console.log("twodaysbeforenotification ->currentDate afterTwoDaysDate afterTwoDaysDateOneHour", currentDate, afterTwoDaysDate, afterTwoDaysDateOneHour)
     event.find({ "starttime": { $gt: afterTwoDaysDate, $lt: afterTwoDaysDateOneHour } }).then((eventlist) => {
-        console.log("twodaysbeforenotification -> eventlist", eventlist)
+        // console.log("twodaysbeforenotification -> eventlist", eventlist)
         eventlist.map((eve) => {
             userService.eventhournotification(eve.createdby, 48)
         })
@@ -307,9 +311,9 @@ function onedaysbeforenotification() {
     const currentDate = new Date();
     const afterOneDaysDate = currentDate.addDays(1);//greater than this
     const afterOneDaysDateOneHour = afterOneDaysDate.addHours(1);//less than this
-    console.log("onedaysbeforenotification ->currentDate afterOneDaysDate  afterOneDaysDateOneHour", currentDate, afterOneDaysDate, afterOneDaysDateOneHour)
+    // console.log("onedaysbeforenotification ->currentDate afterOneDaysDate  afterOneDaysDateOneHour", currentDate, afterOneDaysDate, afterOneDaysDateOneHour)
     event.find({ "starttime": { $gt: afterOneDaysDate, $lt: afterOneDaysDateOneHour } }).then((eventlist) => {
-        console.log("onedaysbeforenotification -> eventlist", eventlist)
+        // console.log("onedaysbeforenotification -> eventlist", eventlist)
         eventlist.map((eve) => {
             userService.eventhournotification(eve.createdby, 24)
         })
@@ -321,7 +325,7 @@ function oneminafternotification() {
     const currentDate = new Date();
     const beforeOneminutedate = currentDate.removeMinutes(1);
     event.find({ "endtime": beforeOneminutedate }).then((eventlist) => {
-        console.log("oneminafternotification -> eventlist", eventlist)
+        // console.log("oneminafternotification -> eventlist", eventlist)
         eventlist.map((eve) => {
             userService.ratenotification(eve.participants)
             userService.rateplayernotification(eve.createdby, eve.createdby)

@@ -35,7 +35,7 @@ function validatePassword(data) {
 }
 
 function generateToken(data, secret) {
-    console.log("generateToken -> data=========================>", data)
+    // console.log("generateToken -> data=========================>", data)
     let obj = {
         id: data._id,
         email: data.email,
@@ -45,7 +45,7 @@ function generateToken(data, secret) {
     return jwt.sign(obj, secret, { expiresIn: '720hr' })
 }
 async function sendEMail(receiverid, data) {
-    console.log("sendEMail ->  process.env.MAIL_SERVICE",  process.env.MAIL_SERVICE,process.env.USERID,process.env.PASSWORD)
+    // console.log("sendEMail ->  process.env.MAIL_SERVICE",  process.env.MAIL_SERVICE,process.env.USERID,process.env.PASSWORD)
     var tansporter = nodemailer.createTransport({
         service: process.env.MAIL_SERVICE,
         auth: {
