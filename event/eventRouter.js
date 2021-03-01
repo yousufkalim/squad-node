@@ -21,7 +21,7 @@ eventRouter.route('/detail')
         actions.eventdetail(req, res, next)
     });
 eventRouter.route('/list')
-    .get([validate.verifyToken], (req, res, next) => {
+    .post([validate.verifyToken], (req, res, next) => {
         actions.eventlist(req, res, next)//filter by date
     });
 eventRouter.route('/delete')

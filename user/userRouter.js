@@ -93,7 +93,7 @@ userRouter.route('/test')
     })
 
 userRouter.route('/peoplearound')
-    .get([validate.verifyToken], (req, res) => {
+    .post([validate.verifyToken], (req, res) => {
         actions.peoplearound(req, res)
     })
 userRouter.route('/peoplenewtosquad')
