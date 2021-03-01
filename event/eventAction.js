@@ -36,6 +36,12 @@ function eventinvitation(req, res,next) {
 function addeventunauthorized(req, res,next) {
     service.addeventunauthorized(req, res,next)
 }
+function deleteevent(req, res,next) {
+    service.deleteevent(req, res,next)
+}
+function unjoinevent(req, res,next) {
+    service.unjoinevent(req, res,next)
+}
 module.exports = {
     addevent,
     eventdetail,
@@ -47,5 +53,7 @@ module.exports = {
     eventinvitation,
     updateevent,
     preferenceBasedList,
-    addeventunauthorized
+    addeventunauthorized,
+    deleteevent,
+    unjoinevent
 }

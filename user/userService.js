@@ -66,8 +66,6 @@ function registerUser(req, res) {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
-
-
 function loginUser(req, res) {
     console.log("loginUser ->   req.body.fcm", req.body.fcm)
     const fcmToken = (req.body.fcm) ? req.body.fcm : '';
@@ -994,17 +992,7 @@ function declinerequest(req, res) {
     }).catch((err) => {
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
-
 }
-
-
-
-
-
-
-
-
-
 function invitenotification(users) {//sent to user
     console.log("invitenotification -> users", users)
     var message = {

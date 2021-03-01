@@ -23,22 +23,26 @@ messages = {
     passwordreset: 'Password reset',
     mailnotsend: 'cant send mail currently try after sometime',
     userdeleted: 'User Deleted',
-    sportadded:'Sport Added',
-    youcantaccess:'You Dont have access to these service',
-    sportdeleted:'Sport Deleted',
-    eventcreated:'Event Created',
-    eventjoin:'Event Joined',
-    preferencesupdated:'Preferences Updated',
-    emailvalidate:"Email Validated",
-    verifyemailfirst:"Verify Your Email First",
-    emailAlreadyRegistered:"Email Already registered",
-    latlongincorrect:"longitude/latitude is out of bounds",
-    preferancedeleted:"Preferance Removed",
-    placeadded:"Place added",
-    addrate:"Rating Added",
-    eventfull:"Event Full",
-    validatefirst:"Validate you email first",
-    invitatdec:"Invitation declined",
+    sportadded: 'Sport Added',
+    youcantaccess: 'You Dont have access to these service',
+    sportdeleted: 'Sport Deleted',
+    eventcreated: 'Event Created',
+    eventjoin: 'Event Joined',
+    preferencesupdated: 'Preferences Updated',
+    emailvalidate: "Email Validated",
+    verifyemailfirst: "Verify Your Email First",
+    emailAlreadyRegistered: "Email Already registered",
+    latlongincorrect: "longitude/latitude is out of bounds",
+    preferancedeleted: "Preferance Removed",
+    placeadded: "Place added",
+    addrate: "Rating Added",
+    eventfull: "Event Full",
+    validatefirst: "Validate you email first",
+    invitatdec: "Invitation declined",
+    eventdel: "Event deleted",
+    cantdeleve: "You can not delete this event",
+    evenotfound: "Event not found",
+    eventunjoin: "Event unjoined",
     invalidEmailPass: "Email or Password is incorrect"//'Invalid email or password, Email_format:standard email format. Password_format: between 8 to 20 character with number and special character eg. Superm@n123',
 }
 schemas = {
@@ -46,8 +50,8 @@ schemas = {
     user: 'user',
     chat: 'chat',
     sport: 'sport',
-    event:'event',
-    place:'place'
+    event: 'event',
+    place: 'place'
 }
 status = {
     active: "ACTIVE",
@@ -61,19 +65,19 @@ role = {
 }
 level = {
     beginner: "BEGINNER",
-    intermediate:"INTERMEDIATE",
-    advanced:"ADVANCED",
-    all:"ALL"
+    intermediate: "INTERMEDIATE",
+    advanced: "ADVANCED",
+    all: "ALL"
 }
-gender={
-    men:"MEN",
-    women:"WOMEN",
-    both:"BOTH"
+gender = {
+    men: "MEN",
+    women: "WOMEN",
+    both: "BOTH"
 }
-eventType={
-    public:"PUBLIC",
-    private:"PRIVATE",
-    participate:"PARTICIPATE"
+eventType = {
+    public: "PUBLIC",
+    private: "PRIVATE",
+    participate: "PARTICIPATE"
 }
 module.exports = {
     schemas,

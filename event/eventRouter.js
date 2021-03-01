@@ -24,6 +24,10 @@ eventRouter.route('/list')
     .get([validate.verifyToken], (req, res, next) => {
         actions.eventlist(req, res, next)//filter by date
     });
+eventRouter.route('/delete')
+    .delete([validate.verifyToken], (req, res, next) => {
+        actions.deleteevent(req, res, next)
+    });
 eventRouter.route('/myevents')
     .get([validate.verifyToken], (req, res, next) => {
         actions.myevents(req, res, next)//created by user
@@ -31,6 +35,10 @@ eventRouter.route('/myevents')
 eventRouter.route('/joinevent')
     .post([validate.verifyToken], (req, res, next) => {
         actions.joinevent(req, res, next)
+    });
+eventRouter.route('/unjoinevent')
+    .post([validate.verifyToken], (req, res, next) => {
+        actions.unjoinevent(req, res, next)
     });
 eventRouter.route('/eventplayed')
     .get([validate.verifyToken], (req, res, next) => {

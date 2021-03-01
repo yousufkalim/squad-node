@@ -6,18 +6,14 @@ const userdao = require('../user/userDao');
 const util = require('../app util/util');
 const jwt = require('jsonwebtoken');
 
-async function verifyToken(req, res, next) {
-    // console.log("verifyToken -> req.headers", req.headers)
+async function verifyToken(req, res, next) {  
     let token = req.headers['authorization']
-    // console.log("verifyToken -> token", token)
     await jwt.verify(token, process.env.USER_SECRET, (err) => {
-        // console.log("verifyToken -> err", err)
         if (err) {
             return res.json({ code: code.unAuthorized, message: msg.invalidToken })
         }
         else {
             let obj = util.decodeToken(token)
-            // console.log("verifyToken -> obj", obj)
             let query = { _id: obj.id }
             userdao.findone(query).then((data) => {
 

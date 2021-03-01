@@ -402,6 +402,51 @@ Date.prototype.removeMinutes = function (m) {
     date.setTime(date.getTime() - (m * 60 * 1000));
     return date;
 }
+
+function deleteevent(req, res) {
+    let token = req.headers['authorization']
+    let obj = util.decodeToken(token);
+    let query = { _id: req.query.eventId, createdby: obj.id };
+    eventdao.remove(query).then((eventdata) => {
+        if (eventdata.deletedCount == 1) {
+            res.json({ code: code.ok, message: msg.eventdel })
+        } else if (eventdata.n == 0) {
+            res.json({ code: code.badRequest, message: msg.evenotfound })
+        } else {
+            res.json({ code: code.badRequest, message: msg.cantdeleve })
+        }
+
+    }).catch((err) => {
+        console.log("deleteevent -> err", err)
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+}
+function unjoinevent(req, res) {
+    //remove userid  from event data participants  602d1310056d1a1ac86aacba
+    //remove eventid from user participatedin 602a28ea63ca95110e352d1d
+    let token = req.headers['authorization']
+    let obj = util.decodeToken(token)
+    let query = { _id: req.query.eventId },
+        update = { $pull: { participants: obj.id } },
+        options = { new: true };
+    // eventdao.findone(query).then((data) => {
+    return eventdao.findOneAndUpdate(query, update, options).then((data) => {
+        if (data) {
+            console.log("unjoinevent -> data", data)
+            let query1 = { _id: obj.id },
+                update1 = { $pull: { participatedin: { eventId: data._id } } },
+                options1 = { new: true };
+            userDao.findOneAndUpdate(query1, update1, options1).then((userdata) => {
+                // console.log("joinevent -> userdata", userdata)
+                userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
+                res.json({ code: code.ok, msg: msg.eventunjoin })
+            })
+        }
+    }).catch((err) => {
+        console.log("joinevent -> err", err)
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+}
 module.exports = {
     addevent,
     eventdetail,
@@ -417,5 +462,7 @@ module.exports = {
     twodaysbeforenotification,
     onedaysbeforenotification,
     oneminafternotification,
-    eventhappennotification
+    eventhappennotification,
+    deleteevent,
+    unjoinevent
 }
