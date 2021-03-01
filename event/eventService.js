@@ -25,6 +25,7 @@ function addevent(req, res) {
     let obj = util.decodeToken(token)
     req.body.createdby = obj.id
     const data = req.body;
+    console.log("addevent -> req.body=============================================================================================", req.body)
     return eventdao.create(data).then((response) => {
         res.json({ code: code.created, eventId: response._id, message: msg.eventcreated })
     }).catch((err) => {
