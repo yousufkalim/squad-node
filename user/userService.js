@@ -608,7 +608,8 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
         $and: [
             { participatedin: { $elemMatch: { "eventId": { $nin: eventId } } } },
             { preferences: { $elemMatch: { "level": { $in: level } } } },
-            { gender: { $in: { gender } } },
+            { gender: { $in: gender } },
+         
             {
                 location: {
                     $nearSphere: {
@@ -622,6 +623,7 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
     console.log("peoplearound -> query", query.participatedin, query.preferences, query.gender, query.location)
     user.find(query, '_id firstname lastname imageUrl').exec((err, data) => {//have to add friend flag here
         if (err) {
+            console.log("peoplearound -> err", err)
 
             return res.json({ code: code.internalError, message: msg.internalServerError })
         } else {
