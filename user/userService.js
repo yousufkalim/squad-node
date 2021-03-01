@@ -621,10 +621,14 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
     }
     user.find(query, '_id firstname lastname imageUrl').exec((err, data) => {//have to add friend flag here
         if (err) {
-            console.log("peoplearound -> err", err)
+        
             return res.json({ code: code.internalError, message: msg.internalServerError })
         } else {
             let finallist = []
+         
+            if (data.length == 0) {
+                return res.json({ code: code.ok, data: data, count: 0 })
+            }
             data.map((userdata, index) => {
                 var fr = (userdata.friends) ? userdata.friends.includes(obj.id) : false;
                 userdata = {
@@ -784,7 +788,7 @@ async function peoplecount(req, res) {
                 }
             }
             await user.find(query).then((data) => {
-                 myResolve(data.length)
+                myResolve(data.length)
             }).catch((err) => {
                 myReject(err)
             })
