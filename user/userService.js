@@ -670,7 +670,7 @@ function invitepeople(req, res) {
                         if (index == (manualinv.length - 1)) {
                             //add to invitation to user record
                             addgameinvitation(obj, userId.id, eventId)
-                            this.invitemail(res, req, obj, eventId);
+                            invitemail(res, req, obj, eventId);
                         }
                     })
                 }
@@ -732,7 +732,8 @@ async function invitemail(res, req, users, eventId) {
     let usersemail = [];
     users.map(async (el, i) => {
         let userId = (el.userid) ? el.userid : ''
-        let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + userId;
+        // let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + userId;
+        let link = "squad://joinevent/eventId=" + eventId
         usersemail.push(el.email)
         // let link = eventlink;
         let data = {
