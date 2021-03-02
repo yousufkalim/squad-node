@@ -609,7 +609,7 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
             { participatedin: { $elemMatch: { "eventId": { $nin: eventId } } } },
             { preferences: { $elemMatch: { "level": { $in: level } } } },
             { gender: { $in: gender } },
-         
+
             {
                 location: {
                     $nearSphere: {
@@ -1141,7 +1141,7 @@ function ratenotification(participantIds) {
             var message = {
                 to: (dta.fcmToken) ? dta.fcmToken : '',
                 notification: {
-                    title: 'Rate Vanue/Organizer',
+                    title: 'Rate Vanue/Organizer/Players',
                 },
                 data: {
                     my_key: 'CODERSCOTCH',
@@ -1150,7 +1150,7 @@ function ratenotification(participantIds) {
             };
             fcm.send(message, function (err, response) {
                 if (err) {
-                    console.log("loginUser -> err============================================>", err)
+                    console.log("ratenotification -> err", err)
                     console.log("Something has gone wrong!");
                 } else {
                     console.log("Successfully sent with response: ", response);

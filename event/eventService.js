@@ -8,6 +8,7 @@ const user = require('../schema/user');
 const userService = require('../user/userService');
 const { json } = require('express');
 const userDao = require('../user/userDao');
+const { use } = require('../user/userRouter');
 const { gender } = require('../constants').gender;
 
 
@@ -168,7 +169,43 @@ function joinevent(req, res) {
         console.log("joinevent -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
+}
+function joinevent2(req, res) {
+    console.log("req.body.starttime", req.body.starttime)
+    let token = req.headers['authorization']
+    let obj = util.decodeToken(token);
+    let query = { _id: obj.id };
+    let eventIdlist = [];
+    user.findOne(query).then((data) => {
+        if (data.participatedin.length == 0) {
+            //join event
+            this.joinevent(req, res)
+            // res.json({ code: code.ok, message: "you can join event" })
+        } else {
+            data.participatedin.map((eventId, eindex) => {
+                eventIdlist.push(eventId.eventId);
+                if (data.participatedin.length == (eindex + 1)) {
+                    let query = { _id: { $in: eventIdlist }, starttime: { $eq: new Date(req.body.starttime) } };
+                    console.log("query", query)
+                    event.find(query).then((eventdata) => {
+                        console.log("eventdata====================>", eventdata.length)
+                        if (eventdata.length == 0) {
+                            this.joinevent(req, res)
+                            // res.json({ code: code.ok, message: "you can join event" })
+                        } else {
+                            res.json({ code: code.badRequest, msg: msg.cannotjoinevent })
+                        }
 
+                    })
+
+                }
+            })
+
+        }
+    }).catch((err) => {
+        console.log("joinevent -> err", err)
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
 }
 function eventplayed(req, res) {
     //"avrratvanue" "avrratorganizer"
@@ -305,7 +342,7 @@ function preferenceBasedList(req, res) {
                     // level: { $in: el.level }
 
                     level: el.level,
-                    gender: { $in:[ data.gender,gender.both] }
+                    gender: { $in: [data.gender, gender.both] }
                     // { $eq:  }
 
                     // level: el.level
@@ -467,5 +504,6 @@ module.exports = {
     oneminafternotification,
     eventhappennotification,
     deleteevent,
-    unjoinevent
+    unjoinevent,
+    joinevent2
 }

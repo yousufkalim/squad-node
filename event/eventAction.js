@@ -18,7 +18,7 @@ function eventlist(req, res,next) {
     service.eventlist(req, res,next)
 }
 function joinevent(req, res,next) {
-    service.joinevent(req, res,next)
+    service.joinevent2(req, res,next)
 }
 function eventplayed(req, res,next) {
     service.eventplayed(req, res,next)

@@ -43,6 +43,7 @@ messages = {
     cantdeleve: "You can not delete this event",
     evenotfound: "Event not found",
     eventunjoin: "Event unjoined",
+    cannotjoinevent:"you can not join this event as you have already joint event which will happen at the same time of this event",
     invalidEmailPass: "Email or Password is incorrect"//'Invalid email or password, Email_format:standard email format. Password_format: between 8 to 20 character with number and special character eg. Superm@n123',
 }
 schemas = {
