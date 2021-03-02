@@ -8,6 +8,7 @@ const user = require('../schema/user');
 const userService = require('../user/userService');
 const { json } = require('express');
 const userDao = require('../user/userDao');
+const { gender } = require('../constants').gender;
 
 
 function addeventunauthorized(req, res) {
@@ -303,8 +304,9 @@ function preferenceBasedList(req, res) {
                     sport: el.sportId,
                     // level: { $in: el.level }
 
-                    level:
-                        { $eq: el.level }
+                    level: el.level,
+                    gender: { $in:[ data.gender,gender.both] }
+                    // { $eq:  }
 
                     // level: el.level
 
