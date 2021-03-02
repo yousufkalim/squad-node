@@ -79,11 +79,19 @@ async function verifyToken(req, res, next) {
     })
 }
 async function validateUpdate(req, res, next) {
-    const { email,password,role} = req.body;
+    const { email, password, role } = req.body;
     if (!email && !password & !role) {
         next()
     }
     else {
+        return res.json({ code: code.badRequest, message: msg.invalidBody })
+    }
+}
+async function verifyaddpreferance(req, res, next) {
+    const { sportId, radius, level } = req.body.preferences;
+    if (sportId && radius && level) {
+        next()
+    } else {
         return res.json({ code: code.badRequest, message: msg.invalidBody })
     }
 }
@@ -200,6 +208,7 @@ module.exports = {
     validateSocialLogin,
     validateSocialLoginFace,
     validateSocialLoginLinkedin,
-    validateSignUp
+    validateSignUp,
+    verifyaddpreferance
 
 }

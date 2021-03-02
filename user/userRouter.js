@@ -72,7 +72,7 @@ userRouter.route('/linkedin/socialLogin')
 
 
 userRouter.route('/createpreference')
-    .post([validate.verifyToken], (req, res) => {
+    .post([validate.verifyToken,validate.verifyaddpreferance], (req, res) => {
         actions.createpreference(req, res)
     })
 userRouter.route('/getpreference')
