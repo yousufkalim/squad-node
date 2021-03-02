@@ -6,9 +6,8 @@ const event = require('../schema/event');
 
 const user = require('../schema/user');
 const userService = require('../user/userService');
-const { json } = require('express');
+
 const userDao = require('../user/userDao');
-const { use } = require('../user/userRouter');
 const { gender } = require('../constants').gender;
 
 
@@ -118,18 +117,19 @@ function eventlist(req, res) {
                         var participatedinevent;
                         el.participants.map((ele) => {
                             if (ele._id == user.id) {
-                                console.log("eventlist -> ele._id == user.id", ele._id, user.id)
+                              
                                 participatedinevent = true;
                             } else {
-                                console.log("eventlist -> ele._id != user.id", ele._id, user.id)
+                              
                                 participatedinevent = false;
                             }
                         })
                         let obj = {
                             ...el._doc,
-                            participatedinevent: participatedinevent
+                            participatedinevent: participatedinevent,
+                            seatsremain: el.seats - el.participants.length
                         }
-                        console.log("eventlist -> obj", obj)
+                       
                         data[i] = obj
                     })
                     res.json({ code: code.ok, data: data })
