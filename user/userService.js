@@ -732,8 +732,8 @@ async function invitemail(res, req, users, eventId) {
     let usersemail = [];
     users.map(async (el, i) => {
         let userId = (el.userid) ? el.userid : ''
-        // let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + userId;
-        let link = "squad://joinevent/eventId=" + eventId
+        let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + userId;
+        // let link = "squad://joinevent/eventId=" + eventId
         usersemail.push(el.email)
         // let link = eventlink;
         let data = {
@@ -756,7 +756,9 @@ async function invitemail(res, req, users, eventId) {
 }
 async function getinvite(req, res) {
     console.log("getinvite -> req.headers.eventId", req.params.eventId, req.params.userId)
-    res.redirect('squad://join/' + req.params.userId + '/' + req.params.eventId)//deeplinking url for join event
+    // let link = "squad://joinevent/eventId=" + eventId
+    res.redirect("squad://joinevent/eventId=" + req.params.eventId)
+    // res.redirect('squad://join/' + req.params.userId + '/' + req.params.eventId)//deeplinking url for join event
 }
 async function peoplecount(req, res) {
     let token = req.headers['authorization'],
