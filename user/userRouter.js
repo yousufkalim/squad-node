@@ -17,7 +17,7 @@ userRouter.route('/loginAdmin')
         actions.loginAdmin(req, res, next)
     });
 userRouter.route('/userdetail')
-    .post([], (req, res, next) => {
+    .get([], (req, res, next) => {
         actions.userdetail(req, res, next)
     });
 userRouter.route('/forgotPassword')

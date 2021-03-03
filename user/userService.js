@@ -1072,8 +1072,51 @@ function unfriend(req, res) {
     })
 }
 
-function userdetail(req,res){
+function userdetail(req, res) {
+    let query = { _id: req.query.userId };
+    var rateasplayer = 0,
+        rateasorganizer = 0,
+        friendstatus = null;
+    userdao.findone(query).then((data) => {
+        if (data.rateasplayer) {
+            data.rateasplayer.map((player) => {
+                rateasplayer += player.ratedwith
+            })
+        }
+        if (data.rateasorganizer) {
+            data.rateasorganizer.map((organizer) => {
+                rateasorganizer += organizer.ratedwith
+            })
+        }
+        if (data.friends.includes(req.query.userId)) {
+            friendstatus = "Remove friend"
+        } else if (data.friendRequest.includes(req.query.userId)) {
+            friendstatus = "Accept or Reject"
+        } else if (data.sentRequest.includes(req.query.userId)) {
+            friendstatus = "Requested"
+        } else {
+            friendstatus = "Add friend"
+        }
 
+        let Obj = {
+            "imageUrl": (data.imageUrl) ? data.imageUrl : '',
+            "totalfriends": (data.friends) ? data.friends.length : 0,
+            "firstname": (data.firstname) ? data.firstname : "",
+            "lastname": (data.lastname) ? data.lastname : "",
+            "dob": (data.dob) ? data.dob : "",
+            "email": (data.email) ? data.email : "",
+            "gender": (data.gender) ? data.gender : "",
+            "contactNo": (data.contactNo) ? data.contactNo : "",
+            "Noofeventplayed": (data.participatedin) ? data.participatedin.length : 0,
+            "rateasorganizer": (data.rateasorganizer) ? rateasorganizer / data.rateasorganizer.length : "",
+            "rateasplayer": (data.rateasplayer) ? rateasplayer / data.rateasplayer.length : "",
+            "friendshipstatus": friendstatus
+
+        }
+        res.json({ code: code.ok, data: Obj })
+    }).catch((err) => {
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
 }
 function getuserpreference(req, res, next) {
     let query = { _id: req.query.userId }
@@ -1118,12 +1161,6 @@ function getuserpreference(req, res, next) {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
-
-
-
-
-
-
 
 function invitenotification(users) {//sent to user
     console.log("invitenotification -> users", users)
