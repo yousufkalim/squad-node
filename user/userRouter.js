@@ -16,6 +16,10 @@ userRouter.route('/loginAdmin')
     .post([validate.validateLogin], (req, res, next) => {
         actions.loginAdmin(req, res, next)
     });
+userRouter.route('/userdetail')
+    .post([], (req, res, next) => {
+        actions.userdetail(req, res, next)
+    });
 userRouter.route('/forgotPassword')
     .post([], (req, res) => {
         actions.forgotPassword(req, res)
@@ -79,6 +83,11 @@ userRouter.route('/getpreference')
     .get([validate.verifyToken], (req, res) => {
         actions.getpreference(req, res)
     })
+userRouter.route('/getuserpreference')
+    .get([validate.verifyToken], (req, res) => {
+        actions.getuserpreference(req, res)
+    })
+
 userRouter.route('/updatepreference')
     .put([validate.verifyToken], (req, res) => {
         actions.updatepreference(req, res)

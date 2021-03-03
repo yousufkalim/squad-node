@@ -116,6 +116,12 @@ function canclerequest(req, res) {
 function unfriend(req, res) {
     service.unfriend(req, res)
 }
+function userdetail(req, res) {
+    service.userdetail(req, res)
+}
+function getuserpreference(req, res) {
+    service.getuserpreference(req, res)
+}
 module.exports = {
     registerUser,
     loginUser,
@@ -154,5 +160,7 @@ module.exports = {
     gamenotifdecline,
     listorsentrequest,
     canclerequest,
-    unfriend
+    unfriend,
+    userdetail,
+    getuserpreference
 }

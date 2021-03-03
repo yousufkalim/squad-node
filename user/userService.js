@@ -1072,8 +1072,52 @@ function unfriend(req, res) {
     })
 }
 
+function userdetail(req,res){
 
+}
+function getuserpreference(req, res, next) {
+    let query = { _id: req.query.userId }
+    let finalpreferancearray = []
+    user.findOne(query).populate('preferences.sportId', '_id name image').then((data) => {
+        data.preferences.map((preferance) => {
+            if (preferance.sportId != null) {
+                let obj = {
+                    ...preferance._doc,
+                    isSelected: true
+                }
+                finalpreferancearray.push(obj);
+            }
 
+        })
+        sportdao.find({ status: status.active }).then((sportlist) => {
+            sportlist.map((list => {
+                var found = finalpreferancearray.filter(item => {
+                    let match;
+                    if (item.sportId) {
+                        match = (item.sportId.name === list.name)
+                        return match
+                    } else {
+                        match = (item.name === list.name);
+                        return match
+                    }
+                })
+
+                if (found == false) {
+                    let obj = {
+                        ...list._doc,
+                        isSelected: false
+                    }
+                    finalpreferancearray.push(obj)
+                }
+            }))
+            res.json({ code: code.ok, data: finalpreferancearray })
+
+        })
+    }).catch((err) => {
+        console.log("getpreference -> err", err)
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+}
 
 
 
@@ -1371,5 +1415,7 @@ module.exports = {
     gamenotifdecline,
     listorsentrequest,
     canclerequest,
-    unfriend
+    unfriend,
+    userdetail,
+    getuserpreference
 }
