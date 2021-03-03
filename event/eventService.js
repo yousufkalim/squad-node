@@ -493,8 +493,7 @@ function deleteevent(req, res) {
     })
 }
 function unjoinevent(req, res) {
-    //remove userid  from event data participants  602d1310056d1a1ac86aacba
-    //remove eventid from user participatedin 602a28ea63ca95110e352d1d
+  
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     let query = { _id: req.query.eventId },

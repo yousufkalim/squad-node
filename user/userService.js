@@ -13,7 +13,7 @@ const UAParser = require('ua-parser-js');
 var FCM = require('fcm-node');
 const { response } = require('express');
 const { strict } = require('assert');
-const { use } = require('../admin/adminRouter');
+
 const userDao = require('./userDao');
 const { promises } = require('fs');
 var serverKey = process.env.SERVER_KEY;
@@ -933,14 +933,23 @@ function listforfriendrequest(req, res) {
         data.friends.map(id => excludeIds.push(ObjectId(id)))
         data.sentRequest.map(id => excludeIds.push(ObjectId(id)))
         data.friendRequest.map(id => excludeIds.push(ObjectId(id)))
-        user.find({ _id: { $nin: excludeIds } }, '_id firstname lastname imageUrl').then((userdata) => {
+        user.find({ _id: { $nin: excludeIds }, 'role': role.user }, '_id firstname lastname imageUrl').then((userdata) => {
             return res.json({ code: code.ok, data: userdata })
         })
     }).catch((err) => {
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
 }
+function listorsentrequest(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token);
+    user.findOne({ _id: obj.id }).populate('sentRequest', '_id firstname lastname imageUrl').then((data) => {
+        return res.json({ code: code.ok, data: data.sentRequest })
+    }).catch((err) => {
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
 
+}
 function sendrequest(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token)//will push userId to sentrequest 
@@ -1016,6 +1025,62 @@ function declinerequest(req, res) {
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
 }
+
+
+
+function canclerequest(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token);//sentRequest
+    const { userId } = req.body;//friendRequest
+    let query = { _id: obj.id },
+        update = { $pull: { sentRequest: userId } },
+        options = { new: true };
+    userDao.findOneAndUpdate(query, update, options).then((data) => {
+        console.log("canclerequest -> data", data.sentRequest)
+        let query1 = { _id: userId },
+            update1 = { $pull: { friendRequest: obj.id } },
+            options1 = { new: true };
+        userDao.findOneAndUpdate(query1, update1, options1).then((usserdata) => {
+            console.log("canclerequest -> usserdata", usserdata.friendRequest)
+            return res.json({ code: code.ok, message: "Request cancle" })
+        })
+
+    }).catch((err) => {
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
+}
+
+function unfriend(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token);//sentRequest
+    const { userId } = req.body;//friendRequest
+    let query = { _id: obj.id },
+        update = { $pull: { friends: userId } },
+        options = { new: true };
+    userDao.findOneAndUpdate(query, update, options).then((data) => {
+        console.log("canclerequest -> data", data.sentRequest)
+        let query1 = { _id: userId },
+            update1 = { $pull: { friends: obj.id } },
+            options1 = { new: true };
+        userDao.findOneAndUpdate(query1, update1, options1).then((usserdata) => {
+            console.log("canclerequest -> usserdata", usserdata.friendRequest)
+            return res.json({ code: code.ok, message: "unfriend" })
+        })
+
+    }).catch((err) => {
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
+}
+
+
+
+
+
+
+
+
+
+
 function invitenotification(users) {//sent to user
     console.log("invitenotification -> users", users)
     var message = {
@@ -1303,5 +1368,8 @@ module.exports = {
     declinerequest,
     addgameinvitation,
     gamenotification,
-    gamenotifdecline
+    gamenotifdecline,
+    listorsentrequest,
+    canclerequest,
+    unfriend
 }

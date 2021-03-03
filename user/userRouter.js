@@ -72,7 +72,7 @@ userRouter.route('/linkedin/socialLogin')
 
 
 userRouter.route('/createpreference')
-    .post([validate.verifyToken,validate.verifyaddpreferance], (req, res) => {
+    .post([validate.verifyToken, validate.verifyaddpreferance], (req, res) => {
         actions.createpreference(req, res)
     })
 userRouter.route('/getpreference')
@@ -129,6 +129,14 @@ userRouter.route('/listforfriendrequest')
     .get([validate.verifyToken], (req, res) => {
         actions.listforfriendrequest(req, res)
     })
+userRouter.route('/listorsentrequest')
+    .get([validate.verifyToken], (req, res) => {
+        actions.listorsentrequest(req, res)
+    })
+userRouter.route('/canclerequest')
+    .post([validate.verifyToken], (req, res) => {
+        actions.canclerequest(req, res)
+    })
 userRouter.route('/sendrequest')
     .post([validate.verifyToken], (req, res) => {
         actions.sendrequest(req, res)
@@ -149,12 +157,16 @@ userRouter.route('/declinerequest')
     .post([validate.verifyToken], (req, res) => {
         actions.declinerequest(req, res)
     })
+userRouter.route('/unfriend')
+    .post([validate.verifyToken], (req, res) => {
+        actions.unfriend(req, res)
+    })
 
 userRouter.route('/list/gamenotification')
     .get([validate.verifyToken], (req, res) => {
         actions.gamenotification(req, res)
     })
-    userRouter.route('/gamenotifdecline')
+userRouter.route('/gamenotifdecline')
     .post([validate.verifyToken], (req, res) => {
         actions.gamenotifdecline(req, res)
     })
