@@ -767,12 +767,15 @@ async function peoplecount(req, res) {
         let userIds = []
         user.findOne(query).populate('participatedin.eventId', '_id participants').then((userdata) => {
             userdata.participatedin.map((el, index) => {
-                console.log("peoplecount -> el", el.eventId)
-                el.eventId.participants.map((userid) => {
-                    if (userid != obj.id) {
-                        userIds.push(userid)
-                    }
-                })
+                // console.log("peoplecount -> el", el.eventId)
+                if (el.eventId && el.eventId.participants) {
+                    el.eventId.participants.map((userid) => {
+                        if (userid != obj.id) {
+                            userIds.push(userid)
+                        }
+                    })
+                }
+
             })
             let unique = userIds.filter((it, i, ar) => ar.indexOf(it) === i);
             user.find({ _id: { $in: unique } }).then((users) => {
