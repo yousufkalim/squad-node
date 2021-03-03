@@ -905,11 +905,15 @@ function peopleimet(req, res) {
     let userIds = []
     user.findOne(query).populate('participatedin.eventId', '_id participants').then((userdata) => {
         userdata.participatedin.map((el, index) => {
-            el.eventId.participants.map((userid) => {
-                if (userid != obj.id) {
-                    userIds.push(userid)
-                }
-            })
+            if (el.eventId && el.eventId.participants) {
+
+                el.eventId.participants.map((userid) => {
+                    if (userid != obj.id) {
+                        userIds.push(userid)
+                    }
+                })
+            }
+
         })
         let unique = userIds.filter((it, i, ar) => ar.indexOf(it) === i);
         user.find({ _id: { $in: unique } }, '_id firstname lastname imageUrl email').then((users) => {
