@@ -117,10 +117,10 @@ function eventlist(req, res) {
                         var participatedinevent;
                         el.participants.map((ele) => {
                             if (ele._id == user.id) {
-                              
+
                                 participatedinevent = true;
                             } else {
-                              
+
                                 participatedinevent = false;
                             }
                         })
@@ -129,7 +129,7 @@ function eventlist(req, res) {
                             participatedinevent: participatedinevent,
                             seatsremain: el.seats - el.participants.length
                         }
-                       
+
                         data[i] = obj
                     })
                     res.json({ code: code.ok, data: data })
@@ -247,7 +247,7 @@ function eventplayed(req, res) {
                     }
                 })
 
-                // console.log("eventplayed -> events", events, avrratvanue, avrratorganizer)
+
                 //organizer average rate
                 events.participants.map((userdata, i) => {
                     var fr = (userdata.friends) ? userdata.friends.includes(obj.id) : false,
@@ -323,9 +323,7 @@ function preferenceBasedList(req, res) {
     let obj = util.decodeToken(token)
     var eventlist = [];
     user.findById(obj.id).then((data) => {
-        // console.log("preferenceBasedList -> data.preferences", data.preferences, data.preferences.length)
         if (data.preferences.length >= 1) {
-            // console.log("preferenceBasedList -> if")
             data.preferences.map((el, index) => {
                 let query = {//db.events.createIndex( {location: "2dsphere" } )
                     location: {
@@ -339,27 +337,64 @@ function preferenceBasedList(req, res) {
                     },
 
                     sport: el.sportId,
-                    // level: { $in: el.level }
-
                     level: el.level,
                     gender: { $in: [data.gender, gender.both] }
-                    // { $eq:  }
-
-                    // level: el.level
-
                 };
+                (req.query.date) ? (query.date = req.query.date) : '';
+                event.find(query).populate('participants', '_id imageUrl firstname lastname')
+                    .sort({ starttime: sorttype }).then((data) => {
 
-                event.find(query).populate('participants', '_id imageUrl firstname lastname').then((eventdata) => {
-                    (eventdata[0] != null) ? eventlist.push(eventdata[0]) : '';
-                    if (index == (data.preferences.length - 1)) {
-                        res.json({ code: code.ok, data: eventlist })
-                    }
-                })
+                        if (data.length == 0) {
+                            res.json({ code: code.ok, data: data })
+                        }
+                        data.map((el, inx) => {
+
+                            if (el.participants && el.participants.length >= 1) {
+
+                                el.participants.map((par, i) => {
+                                    // console.log("eventlist -> par", par)
+                                    let obj = {
+                                        ...par._doc,
+                                        friend: false
+                                    }
+                                    el.participants[i] = obj
+                                })
+                            }
+
+                            if ((data.length - 1) == inx) {
+                                data.map((el, i) => {
+                                    var participatedinevent;
+                                    el.participants.map((ele) => {
+                                        if (ele._id == user.id) {
+
+                                            participatedinevent = true;
+                                        } else {
+
+                                            participatedinevent = false;
+                                        }
+                                    })
+                                    let obj = {
+                                        ...el._doc,
+                                        participatedinevent: participatedinevent,
+                                        seatsremain: el.seats - el.participants.length
+                                    }
+
+                                    data[i] = obj
+                                })
+                                res.json({ code: code.ok, data: data })
+                            }
+                        })
+                    })
+                // event.find(query).populate('participants', '_id imageUrl firstname lastname')
+                // .then((eventdata) => {
+                //     (eventdata[0] != null) ? eventlist.push(eventdata[0]) : '';
+                //     if (index == (data.preferences.length - 1)) {
+                //         res.json({ code: code.ok, data: eventlist })
+                //     }
+                // })
             })
         } else if (data.preferences == 0) {
-            // console.log("preferenceBasedList ->  else if")
             this.eventlist(req, res)
-            // res.json({ code: code.ok, data: eventlist })
         } else {
 
             // console.log("===================in else=====================")

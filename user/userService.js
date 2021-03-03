@@ -756,7 +756,6 @@ async function invitemail(res, req, users, eventId) {
 }
 async function getinvite(req, res) {
     console.log("getinvite -> req.headers.eventId", req.params.eventId, req.params.userId)
-    // let link = "squad://joinevent/eventId=" + eventId
     res.redirect("squad://joinevent/eventId=" + req.params.eventId)
     // res.redirect('squad://join/' + req.params.userId + '/' + req.params.eventId)//deeplinking url for join event
 }
