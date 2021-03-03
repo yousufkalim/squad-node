@@ -650,6 +650,7 @@ function invitepeople(req, res) {
     let token = req.headers['authorization'];
     let userId = util.decodeToken(token)
     const { users, eventId } = req.body;
+    console.log("invitepeople ->  users, eventId", users, eventId)
     var obj = []
     users.map((el, i) => {
         let query = { _id: el }
@@ -661,8 +662,10 @@ function invitepeople(req, res) {
                 userid: data._id
             }
             obj.push(info)
+            console.log("invitepeople -> i == (users.length - 1)", i, users.length, i == (users.length - 1))
             if (i == (users.length - 1)) {
-                if (req.body.manualInvite) {
+                console.log("invitepeople -> req.body.manualInvite.length", req.body.manualInvite.length)
+                if (req.body.manualInvite.length != 0) {
                     var manualinv = req.body.manualInvite
                     manualinv.map(async (el, index) => {
                         el.fcmToken = (el.fcmToken) ? el.fcmToken : '';
@@ -673,6 +676,10 @@ function invitepeople(req, res) {
                             invitemail(res, req, obj, eventId);
                         }
                     })
+                } else {
+                    console.log("invitepeople -> else")
+                    addgameinvitation(obj, userId.id, eventId)
+                    invitemail(res, req, obj, eventId);
                 }
 
 
@@ -683,6 +690,7 @@ function invitepeople(req, res) {
     })
 }
 async function addgameinvitation(userlist, sederId, eventId) {
+    console.log("addgameinvitation func 1 -> userlist", userlist, sederId, eventId)
     userlist.map((el) => {
         let invitation = {
             senderId: sederId,
@@ -728,14 +736,13 @@ async function gamenotifdecline(req, res) {
     })
 }
 async function invitemail(res, req, users, eventId) {
-    console.log("invitemail -> users", users)
+    console.log("invitemail function 2-> users", users, eventId)
     let usersemail = [];
     users.map(async (el, i) => {
+        console.log("invitemail -> el", el.email)
         let userId = (el.userid) ? el.userid : ''
         let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + userId;
-        // let link = "squad://joinevent/eventId=" + eventId
         usersemail.push(el.email)
-        // let link = eventlink;
         let data = {
             username: el.firstname,
             subject: "Invitation Link",
