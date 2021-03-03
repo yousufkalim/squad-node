@@ -320,87 +320,83 @@ function eventwillplayed(req, res) {
 }
 function preferenceBasedList(req, res) {
     let token = req.headers['authorization']
-    let obj = util.decodeToken(token)
+    let userToken = util.decodeToken(token)
     var eventlist = [];
-    user.findById(obj.id).then((data) => {
-        if (data.preferences.length >= 1) {
-            data.preferences.map((el, index) => {
-                let query = {//db.events.createIndex( {location: "2dsphere" } )
-                    location: {
-                        $nearSphere: {
-                            $geometry: {
-                                type: "Point",
-                                coordinates: [data.location.coordinates[0], data.location.coordinates[1]]
-                            },
-                            $maxDistance: parseFloat(el.radius) * 1000
-                        }
-                    },
-
-                    sport: el.sportId,
-                    level: el.level,
-                    gender: { $in: [data.gender, gender.both] }
-                };
-                (req.query.date) ? (query.date = req.query.date) : '';
-                event.find(query).populate('participants', '_id imageUrl firstname lastname')
-                    .sort({ starttime: sorttype }).then((data) => {
-
-                        if (data.length == 0) {
-                            res.json({ code: code.ok, data: data })
-                        }
-                        data.map((el, inx) => {
-
-                            if (el.participants && el.participants.length >= 1) {
-
-                                el.participants.map((par, i) => {
-                                    // console.log("eventlist -> par", par)
-                                    let obj = {
-                                        ...par._doc,
-                                        friend: false
-                                    }
-                                    el.participants[i] = obj
-                                })
+    user.findById(userToken.id).then((userdata) => {
+        if (userdata.preferences.length >= 1) {
+            const promiseArray = userdata.preferences.map(function (el) {
+                return new Promise(function (resolve, reject) {
+                    let query = {//db.events.createIndex( {location: "2dsphere" } )
+                        location: {
+                            $nearSphere: {
+                                $geometry: {
+                                    type: "Point",
+                                    coordinates: [userdata.location.coordinates[0], userdata.location.coordinates[1]]
+                                },
+                                $maxDistance: parseFloat(el.radius) * 1000
                             }
+                        },
 
-                            if ((data.length - 1) == inx) {
-                                data.map((el, i) => {
-                                    var participatedinevent;
-                                    el.participants.map((ele) => {
-                                        if (ele._id == user.id) {
-
-                                            participatedinevent = true;
-                                        } else {
-
-                                            participatedinevent = false;
+                        sport: el.sportId,
+                        level: { $in: [el.level, "ALL"] },// el.level,
+                        gender: { $in: [userdata.gender, "BOTH"] }
+                    };
+                    (req.query.date) ? (query.date = req.query.date + "T00:00:00.000Z") : '';
+                    event.find(query).populate('participants', '_id imageUrl firstname lastname').then((data) => {
+                        // resolve(eventdata)
+                        if (data[0] != null) {
+                            data.map((el, inx) => {
+                                if (el.participants && el.participants.length >= 1) {
+                                    el.participants.map((par, i) => {
+                                        var fr = (userdata.friends) ? userdata.friends.includes(el._id) : false;
+                                        let obj = {
+                                            ...par._doc,
+                                            friend: fr
                                         }
+                                        el.participants[i] = obj
                                     })
-                                    let obj = {
-                                        ...el._doc,
-                                        participatedinevent: participatedinevent,
-                                        seatsremain: el.seats - el.participants.length
-                                    }
-
-                                    data[i] = obj
-                                })
-                                res.json({ code: code.ok, data: data })
-                            }
-                        })
+                                }
+                                if ((data.length - 1) == inx) {
+                                    data.map((el, i) => {
+                                        var participatedinevent = false;
+                                        el.participants.map((ele) => {
+                                            if (ele._id == userToken.id) {
+                                                participatedinevent = true;
+                                            } else {
+                                                participatedinevent = false;
+                                            }
+                                        })
+                                        let obj = {
+                                            ...el._doc,
+                                            participatedinevent: participatedinevent,
+                                            seatsremain: el.seats - el.participants.length
+                                        }
+                                        console.log("preferenceBasedList -> obj", obj)
+                                        resolve(obj)
+                                    })
+                                }
+                            })
+                        } else {
+                            resolve()
+                        }
+                    }).catch((err) => {
+                        reject(err)
                     })
-                // event.find(query).populate('participants', '_id imageUrl firstname lastname')
-                // .then((eventdata) => {
-                //     (eventdata[0] != null) ? eventlist.push(eventdata[0]) : '';
-                //     if (index == (data.preferences.length - 1)) {
-                //         res.json({ code: code.ok, data: eventlist })
-                //     }
-                // })
+                });
+            });
+            Promise.all(promiseArray).then(function (eventsdata) {
+                let eventlist=[];
+                console.log("preferenceBasedList -> eventsdata", eventsdata)
+                eventsdata.map((data) => {
+                    (data) ? eventlist.push(data) : '';
+                })
+                res.json({ code: code.ok, data: eventlist })
             })
-        } else if (data.preferences == 0) {
+        } else if (userdata.preferences == 0) {
             this.eventlist(req, res)
-        } else {
-
-            // console.log("===================in else=====================")
         }
-
     }).catch((err) => {
+        console.log("preferenceBasedList -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
 
     })
