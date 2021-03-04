@@ -122,6 +122,9 @@ function userdetail(req, res) {
 function getuserpreference(req, res) {
     service.getuserpreference(req, res)
 }
+function friendnotification(req, res) {
+    service.friendnotification(req, res)
+}
 module.exports = {
     registerUser,
     loginUser,
@@ -162,5 +165,6 @@ module.exports = {
     canclerequest,
     unfriend,
     userdetail,
-    getuserpreference
+    getuserpreference,
+    friendnotification
 }

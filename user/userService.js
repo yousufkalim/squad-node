@@ -721,21 +721,36 @@ async function gamenotification(req, res) {
         .populate('rateyouNotification.userId', '_id firstname lastname imageUrl')
         .populate('joineventNotification.userId', '_id firstname lastname imageUrl')
         .populate('joineventNotification.eventId', '_id date starttime endtime Address')
-        .populate('friendrequestNotification.userId', '_id firstname lastname imageUrl')
+        // .populate('friendrequestNotification.userId', '_id firstname lastname imageUrl')
         .populate('eventhappenNotification.eventId', '_id date starttime endtime Address')
         .populate('eventafterhourNotification.eventId', '_id date starttime endtime Address')
         .populate('rateplayerNotification.eventId', '_id date starttime endtime Address')
         .populate('rateallNotification.eventId', '_id date starttime endtime Address')
         .then((data) => {
             res.json({
-                code: code.ok, gameinvitationnotification: data.invitationtogame,
-                ratenotification: data.rateyouNotification,
-                joineventnotification: data.joineventNotification,
-                friendrequestNotification: data.friendrequestNotification,
-                eventhappenNotification: data.eventhappenNotification,
-                eventafterhourNotification: data.eventafterhourNotification,
-                rateplayerNotification: data.rateplayerNotification,
-                rateallNotification: data.rateallNotification
+                code: code.ok, gameinvitationnotification: [{ "ratenotification": data.rateyouNotification },
+                { joineventnotification: data.joineventNotification },
+                { eventhappenNotification: data.eventhappenNotification },
+                { eventafterhourNotification: data.eventafterhourNotification },
+                { rateplayerNotification: data.rateplayerNotification },
+                { rateallNotification: data.rateallNotification }]
+            })
+        }).catch((err) => {
+            res.json({ code: code.ineternalError, message: msg.internalServerError })
+        })
+}
+async function friendnotification(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token);
+    let query = { _id: obj.id };
+    await user.findOne(query)
+       
+        .populate('friendrequestNotification.userId', '_id firstname lastname imageUrl')
+     
+        .then((data) => {
+            res.json({
+                code: code.ok, friendnotification: data.friendrequestNotification,
+               
             })
         }).catch((err) => {
             res.json({ code: code.ineternalError, message: msg.internalServerError })
@@ -1512,5 +1527,6 @@ module.exports = {
     userdetail,
     getuserpreference,
     addratingnotif,
-    friendrequestNotification
+    friendrequestNotification,
+    friendnotification
 }
