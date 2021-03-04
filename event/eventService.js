@@ -69,6 +69,7 @@ function eventlist(req, res) {
     var sorttype = '';
     let query = {};
     let radius = (req.query.radius) ? req.query.radius : 100;
+    var free = (req.query.free) ? req.query.free : 0;
     (req.query.date) ? (query.date = req.query.date + "T00:00:00.000Z") : '';
     if (req.query.order == "Asce") {
         sorttype = -1
@@ -132,7 +133,19 @@ function eventlist(req, res) {
 
                         data[i] = obj
                     })
-                    res.json({ code: code.ok, data: data })
+                    if (free == 1) {
+                        console.log("eventlist -> free", free)
+                        data.sort((a, b) => a.price - b.price);
+                        console.log("eventlist -> data", data)
+
+                        data.forEach((e) => {
+                            console.log(` ${e.price}`);
+                        });
+
+                        res.json({ code: code.ok, data: data })
+                    } else {
+                        res.json({ code: code.ok, data: data })
+                    }
                 }
             })
         }).catch((err) => {
@@ -340,6 +353,7 @@ function preferenceBasedList(req, res) {
     let token = req.headers['authorization']
     let userToken = util.decodeToken(token)
     var eventlist = [];
+    var free = (req.query.free) ? req.query.free : 0;
     user.findById(userToken.id).then((userdata) => {
         if (userdata.preferences.length >= 1) {
             const promiseArray = userdata.preferences.map(function (el) {
@@ -408,7 +422,19 @@ function preferenceBasedList(req, res) {
                 eventsdata.map((data) => {
                     (data) ? eventlist.push(data) : '';
                 })
-                res.json({ code: code.ok, data: eventlist })
+                if (free == 1) {
+                    console.log("eventlist -> free", free)
+                    data.sort((a, b) => a.price - b.price);
+                    console.log("eventlist -> data", data)
+
+                    data.forEach((e) => {
+                        console.log(` ${e.price}`);
+                    });
+                    res.json({ code: code.ok, data: eventlist })
+                } else {
+                    res.json({ code: code.ok, data: eventlist })
+                }
+
             })
         } else if (userdata.preferences == 0) {
             this.eventlist(req, res)
