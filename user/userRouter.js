@@ -171,7 +171,7 @@ userRouter.route('/unfriend')
         actions.unfriend(req, res)
     })
 
-userRouter.route('/list/gamenotification')
+userRouter.route('/list/notification')
     .get([validate.verifyToken], (req, res) => {
         actions.gamenotification(req, res)
     })
