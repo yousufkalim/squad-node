@@ -8,11 +8,12 @@ const bcrypt = require('bcrypt');
 const user = require('../schema/user')
 const crypto = require('crypto');
 const { role } = require('../constants');
+const { rateas } = require('../constants');
 const env = require('dotenv').config();
 const UAParser = require('ua-parser-js');
 var FCM = require('fcm-node');
-const { response } = require('express');
-const { strict } = require('assert');
+// const { response } = require('express');
+// const { strict } = require('assert');
 
 const userDao = require('./userDao');
 const { promises } = require('fs');
@@ -716,9 +717,26 @@ async function gamenotification(req, res) {
     let query = { _id: obj.id };
     await user.findOne(query)
         .populate('invitationtogame.senderId', '_id firstname lastname imageUrl')
-        .populate('invitationtogame.eventId', '_id date starttime endtime Address').then((data) => {
-            console.log("gamenotification -> data", data)
-            res.json({ code: code.ok, data: data.invitationtogame })
+        .populate('invitationtogame.eventId', '_id date starttime endtime Address')
+        .populate('rateyouNotification.userId', '_id firstname lastname imageUrl')
+        .populate('joineventNotification.userId', '_id firstname lastname imageUrl')
+        .populate('joineventNotification.eventId', '_id date starttime endtime Address')
+        .populate('friendrequestNotification.userId', '_id firstname lastname imageUrl')
+        .populate('eventhappenNotification.eventId', '_id date starttime endtime Address')
+        .populate('eventafterhourNotification.eventId', '_id date starttime endtime Address')
+        .populate('rateplayerNotification.eventId', '_id date starttime endtime Address')
+        .populate('rateallNotification.eventId', '_id date starttime endtime Address')
+        .then((data) => {
+            res.json({
+                code: code.ok, gameinvitationnotification: data.invitationtogame,
+                ratenotification: data.rateyouNotification,
+                joineventnotification: data.joineventNotification,
+                friendrequestNotification: data.friendrequestNotification,
+                eventhappenNotification: data.eventhappenNotification,
+                eventafterhourNotification: data.eventafterhourNotification,
+                rateplayerNotification: data.rateplayerNotification,
+                rateallNotification: data.rateallNotification
+            })
         }).catch((err) => {
             res.json({ code: code.ineternalError, message: msg.internalServerError })
         })
@@ -856,11 +874,10 @@ function addRatingasplayer(req, res) {
             update = { $push: { "rateasplayer": rating } },
             options = { new: true };
         userdao.findOneAndUpdate(query, update, options).then((userdata) => {
-            (userdata.fcmToken) ? rateyounotification(userdata.fcmToken) : '';
-            // return res.json({ code: code.ok, msg: msg.addrate })
+            addratingnotif(rateas.player, obj.id, ele.userId)
+                (userdata.fcmToken) ? rateyounotification(userdata.fcmToken) : '';
         }).catch((err) => {
-            console.log("addRating -> err", err)
-            // return res.json({ code: code.internalError, message: msg.internalServerError })
+            console.log("addRating -> err==================================", err)
         })
         if (ratearray.length == index + 1) {
             return res.json({ code: code.ok, msg: msg.addrate })
@@ -879,12 +896,34 @@ function addRatingasorganizer(req, res) {
         update = { $push: { "rateasorganizer": rating } },
         options = { new: true };
     userdao.findOneAndUpdate(query, update, options).then((userdata) => {
+        addratingnotif(rateas.organizer, obj.id, userId);
         (userdata.fcmToken) ? rateyounotification(userdata.fcmToken) : '';
         return res.json({ code: code.ok, msg: msg.addrate })
     }).catch((err) => {
-        console.log("addRating -> err", err)
+        console.log("addRating -> err===============================", err)
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
+
+}
+
+function addratingnotif(type, senderId, receiverId) {
+
+    let rateyouNotification = {
+        type: type,
+        userId: senderId
+    };
+
+    let query = { _id: receiverId },
+        update = { $push: { rateyouNotification: rateyouNotification } },
+        options = { new: true };
+    user.findOneAndUpdate(query, update, options).then((data) => {
+        console.log("rateyou notification added -> data", data)
+
+    }).catch((err) => {
+        console.log("err", err)
+
+    })
+
 
 }
 function peoplenewtosquad(req, res) {
@@ -963,10 +1002,27 @@ function sendrequest(req, res) {
             update1 = { $push: { sentRequest: userId } },
             options1 = { new: true };
         userdao.findOneAndUpdate(query1, update1, options1).then((senderdata) => {
+            friendrequestNotification(obj.id, userId)
             return res.json({ code: code.ok, msg: "request sent" })
         })
     }).catch((err) => {
         return res.json({ code: code.internalError, message: msg.internalServerError })
+    })
+}
+
+function friendrequestNotification(senderId, receiverId) {
+    let friendrequestNotification = {
+        userId: senderId
+    };
+
+    let query = { _id: receiverId },
+        update = { $push: { friendrequestNotification: friendrequestNotification } },
+        options = { new: true };
+    user.findOneAndUpdate(query, update, options).then((data) => {
+        console.log("friendrequestNotification -> data", data)
+    }).catch((err) => {
+        console.log("err", err)
+
     })
 }
 function requestlist(req, res) {
@@ -1454,5 +1510,7 @@ module.exports = {
     canclerequest,
     unfriend,
     userdetail,
-    getuserpreference
+    getuserpreference,
+    addratingnotif,
+    friendrequestNotification
 }

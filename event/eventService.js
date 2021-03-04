@@ -160,6 +160,7 @@ function joinevent(req, res) {
                     options1 = { new: true };
                 userDao.findOneAndUpdate(query1, update1, options1).then((userdata) => {
                     // console.log("joinevent -> userdata", userdata)
+                    addjoineventNotification(data._id, obj.id, data.createdby)
                     userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
                     res.json({ code: code.ok, msg: msg.eventjoin })
                 })
@@ -168,6 +169,23 @@ function joinevent(req, res) {
     }).catch((err) => {
         console.log("joinevent -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+}
+function addjoineventNotification(eventId, userId, creatorId) {
+    let joineventNotification = {
+        eventId: eventId,
+        userId: userId
+    };
+
+    let query = { _id: creatorId },
+        update = { $push: { joineventNotification: joineventNotification } },
+        options = { new: true };
+    userDao.findOneAndUpdate(query, update, options).then((data) => {
+        console.log("rateyou notification added -> data", data)
+
+    }).catch((err) => {
+        console.log("err", err)
+
     })
 }
 function joinevent2(req, res) {
@@ -385,7 +403,7 @@ function preferenceBasedList(req, res) {
                 });
             });
             Promise.all(promiseArray).then(function (eventsdata) {
-                let eventlist=[];
+                let eventlist = [];
                 console.log("preferenceBasedList -> eventsdata", eventsdata)
                 eventsdata.map((data) => {
                     (data) ? eventlist.push(data) : '';
@@ -413,6 +431,7 @@ function twodaysbeforenotification() {
     event.find({ "starttime": { $gt: afterTwoDaysDate, $lt: afterTwoDaysDateOneHour } }).then((eventlist) => {
         // console.log("twodaysbeforenotification -> eventlist", eventlist)
         eventlist.map((eve) => {
+            addeventafterhourNotification(48, eve._id, eve.createdby)
             userService.eventhournotification(eve.createdby, 48)
         })
     }).catch((err) => {
@@ -427,9 +446,27 @@ function onedaysbeforenotification() {
     event.find({ "starttime": { $gt: afterOneDaysDate, $lt: afterOneDaysDateOneHour } }).then((eventlist) => {
         // console.log("onedaysbeforenotification -> eventlist", eventlist)
         eventlist.map((eve) => {
+            addeventafterhourNotification(24, eve._id, eve.createdby)
             userService.eventhournotification(eve.createdby, 24)
         })
     }).catch((err) => {
+
+    })
+}
+function addeventafterhourNotification(hours, eventId, creatorId) {
+    let eventafterhourNotification = {
+        eventId: eventId,
+        hours: hours
+    };
+
+    let query = { _id: creatorId },
+        update = { $push: { eventafterhourNotification: eventafterhourNotification } },
+        options = { new: true };
+    userDao.findOneAndUpdate(query, update, options).then((data) => {
+        console.log("rateyou notification added -> data", data)
+
+    }).catch((err) => {
+        console.log("err", err)
 
     })
 }
@@ -439,23 +476,74 @@ function oneminafternotification() {
     event.find({ "endtime": beforeOneminutedate }).then((eventlist) => {
         // console.log("oneminafternotification -> eventlist", eventlist)
         eventlist.map((eve) => {
+            addrateplayerNotification(eve._id, eve.createdby)
             userService.ratenotification(eve.participants)
-            userService.rateplayernotification(eve.createdby, eve.createdby)
+            userService.rateplayernotification(eve.createdby, eve._id)
         })
     }).catch((err) => {
 
     })
 }
+function addrateplayerNotification(eventId, creatorId) {//this will add into creator of event
+    let rateplayerNotification = {
+        eventId: eventId,
+    };
+    let query = { _id: creatorId },
+        update = { $push: { rateplayerNotification: rateplayerNotification } },
+        options = { new: true };
+    userDao.findOneAndUpdate(query, update, options).then((data) => {
+        console.log("addrateplayerNotification -> data", data)
+    }).catch((err) => {
+        console.log("err", err)
+    })
+}
+function addrateallNotification(eventId, participantIds) {//this will add into creator of event
+    participantIds.map((usr) => {
+        let rateallNotification = {
+            eventId: eventId,
+        };
+        let query = { _id: usr },
+            update = { $push: { rateallNotification: rateallNotification } },
+            options = { new: true };
+        userDao.findOneAndUpdate(query, update, options).then((data) => {
+            console.log("addrateallNotification -> data", data)
+
+        }).catch((err) => {
+            console.log("err", err)
+        })
+    })
+
+}
 function eventhappennotification() {
     const currentDate = new Date();
     event.find({ "starttime": currentDate }).then((eventlist) => {
         eventlist.map((eve) => {
+            addeventhappenNotification(eve._id, eve.participants)
             userService.eventhappens(eve.participants)
         })
     }).catch((err) => {
 
     })
 }
+function addeventhappenNotification(eventId, participantIds) {
+    participantIds.map((usr) => {
+        let eventhappenNotification = {
+            eventId: eventId,
+        };
+        let query = { _id: usr },
+            update = { $push: { eventhappenNotification: eventhappenNotification } },
+            options = { new: true };
+        userDao.findOneAndUpdate(query, update, options).then((data) => {
+            console.log("rateyou notification added -> data", data)
+
+        }).catch((err) => {
+            console.log("err", err)
+        })
+    })
+}
+
+
+
 Date.prototype.addDays = function (days) {
     var date = new Date(this.valueOf());
     date.setDate(date.getDate() + days);
@@ -493,7 +581,7 @@ function deleteevent(req, res) {
     })
 }
 function unjoinevent(req, res) {
-  
+
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     let query = { _id: req.query.eventId },
@@ -535,5 +623,10 @@ module.exports = {
     eventhappennotification,
     deleteevent,
     unjoinevent,
-    joinevent2
+    joinevent2,
+    addjoineventNotification,
+    addeventhappenNotification,
+    addeventafterhourNotification,
+    addrateplayerNotification,
+    addrateallNotification
 }

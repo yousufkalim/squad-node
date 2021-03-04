@@ -7,6 +7,7 @@ const role = require('../constants/index').role;
 const bcrypt = require('bcrypt');
 const level = require('../constants/index').level;
 const gender = require('../constants/index').gender;
+const rateas = require('../constants/index').rateas;
 var userSchema = new schema({
     firstname: { type: String },
     lastname: { type: String },
@@ -52,11 +53,46 @@ var userSchema = new schema({
     participatedin: [{
         eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event }
     }],
+
+    //=========================notification================================//
     invitationtogame: [{
         senderId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
-        eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event }
+        eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
+        createdAt: { type: Date, default: Date.now() }
+    }],//notification for game invitation
+    rateyouNotification: [{
+        type: { type: String, enum: [rateas.beginner, rateas.intermediate] },
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
+        createdAt: { type: Date, default: Date.now() }
+    }],
+    joineventNotification: [{
+        eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
+        createdAt: { type: Date, default: Date.now() }
+    }],
+    friendrequestNotification: [{
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
+        createdAt: { type: Date, default: Date.now() }
+    }],
+    eventhappenNotification: [{
+        eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
+        createdAt: { type: Date, default: Date.now() }
+    }],
+    eventafterhourNotification: [{
+        hours: { type: Number },
+        eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
+        createdAt: { type: Date, default: Date.now() }
+    }],
+    rateplayerNotification: [{
+        eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
+        createdAt: { type: Date, default: Date.now() }
+    }],
+    rateallNotification: [{
+        eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
+        createdAt: { type: Date, default: Date.now() }
     }]
 });
+
 
 Users = module.exports = mongoose.model(schemaName.user, userSchema)
 
