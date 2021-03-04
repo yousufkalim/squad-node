@@ -70,14 +70,9 @@ function eventlist(req, res) {
     let query = {};
     let radius = (req.query.radius) ? req.query.radius : 100;
     var free = (req.query.free) ? req.query.free : 0;
+    if (req.query.level)
+        var levelfilter = req.query.level;
     (req.query.date) ? (query.date = req.query.date + "T00:00:00.000Z") : '';
-    if (req.query.order == "Asce") {
-        sorttype = -1
-    } else if (req.query.order == "Desc") {
-        sorttype = 1
-    } else {
-        sorttype = '';
-    }
     (req.query.long && req.query.lat) ? query.location = {
         $nearSphere: {
             $geometry: {
@@ -87,12 +82,6 @@ function eventlist(req, res) {
             $maxDistance: parseFloat(radius) * 1000
         }
     } : '';
-    (req.body.level) ?
-        query.level = { $in: req.body.level } : '';
-    (req.body.sport) ? query.sport = { $in: req.body.sport } : '';
-    // console.log("eventlist -> query", query);
-
-
     return event.find(query).populate('participants', '_id imageUrl firstname lastname')
         .sort({ starttime: sorttype }).then((data) => {
 
@@ -134,18 +123,16 @@ function eventlist(req, res) {
                         data[i] = obj
                     })
                     if (free == 1) {
-                        console.log("eventlist -> free", free)
                         data.sort((a, b) => a.price - b.price);
-                        console.log("eventlist -> data", data)
-
-                        data.forEach((e) => {
-                            console.log(` ${e.price}`);
-                        });
-
-                        res.json({ code: code.ok, data: data })
-                    } else {
-                        res.json({ code: code.ok, data: data })
                     }
+                    if (levelfilter) {
+                        let arr1 = [], arr2 = [];
+                        data.map((el) => {
+                            (levelfilter.includes(el.level)) ? arr1.push(el) : arr2.push(el);
+                        })
+                        data = arr1.concat(arr2);
+                    }
+                    res.json({ code: code.ok, data: data })
                 }
             })
         }).catch((err) => {
@@ -354,6 +341,8 @@ function preferenceBasedList(req, res) {
     let userToken = util.decodeToken(token)
     var eventlist = [];
     var free = (req.query.free) ? req.query.free : 0;
+    if (req.query.level)
+        var levelfilter = req.query.level;
     user.findById(userToken.id).then((userdata) => {
         if (userdata.preferences.length >= 1) {
             const promiseArray = userdata.preferences.map(function (el) {
@@ -368,7 +357,6 @@ function preferenceBasedList(req, res) {
                                 $maxDistance: parseFloat(el.radius) * 1000
                             }
                         },
-
                         sport: el.sportId,
                         level: { $in: [el.level, "ALL"] },// el.level,
                         gender: { $in: [userdata.gender, "BOTH"] }
@@ -423,17 +411,17 @@ function preferenceBasedList(req, res) {
                     (data) ? eventlist.push(data) : '';
                 })
                 if (free == 1) {
-                    console.log("eventlist -> free", free)
                     eventlist.sort((a, b) => a.price - b.price);
-                    console.log("eventlist -> data", eventlist)
-
-                    eventlist.forEach((e) => {
-                        console.log(` ${e.price}`);
-                    });
-                    res.json({ code: code.ok, data: eventlist })
-                } else {
-                    res.json({ code: code.ok, data: eventlist })
                 }
+                if (levelfilter) {
+                    let arr1 = [], arr2 = [];
+                    data.map((el) => {
+                        (levelfilter.includes(el.level)) ? arr1.push(el) : arr2.push(el);
+                    })
+                    data = arr1.concat(arr2);
+                }
+                res.json({ code: code.ok, data: eventlist })
+
 
             })
         } else if (userdata.preferences == 0) {
