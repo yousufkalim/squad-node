@@ -424,10 +424,10 @@ function preferenceBasedList(req, res) {
                 })
                 if (free == 1) {
                     console.log("eventlist -> free", free)
-                    data.sort((a, b) => a.price - b.price);
-                    console.log("eventlist -> data", data)
+                    eventlist.sort((a, b) => a.price - b.price);
+                    console.log("eventlist -> data", eventlist)
 
-                    data.forEach((e) => {
+                    eventlist.forEach((e) => {
                         console.log(` ${e.price}`);
                     });
                     res.json({ code: code.ok, data: eventlist })
