@@ -415,10 +415,10 @@ function preferenceBasedList(req, res) {
                 }
                 if (levelfilter) {
                     let arr1 = [], arr2 = [];
-                    data.map((el) => {
+                    eventlist.map((el) => {
                         (levelfilter.includes(el.level)) ? arr1.push(el) : arr2.push(el);
                     })
-                    data = arr1.concat(arr2);
+                    eventlist = arr1.concat(arr2);
                 }
                 res.json({ code: code.ok, data: eventlist })
 
