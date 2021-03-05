@@ -70,6 +70,8 @@ function eventlist(req, res) {
     let query = {};
     let radius = (req.query.radius) ? req.query.radius : 100;
     var free = (req.query.free) ? req.query.free : 0;
+    if (req.query.sport)
+    var sportfilter = req.query.sport;
     if (req.query.level)
         var levelfilter = req.query.level;
     (req.query.date) ? (query.date = req.query.date + "T00:00:00.000Z") : '';
@@ -129,6 +131,13 @@ function eventlist(req, res) {
                         let arr1 = [], arr2 = [];
                         data.map((el) => {
                             (levelfilter.includes(el.level)) ? arr1.push(el) : arr2.push(el);
+                        })
+                        data = arr1.concat(arr2);
+                    }
+                    if (sportfilter) {
+                        let arr1 = [], arr2 = [];
+                        data.map((el) => {
+                            (sportfilter.includes(el.sport)) ? arr1.push(el) : arr2.push(el);
                         })
                         data = arr1.concat(arr2);
                     }
@@ -343,6 +352,8 @@ function preferenceBasedList(req, res) {
     var free = (req.query.free) ? req.query.free : 0;
     if (req.query.level)
         var levelfilter = req.query.level;
+    if (req.query.sport)
+        var sportfilter = req.query.sport;
     user.findById(userToken.id).then((userdata) => {
         if (userdata.preferences.length >= 1) {
             const promiseArray = userdata.preferences.map(function (el) {
@@ -417,6 +428,13 @@ function preferenceBasedList(req, res) {
                     let arr1 = [], arr2 = [];
                     eventlist.map((el) => {
                         (levelfilter.includes(el.level)) ? arr1.push(el) : arr2.push(el);
+                    })
+                    eventlist = arr1.concat(arr2);
+                }
+                if (sportfilter) {
+                    let arr1 = [], arr2 = [];
+                    eventlist.map((el) => {
+                        (sportfilter.includes(el.sport)) ? arr1.push(el) : arr2.push(el);
                     })
                     eventlist = arr1.concat(arr2);
                 }

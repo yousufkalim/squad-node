@@ -744,13 +744,13 @@ async function friendnotification(req, res) {
         obj = util.decodeToken(token);
     let query = { _id: obj.id };
     await user.findOne(query)
-       
+
         .populate('friendrequestNotification.userId', '_id firstname lastname imageUrl')
-     
+
         .then((data) => {
             res.json({
                 code: code.ok, friendnotification: data.friendrequestNotification,
-               
+
             })
         }).catch((err) => {
             res.json({ code: code.ineternalError, message: msg.internalServerError })
@@ -1144,7 +1144,9 @@ function unfriend(req, res) {
 }
 
 function userdetail(req, res) {
-    let query = { _id: req.query.userId };
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token);//sentRequest
+    let query = { _id: obj.id };
     var rateasplayer = 0,
         rateasorganizer = 0,
         friendstatus = null;
