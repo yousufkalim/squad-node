@@ -425,14 +425,14 @@ function preferenceBasedList(req, res) {
                     eventlist.sort((a, b) => a.price - b.price);
                 }
                 if (levelfilter) {
-                    let arr1 = [], arr2 = [];
+                    var arr1 = [], arr2 = [];
                     eventlist.map((el) => {
                         (levelfilter.includes(el.level)) ? arr1.push(el) : arr2.push(el);
                     })
                     eventlist = arr1.concat(arr2);
                 }
                 if (sportfilter) {
-                    let arr1 = [], arr2 = [];
+                    var arr1 = [], arr2 = [];
                     eventlist.map((el) => {
                         (sportfilter.includes(el.sport)) ? arr1.push(el) : arr2.push(el);
                     })

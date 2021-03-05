@@ -602,26 +602,32 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     const { eventId, level, gender } = req.body;
-    if (!req.query.radius) {
-        req.query.radius = 100
-    }
-    let query = {
+
+    var query = {
         $and: [
             { participatedin: { $elemMatch: { "eventId": { $nin: eventId } } } },
             { preferences: { $elemMatch: { "level": { $in: level } } } },
             { gender: { $in: gender } },
-
-            {
-                location: {
-                    $nearSphere: {
-                        $geometry: { type: "Point", coordinates: [req.query.long, req.query.lat] },
-                        $maxDistance: parseFloat(req.query.radius) * 1000
-                    }
-                }
-            }
         ],
     }
-    console.log("peoplearound -> query", query.participatedin, query.preferences, query.gender, query.location)
+    if (req.query.radius && req.query.long && req.query.lat) {
+        console.log("peoplearound -> radius", req.query.radius, req.query.long, req.query.lat)
+        query = {
+            $and: [
+                // ...query,
+                { participatedin: { $elemMatch: { "eventId": { $nin: eventId } } } },
+                { preferences: { $elemMatch: { "level": { $in: level } } } },
+                { gender: { $in: gender } }, 
+                {
+                    location: {
+                        $nearSphere: {
+                            $geometry: { type: "Point", coordinates: [req.query.long, req.query.lat] },
+                            $maxDistance: parseFloat(req.query.radius) * 1000
+                        }
+                    }
+                }]
+        }
+    }
     user.find(query, '_id firstname lastname imageUrl').exec((err, data) => {//have to add friend flag here
         if (err) {
             console.log("peoplearound -> err", err)
