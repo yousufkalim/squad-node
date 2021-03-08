@@ -611,13 +611,12 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
         ],
     }
     if (req.query.radius && req.query.long && req.query.lat) {
-        console.log("peoplearound -> radius", req.query.radius, req.query.long, req.query.lat)
         query = {
             $and: [
                 // ...query,
                 { participatedin: { $elemMatch: { "eventId": { $nin: eventId } } } },
                 { preferences: { $elemMatch: { "level": { $in: level } } } },
-                { gender: { $in: gender } }, 
+                { gender: { $in: gender } },
                 {
                     location: {
                         $nearSphere: {
@@ -722,17 +721,23 @@ async function gamenotification(req, res) {
         obj = util.decodeToken(token);
     let query = { _id: obj.id };
     await user.findOne(query)
+        // "NotificationType": "invitenotification"
         .populate('invitationtogame.senderId', '_id firstname lastname imageUrl')
         .populate('invitationtogame.eventId', '_id date starttime endtime Address')
         .populate('rateyouNotification.userId', '_id firstname lastname imageUrl')
+        // "NotificationType": "joineventnotification"
         .populate('joineventNotification.userId', '_id firstname lastname imageUrl')
         .populate('joineventNotification.eventId', '_id date starttime endtime Address')
-        // .populate('friendrequestNotification.userId', '_id firstname lastname imageUrl')
+        // "NotificationType": "eventhappennotification"
         .populate('eventhappenNotification.eventId', '_id date starttime endtime Address')
+        // "NotificationType": "eventaftertimenotification"
         .populate('eventafterhourNotification.eventId', '_id date starttime endtime Address')
+        //" NotificationType  " :  ratenotification
         .populate('rateplayerNotification.eventId', '_id date starttime endtime Address')
+        //" NotificationType  " :  ratenotification
         .populate('rateallNotification.eventId', '_id date starttime endtime Address')
         .then((data) => {
+            console.log("gamenotification -> data", data)
             res.json({
                 code: code.ok, gameinvitationnotification: [{ "ratenotification": data.rateyouNotification },
                 { joineventnotification: data.joineventNotification },
@@ -1153,6 +1158,7 @@ function userdetail(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);//sentRequest
     let query = { _id: obj.id };
+    let user_Id = req.query.userId
     var rateasplayer = 0,
         rateasorganizer = 0,
         friendstatus = null;
@@ -1176,23 +1182,27 @@ function userdetail(req, res) {
         } else {
             friendstatus = "Add friend"
         }
+        userdao.findone({ _id: user_Id }).then((userdata) => {
+        console.log("userdetail -> userdata================", userdata)
+            let Obj = {
+                "imageUrl": (userdata.imageUrl) ? userdata.imageUrl : '',
+                "totalfriends": (userdata.friends) ? userdata.friends.length : 0,
+                "firstname": (userdata.firstname) ? userdata.firstname : "",
+                "lastname": (userdata.lastname) ? userdata.lastname : "",
+                "dob": (userdata.dob) ? userdata.dob : "",
+                "email": (userdata.email) ? userdata.email : "",
+                "gender": (userdata.gender) ? userdata.gender : "",
+                "contactNo": (userdata.contactNo) ? userdata.contactNo : "",
+                "Noofeventplayed": (userdata.participatedin) ? userdata.participatedin.length : 0,
+                "rateasorganizer": (userdata.rateasorganizer) ? rateasorganizer / userdata.rateasorganizer.length : "",
+                "rateasplayer": (userdata.rateasplayer) ? rateasplayer / userdata.rateasplayer.length : "",
+                "friendshipstatus": friendstatus
 
-        let Obj = {
-            "imageUrl": (data.imageUrl) ? data.imageUrl : '',
-            "totalfriends": (data.friends) ? data.friends.length : 0,
-            "firstname": (data.firstname) ? data.firstname : "",
-            "lastname": (data.lastname) ? data.lastname : "",
-            "dob": (data.dob) ? data.dob : "",
-            "email": (data.email) ? data.email : "",
-            "gender": (data.gender) ? data.gender : "",
-            "contactNo": (data.contactNo) ? data.contactNo : "",
-            "Noofeventplayed": (data.participatedin) ? data.participatedin.length : 0,
-            "rateasorganizer": (data.rateasorganizer) ? rateasorganizer / data.rateasorganizer.length : "",
-            "rateasplayer": (data.rateasplayer) ? rateasplayer / data.rateasplayer.length : "",
-            "friendshipstatus": friendstatus
+            }
+            res.json({ code: code.ok, data: Obj })
+        })
 
-        }
-        res.json({ code: code.ok, data: Obj })
+
     }).catch((err) => {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })

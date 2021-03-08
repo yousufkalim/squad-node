@@ -442,7 +442,7 @@ function preferenceBasedList(req, res) {
 
 
             })
-        } else if (userdata.preferences == 0) {
+        } else if (userdata.preferences.length == 0) {
             this.eventlist(req, res)
         }
     }).catch((err) => {
