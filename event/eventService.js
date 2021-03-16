@@ -71,7 +71,7 @@ function eventlist(req, res) {
     let radius = (req.query.radius) ? req.query.radius : 100;
     var free = (req.query.free) ? req.query.free : 0;
     if (req.query.sport)
-    var sportfilter = req.query.sport;
+        var sportfilter = req.query.sport;
     if (req.query.level)
         var levelfilter = req.query.level;
     (req.query.date) ? (query.date = req.query.date + "T00:00:00.000Z") : '';
@@ -312,7 +312,12 @@ function eventwillplayed(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     let query = { date: { "$gt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
+    console.log("query====================>", query)
     return event.find(query).populate('placeId', '_id sportId').populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer').then((data) => {
+        console.log("eventwillplayed -> !data", data.length)
+        if (data.length == 0) {
+            return res.json({ code: code.ok, data: data })
+        }
         data.map((events, index) => {
             events.participants.map((userdata, i) => {
                 var fr = (userdata.friends) ? userdata.friends.includes(obj.id) : false,
@@ -342,8 +347,13 @@ function eventwillplayed(req, res) {
             }
         })
     }).catch((err) => {
+        console.log("eventwillplayed -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
+    console.log("eventwillplayed -> query", query)
+    console.log("eventwillplayed -> query", query)
+    console.log("eventwillplayed -> query", query)
+    console.log("eventwillplayed -> query", query)
 }
 function preferenceBasedList(req, res) {
     let token = req.headers['authorization']
