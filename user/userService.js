@@ -1073,7 +1073,7 @@ function friendlist(req, res) {
 function acceptrequest(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);//removefrom friendreques add to friend
-    const { userId } = req.body;//whome request user ant to accept remove from sent and add to friend
+    const { userId, notificationId } = req.body;//whome request user ant to accept remove from sent and add to friend
     let query = { _id: obj.id },
         update = { $push: { friends: userId }, $pull: { friendRequest: userId } },
         options = { new: true };
@@ -1082,6 +1082,7 @@ function acceptrequest(req, res) {
             update1 = { $push: { friends: obj.id }, $pull: { sentRequest: obj.id } },
             options1 = { new: true };
         userdao.findOneAndUpdate(query1, update1, options1).then((acceptof) => {
+            removeFriendNotif(obj.id, notificationId)
             return res.json({ code: code.ok, msg: "request accepted" })
         })
     }).catch((err) => {
@@ -1092,7 +1093,7 @@ function acceptrequest(req, res) {
 function declinerequest(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);//removefrom friendreques 
-    const { userId } = req.body;//whome request user ant to decline remove from sent
+    const { userId, notificationId } = req.body;//whome request user ant to decline remove from sent
     let query = { _id: obj.id },
         update = { $pull: { friendRequest: userId } },
         options = { new: true };
@@ -1101,13 +1102,27 @@ function declinerequest(req, res) {
             update1 = { $pull: { sentRequest: obj.id } },
             options1 = { new: true };
         userdao.findOneAndUpdate(query1, update1, options1).then((acceptof) => {
+            removeFriendNotif(obj.id, notificationId)
             return res.json({ code: code.ok, msg: "request declined" })
         })
     }).catch((err) => {
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
 }
+function removeFriendNotif(userId, notifId) {
+    // friendrequestNotification
+    // let token = req.headers['authorization']
+    // let obj = util.decodeToken(token)
+    let query = { _id: userId },
+        update = { "$pull": { friendrequestNotification: { "_id": ObjectId(notifId) } } },
+        options = { new: true };
+    user.findOneAndUpdate(query, update, options).then(data => {
 
+    }).catch(err => {
+
+    })
+
+}
 
 
 function canclerequest(req, res) {
@@ -1183,7 +1198,7 @@ function userdetail(req, res) {
             friendstatus = "Add friend"
         }
         userdao.findone({ _id: user_Id }).then((userdata) => {
-        console.log("userdetail -> userdata================", userdata)
+            console.log("userdetail -> userdata================", userdata)
             let Obj = {
                 "imageUrl": (userdata.imageUrl) ? userdata.imageUrl : '',
                 "totalfriends": (userdata.friends) ? userdata.friends.length : 0,
