@@ -282,6 +282,7 @@ function socialloginGmail(req, res) {
             })
         }
     }).catch((err) => {
+    console.log("socialloginGmail -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
