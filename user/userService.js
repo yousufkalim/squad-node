@@ -12,6 +12,7 @@ const { rateas } = require('../constants');
 const env = require('dotenv').config();
 const UAParser = require('ua-parser-js');
 var FCM = require('fcm-node');
+
 // const { response } = require('express');
 // const { strict } = require('assert');
 
@@ -20,7 +21,6 @@ const { promises } = require('fs');
 var serverKey = process.env.SERVER_KEY;
 var fcm = new FCM(serverKey);
 var ObjectId = require('mongodb').ObjectID;
-
 
 
 
@@ -82,7 +82,7 @@ function loginUser(req, res) {
                     update = { $set: { fcmToken: fcmToken } },
                     options = { new: true }
                 user.findOneAndUpdate(query, update, options).then((updateddata) => {
-                    console.log("loginUser -> updateddata", updateddata)
+                    // console.log("loginUser -> updateddata", updateddata)
                 })
                 let tokn = util.generateToken(result, process.env.USER_SECRET)
                 var data = {
@@ -282,7 +282,7 @@ function socialloginGmail(req, res) {
             })
         }
     }).catch((err) => {
-    console.log("socialloginGmail -> err", err)
+        console.log("socialloginGmail -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
@@ -932,7 +932,6 @@ function addRatingasorganizer(req, res) {
     })
 
 }
-
 function addratingnotif(type, senderId, receiverId) {
 
     let rateyouNotification = {
@@ -1036,7 +1035,6 @@ function sendrequest(req, res) {
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
 }
-
 function friendrequestNotification(senderId, receiverId) {
     let friendrequestNotification = {
         userId: senderId
@@ -1074,7 +1072,7 @@ function friendlist(req, res) {
 function acceptrequest(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);//removefrom friendreques add to friend
-    const { userId, notificationId } = req.body;//whome request user ant to accept remove from sent and add to friend
+    const { userId } = req.body;//whome request user ant to accept remove from sent and add to friend
     let query = { _id: obj.id },
         update = { $push: { friends: userId }, $pull: { friendRequest: userId } },
         options = { new: true };
@@ -1083,7 +1081,7 @@ function acceptrequest(req, res) {
             update1 = { $push: { friends: obj.id }, $pull: { sentRequest: obj.id } },
             options1 = { new: true };
         userdao.findOneAndUpdate(query1, update1, options1).then((acceptof) => {
-            removeFriendNotif(obj.id, notificationId)
+            removeFriendNotif(obj.id, userId)
             return res.json({ code: code.ok, msg: "request accepted" })
         })
     }).catch((err) => {
@@ -1094,7 +1092,7 @@ function acceptrequest(req, res) {
 function declinerequest(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);//removefrom friendreques 
-    const { userId, notificationId } = req.body;//whome request user ant to decline remove from sent
+    const { userId } = req.body;//whome request user ant to decline remove from sent
     let query = { _id: obj.id },
         update = { $pull: { friendRequest: userId } },
         options = { new: true };
@@ -1103,19 +1101,16 @@ function declinerequest(req, res) {
             update1 = { $pull: { sentRequest: obj.id } },
             options1 = { new: true };
         userdao.findOneAndUpdate(query1, update1, options1).then((acceptof) => {
-            removeFriendNotif(obj.id, notificationId)
+            removeFriendNotif(obj.id, userId)
             return res.json({ code: code.ok, msg: "request declined" })
         })
     }).catch((err) => {
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
 }
-function removeFriendNotif(userId, notifId) {
-    // friendrequestNotification
-    // let token = req.headers['authorization']
-    // let obj = util.decodeToken(token)
+function removeFriendNotif(userId, requestuserId) {
     let query = { _id: userId },
-        update = { "$pull": { friendrequestNotification: { "_id": ObjectId(notifId) } } },
+        update = { "$pull": { friendrequestNotification: { "userId": ObjectId(requestuserId) } } },
         options = { new: true };
     user.findOneAndUpdate(query, update, options).then(data => {
 
@@ -1124,8 +1119,6 @@ function removeFriendNotif(userId, notifId) {
     })
 
 }
-
-
 function canclerequest(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);//sentRequest
@@ -1147,7 +1140,6 @@ function canclerequest(req, res) {
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
 }
-
 function unfriend(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);//sentRequest
@@ -1169,7 +1161,6 @@ function unfriend(req, res) {
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
 }
-
 function userdetail(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);//sentRequest
@@ -1266,7 +1257,6 @@ function getuserpreference(req, res, next) {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
-
 function invitenotification(users) {//sent to user
     console.log("invitenotification -> users", users)
     var message = {
@@ -1562,5 +1552,6 @@ module.exports = {
     getuserpreference,
     addratingnotif,
     friendrequestNotification,
-    friendnotification
+    friendnotification,
+
 }

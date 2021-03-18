@@ -9,8 +9,16 @@ const userService = require('../user/userService');
 
 const userDao = require('../user/userDao');
 const { gender } = require('../constants').gender;
+const geolib = require('geolib');
 
+function latlongtokm(userlong, userlat, eventlong, eventlang) {
+    let km = geolib.getDistance(
+        { latitude: 22.2685379, longitude: 70.7935891 },
+        { latitude: 23.0006665, longitude: 72.5022646 }
+    );
+    return km
 
+}
 function addeventunauthorized(req, res) {
     const data = req.body;
     console.log("addevent -> data==============================>", data)
@@ -64,26 +72,21 @@ function myevents(req, res) {
     })
 }
 function eventlist(req, res) {
+    let query = {};
+    // let radius = (req.query.radius) ? req.query.radius : 100;
     let token = req.headers['authorization']
     let user = util.decodeToken(token)
     var sorttype = '';
-    let query = {};
-    let radius = (req.query.radius) ? req.query.radius : 100;
     var free = (req.query.free) ? req.query.free : 0;
+    // var km = (req.query.km) ? req.query.km : 0;
+    const { userdata } = req.body;
     if (req.query.sport)
         var sportfilter = req.query.sport;
     if (req.query.level)
         var levelfilter = req.query.level;
+    if (req.query.km)
+        var km = req.query.km;
     (req.query.date) ? (query.date = req.query.date + "T00:00:00.000Z") : '';
-    (req.query.long && req.query.lat) ? query.location = {
-        $nearSphere: {
-            $geometry: {
-                type: 'Point',
-                coordinates: [req.query.long, req.query.lat]
-            },
-            $maxDistance: parseFloat(radius) * 1000
-        }
-    } : '';
     return event.find(query).populate('participants', '_id imageUrl firstname lastname')
         .sort({ starttime: sorttype }).then((data) => {
 
@@ -106,13 +109,17 @@ function eventlist(req, res) {
 
                 if ((data.length - 1) == inx) {
                     data.map((el, i) => {
+                        let kmobj = {
+                            ...el,
+                            distance: this.latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
+                                el.location.coordinates[0], el.location.coordinates[1])
+                        }
+                        console.log("preferenceBasedList -> kmobj", kmobj.distance)
                         var participatedinevent;
                         el.participants.map((ele) => {
                             if (ele._id == user.id) {
-
                                 participatedinevent = true;
                             } else {
-
                                 participatedinevent = false;
                             }
                         })
@@ -138,6 +145,13 @@ function eventlist(req, res) {
                         let arr1 = [], arr2 = [];
                         data.map((el) => {
                             (sportfilter.includes(el.sport)) ? arr1.push(el) : arr2.push(el);
+                        })
+                        data = arr1.concat(arr2);
+                    }
+                    if (km) {
+                        let arr1 = [], arr2 = [];
+                        data.map((el) => {
+                            (km == el.km) ? arr1.push(el) : arr2.push(el);
                         })
                         data = arr1.concat(arr2);
                     }
@@ -350,15 +364,10 @@ function eventwillplayed(req, res) {
         console.log("eventwillplayed -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
-    console.log("eventwillplayed -> query", query)
-    console.log("eventwillplayed -> query", query)
-    console.log("eventwillplayed -> query", query)
-    console.log("eventwillplayed -> query", query)
 }
 function preferenceBasedList(req, res) {
     let token = req.headers['authorization']
     let userToken = util.decodeToken(token)
-    var eventlist = [];
     var free = (req.query.free) ? req.query.free : 0;
     if (req.query.level)
         var levelfilter = req.query.level;
@@ -427,9 +436,15 @@ function preferenceBasedList(req, res) {
             });
             Promise.all(promiseArray).then(function (eventsdata) {
                 let eventlist = [];
-                console.log("preferenceBasedList -> eventsdata", eventsdata)
+
                 eventsdata.map((data) => {
-                    (data) ? eventlist.push(data) : '';
+                    let kmobj = {
+                        ...data,
+                        distance: this.latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
+                            data.location.coordinates[0], data.location.coordinates[1])
+                    }
+                    console.log("preferenceBasedList -> kmobj", kmobj.distance)
+                        (data) ? eventlist.push(data) : '';
                 })
                 if (free == 1) {
                     eventlist.sort((a, b) => a.price - b.price);
@@ -448,11 +463,19 @@ function preferenceBasedList(req, res) {
                     })
                     eventlist = arr1.concat(arr2);
                 }
+                if (km) {
+                    let arr1 = [], arr2 = [];
+                    data.map((el) => {
+                        (km == el.km) ? arr1.push(el) : arr2.push(el);
+                    })
+                    data = arr1.concat(arr2);
+                }
                 res.json({ code: code.ok, data: eventlist })
 
 
             })
         } else if (userdata.preferences.length == 0) {
+            req.body.userdata = userdata;
             this.eventlist(req, res)
         }
     }).catch((err) => {
@@ -583,27 +606,21 @@ function addeventhappenNotification(eventId, participantIds) {
         })
     })
 }
-
-
-
 Date.prototype.addDays = function (days) {
     var date = new Date(this.valueOf());
     date.setDate(date.getDate() + days);
     return date;
 }
-
 Date.prototype.addHours = function (h) {
     var date = new Date(this.valueOf());
     date.setTime(date.getTime() + (h * 60 * 60 * 1000));
     return date;
 }
-
 Date.prototype.removeMinutes = function (m) {
     var date = new Date(this.valueOf());
     date.setTime(date.getTime() - (m * 60 * 1000));
     return date;
 }
-
 function deleteevent(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token);
@@ -670,5 +687,6 @@ module.exports = {
     addeventhappenNotification,
     addeventafterhourNotification,
     addrateplayerNotification,
-    addrateallNotification
+    addrateallNotification,
+    latlongtokm
 }

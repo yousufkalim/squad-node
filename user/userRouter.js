@@ -2,6 +2,8 @@ const userRouter = require('express').Router();
 const service = require('./userService')
 const validate = require('./userValidator')
 const actions = require('./userAction')
+// latlongtokm
+
 
 
 userRouter.route('/register')
