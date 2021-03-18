@@ -18,6 +18,7 @@ var FCM = require('fcm-node');
 
 const userDao = require('./userDao');
 const { promises } = require('fs');
+const { resolve } = require('path');
 var serverKey = process.env.SERVER_KEY;
 var fcm = new FCM(serverKey);
 var ObjectId = require('mongodb').ObjectID;
@@ -738,16 +739,64 @@ async function gamenotification(req, res) {
         //" NotificationType  " :  ratenotification
         .populate('rateallNotification.eventId', '_id date starttime endtime Address')
         .then((data) => {
-            console.log("gamenotification -> data", data)
-            res.json({
-                code: code.ok, gameinvitationnotification: [{ "ratenotification": data.rateyouNotification },
-                { joineventnotification: data.joineventNotification },
-                { eventhappenNotification: data.eventhappenNotification },
-                { eventafterhourNotification: data.eventafterhourNotification },
-                { rateplayerNotification: data.rateplayerNotification },
-                { rateallNotification: data.rateallNotification }]
-            })
+            let gameinvitationnotification = []
+            if (data.rateyouNotification) {
+                data.rateyouNotification.map((rtyou) => {
+                    rtyou = {
+                        ...rtyou._doc,
+                        "notificationType": "rateyouNotification"
+                    }
+                    gameinvitationnotification.push(rtyou)
+                })
+            }
+            if (data.joineventnotification) {
+                data.joineventnotification.map((joevent) => {
+                    joevent = {
+                        ...joevent,
+                        "notificationType": "joineventnotification"
+                    }
+                    gameinvitationnotification.push(joevent)
+                })
+            }
+            if (data.eventhappenNotification) {
+                data.eventhappenNotification.map((eventhapp) => {
+                    eventhapp = {
+                        ...eventhapp,
+                        "notificationType": "eventhappenNotification"
+                    }
+                    gameinvitationnotification.push(eventhapp)
+                })
+            }
+            if (data.eventafterhourNotification) {
+                data.eventafterhourNotification.map((eventhappone) => {
+                    eventhappone = {
+                        ...eventhappone,
+                        "notificationType": "eventafterhourNotification"
+                    }
+                    gameinvitationnotification.push(eventhappone)
+                })
+            }
+            if (data.rateplayerNotification) {
+                data.rateplayerNotification.map((rtplayer) => {
+                    rtplayer = {
+                        ...rtplayer,
+                        "notificationType": "rateplayerNotification"
+                    }
+                    gameinvitationnotification.push(rtplayer)
+                })
+            }
+            if (data.rateallNotification) {
+                data.rateallNotification.map((rtall) => {
+                    rtall = {
+                        ...rtall,
+                        "notificationType": "rateallNotification"
+                    }
+                    gameinvitationnotification.push(rtall)
+                })
+            }
+            res.json({ code: code.ok, gameinvitationnotification: gameinvitationnotification })
         }).catch((err) => {
+            console.log("gamenotification -> err", err)
             res.json({ code: code.ineternalError, message: msg.internalServerError })
         })
 }

@@ -446,24 +446,24 @@ function preferenceBasedList(req, res) {
                     console.log("preferenceBasedList -> kmobj", kmobj.distance)
                         (data) ? eventlist.push(data) : '';
                 })
-                if (free == 1) {
+                if (free == 1) {        //1
                     eventlist.sort((a, b) => a.price - b.price);
                 }
-                if (levelfilter) {
+                if (levelfilter) {      //2
                     var arr1 = [], arr2 = [];
                     eventlist.map((el) => {
                         (levelfilter.includes(el.level)) ? arr1.push(el) : arr2.push(el);
                     })
                     eventlist = arr1.concat(arr2);
                 }
-                if (sportfilter) {
+                if (sportfilter) {      //3
                     var arr1 = [], arr2 = [];
                     eventlist.map((el) => {
                         (sportfilter.includes(el.sport)) ? arr1.push(el) : arr2.push(el);
                     })
                     eventlist = arr1.concat(arr2);
                 }
-                if (km) {
+                if (km) {       //4
                     let arr1 = [], arr2 = [];
                     data.map((el) => {
                         (km == el.km) ? arr1.push(el) : arr2.push(el);
