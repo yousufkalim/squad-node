@@ -750,6 +750,15 @@ async function gamenotification(req, res) {
                     gameinvitationnotification.push(rtyou)
                 })
             }
+            if (data.invitationtogame) {
+                data.invitationtogame.map((rtyou) => {
+                    rtyou = {
+                        ...rtyou._doc,
+                        "notificationType": "invitationtogame"
+                    }
+                    gameinvitationnotification.push(rtyou)
+                })
+            }
             if (data.joineventnotification) {
                 data.joineventnotification.map((joevent) => {
                     joevent = {
