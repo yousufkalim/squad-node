@@ -18,7 +18,7 @@ var FCM = require('fcm-node');
 
 const userDao = require('./userDao');
 const { promises } = require('fs');
-const { resolve } = require('path');
+// const { resolve } = require('path');
 var serverKey = process.env.SERVER_KEY;
 var fcm = new FCM(serverKey);
 var ObjectId = require('mongodb').ObjectID;
@@ -721,6 +721,7 @@ async function addgameinvitation(userlist, sederId, eventId) {
 async function gamenotification(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);
+    console.log("gamenotification -> obj", obj)
     let query = { _id: obj.id };
     await user.findOne(query)
         // "NotificationType": "invitenotification"
