@@ -53,7 +53,6 @@ var userSchema = new schema({
     participatedin: [{
         eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event }
     }],
-
     //=========================notification================================//
     invitationtogame: [{
         senderId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
@@ -88,6 +87,10 @@ var userSchema = new schema({
         createdAt: { type: Date, default: Date.now() }
     }],
     rateallNotification: [{
+        eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
+        createdAt: { type: Date, default: Date.now() }
+    }],
+    eventfullNotification: [{
         eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
         createdAt: { type: Date, default: Date.now() }
     }]

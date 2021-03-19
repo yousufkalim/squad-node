@@ -58,16 +58,16 @@ function eventdetail(req, res) {
     let query = { _id: req.query.eventId };
     user.findById(obj.id).then((userdata) => {
         return event.findOne(query).populate('participants', '_id imageUrl firstname lastname').then((data) => {
-                if (data.participants && data.participants.length >= 1) {
-                    data.participants.map((par, i) => {
-                        var fr = (userdata.friends) ? userdata.friends.includes(par.id) : false;  
-                        let obj = {
-                            ...par._doc,
-                            friend: fr
-                        }
-                        data.participants[i] = obj
-                    })
-                }
+            if (data.participants && data.participants.length >= 1) {
+                data.participants.map((par, i) => {
+                    var fr = (userdata.friends) ? userdata.friends.includes(par.id) : false;
+                    let obj = {
+                        ...par._doc,
+                        friend: fr
+                    }
+                    data.participants[i] = obj
+                })
+            }
             res.json({ code: code.ok, data: data })
         })
     })
@@ -186,6 +186,7 @@ function joinevent(req, res) {
         options = { new: true };
     eventdao.findone(query).then((data) => {
         if ((data.participants.length) == data.seats || (data.participants.length) > data.seats) {
+            addeventfullNotification()
             return res.json({ code: code.badRequest, msg: msg.eventfull })
         } else {
             return eventdao.findOneAndUpdate(query, update, options).then((data) => {
@@ -197,7 +198,9 @@ function joinevent(req, res) {
                     update1 = { $push: { participatedin: { eventId: data._id } } },
                     options1 = { new: true };
                 userDao.findOneAndUpdate(query1, update1, options1).then((userdata) => {
-                    // console.log("joinevent -> userdata", userdata)
+                    if ((userdata.participants.length) == userdata.seats || (userdata.participants.length) > userdata.seats) {
+                        addeventfullNotification(data._id,data.createdby)
+                    }
                     addjoineventNotification(data._id, obj.id, data.createdby)
                     userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
                     res.json({ code: code.ok, msg: msg.eventjoin })
@@ -220,6 +223,23 @@ function addjoineventNotification(eventId, userId, creatorId) {
         options = { new: true };
     userDao.findOneAndUpdate(query, update, options).then((data) => {
         console.log("rateyou notification added -> data", data)
+
+    }).catch((err) => {
+        console.log("err", err)
+
+    })
+}
+function addeventfullNotification(eventId, creatorId) {
+    let eventfullNotification = {
+        eventId: eventId,
+    };
+
+    let query = { _id: creatorId },
+        update = { $push: { eventfullNotification: eventfullNotification } },
+        options = { new: true };
+    userDao.findOneAndUpdate(query, update, options).then((data) => {
+        console.log("addeventfullNotification -> data", data)
+
 
     }).catch((err) => {
         console.log("err", err)
@@ -699,6 +719,7 @@ module.exports = {
     unjoinevent,
     joinevent2,
     addjoineventNotification,
+    addeventfullNotification,
     addeventhappenNotification,
     addeventafterhourNotification,
     addrateplayerNotification,

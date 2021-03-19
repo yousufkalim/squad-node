@@ -12,18 +12,14 @@ const { rateas } = require('../constants');
 const env = require('dotenv').config();
 const UAParser = require('ua-parser-js');
 var FCM = require('fcm-node');
-
 // const { response } = require('express');
 // const { strict } = require('assert');
-
 const userDao = require('./userDao');
 const { promises } = require('fs');
 // const { resolve } = require('path');
 var serverKey = process.env.SERVER_KEY;
 var fcm = new FCM(serverKey);
 var ObjectId = require('mongodb').ObjectID;
-
-
 
 
 function registerUser(req, res) {
@@ -731,6 +727,8 @@ async function gamenotification(req, res) {
         // "NotificationType": "joineventnotification"
         .populate('joineventNotification.userId', '_id firstname lastname imageUrl')
         .populate('joineventNotification.eventId', '_id date starttime endtime Address')
+        //eventfull "NotificationType":"eventfullNotification"
+        .populate('eventfullNotification.eventId', '_id date starttime endtime Address')
         // "NotificationType": "eventhappennotification"
         .populate('eventhappenNotification.eventId', '_id date starttime endtime Address')
         // "NotificationType": "eventaftertimenotification"
@@ -742,7 +740,6 @@ async function gamenotification(req, res) {
         .then((data) => {
             let gameinvitationnotification = []
             if (data.rateyouNotification) {
-                console.log("if1")
                 data.rateyouNotification.map((rtyou) => {
                     rtyou = {
                         ...rtyou._doc,
@@ -752,7 +749,6 @@ async function gamenotification(req, res) {
                 })
             } 
             if (data.invitationtogame) {
-                console.log("if 2")
                 data.invitationtogame.map((rtyou) => {
                     rtyou = {
                         ...rtyou._doc,
@@ -762,7 +758,6 @@ async function gamenotification(req, res) {
                 })
             }
             if (data.joineventNotification) {
-                console.log("if3")
                 data.joineventNotification.map((joevent) => {
                     joevent = {
                         ...joevent._doc,
@@ -772,7 +767,6 @@ async function gamenotification(req, res) {
                 })
             }
             if (data.eventhappenNotification) {
-                console.log("if4")
                 data.eventhappenNotification.map((eventhapp) => {
                     eventhapp = {
                         ...eventhapp._doc,
@@ -783,7 +777,6 @@ async function gamenotification(req, res) {
             }
             
             if (data.eventafterhourNotification) {
-                console.log("if5")
                 data.eventafterhourNotification.map((eventhappone) => {
                     eventhappone = {
                         ...eventhappone._doc,
@@ -793,7 +786,6 @@ async function gamenotification(req, res) {
                 })
             }
             if (data.rateplayerNotification) {
-                console.log("if6")
                 data.rateplayerNotification.map((rtplayer) => {
                     rtplayer = {
                         ...rtplayer._doc,
@@ -803,7 +795,6 @@ async function gamenotification(req, res) {
                 })
             }
             if (data.rateallNotification) {
-                console.log("if7")
                 data.rateallNotification.map((rtall) => {
                     rtall = {
                         ...rtall._doc,
@@ -812,6 +803,16 @@ async function gamenotification(req, res) {
                     gameinvitationnotification.push(rtall)
                 })
             }
+            if (data.eventfullNotification) {
+                data.eventfullNotification.map((rtall) => {
+                    rtall = {
+                        ...rtall._doc,
+                        "notificationType": "eventfullNotification"
+                    }
+                    gameinvitationnotification.push(rtall)
+                })
+            }
+           
             res.json({ code: code.ok, gamenotification: gameinvitationnotification })
         }).catch((err) => {
             console.log("gamenotification -> err", err)
