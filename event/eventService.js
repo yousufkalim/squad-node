@@ -53,13 +53,28 @@ function updateevent(req, res) {
     })
 }
 function eventdetail(req, res) {
-    // console.log("eventdetail -----------------------------", req.query.eventId)
-    let query = { _id: req.query.eventId }
-    return eventdao.findone(query).then((data) => {
-        res.json({ code: code.ok, data: data })
-    }).catch((err) => {
-        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    let token = req.headers['authorization']
+    let obj = util.decodeToken(token)
+    let query = { _id: req.query.eventId };
+    user.findById(obj.id).then((userdata) => {
+        return event.findOne(query).populate('participants', '_id imageUrl firstname lastname').then((data) => {
+                if (data.participants && data.participants.length >= 1) {
+                    data.participants.map((par, i) => {
+                        var fr = (userdata.friends) ? userdata.friends.includes(par.id) : false;  
+                        let obj = {
+                            ...par._doc,
+                            friend: fr
+                        }
+                        data.participants[i] = obj
+                    })
+                }
+            res.json({ code: code.ok, data: data })
+        })
     })
+        .catch((err) => {
+            console.log("eventdetail -> err", err)
+            res.json({ code: code.ineternalError, message: msg.internalServerError })
+        })
 }
 function myevents(req, res) {
     let token = req.headers['authorization']
@@ -98,10 +113,10 @@ function eventlist(req, res) {
                 if (el.participants && el.participants.length >= 1) {
 
                     el.participants.map((par, i) => {
-                        // console.log("eventlist -> par", par)
+                        var fr = (userdata.friends) ? userdata.friends.includes(par._id) : false;
                         let obj = {
                             ...par._doc,
-                            friend: false
+                            friend: fr
                         }
                         el.participants[i] = obj
                     })
@@ -398,7 +413,7 @@ function preferenceBasedList(req, res) {
                             data.map((el, inx) => {
                                 if (el.participants && el.participants.length >= 1) {
                                     el.participants.map((par, i) => {
-                                        var fr = (userdata.friends) ? userdata.friends.includes(el._id) : false;
+                                        var fr = (userdata.friends) ? userdata.friends.includes(par._id) : false;
                                         let obj = {
                                             ...par._doc,
                                             friend: fr
