@@ -123,6 +123,7 @@ function eventlist(req, res) {
                 }
 
                 if ((data.length - 1) == inx) {
+                    let participantIds = []
                     data.map((el, i) => {
                         let kmobj = {
                             ...el,
@@ -132,12 +133,11 @@ function eventlist(req, res) {
                         console.log("preferenceBasedList -> kmobj", kmobj.distance)
                         var participatedinevent;
                         el.participants.map((ele) => {
-                            if (ele._id == user.id) {
-                                participatedinevent = true;
-                            } else {
-                                participatedinevent = false;
-                            }
+                            participantIds.push(ele._id)
                         })
+                        console.log("eventlist -> participatedinevent", participantIds, user.id)
+                        participatedinevent = (user.id) ? (participantIds.includes(user.id)) : false;
+                        console.log("eventlist -> participatedinevent", participatedinevent, participantIds.includes(user.id))
                         let obj = {
                             ...el._doc,
                             participatedinevent: participatedinevent,
@@ -198,8 +198,8 @@ function joinevent(req, res) {
                     update1 = { $push: { participatedin: { eventId: data._id } } },
                     options1 = { new: true };
                 userDao.findOneAndUpdate(query1, update1, options1).then((userdata) => {
-                    if ((userdata.participants.length) == userdata.seats || (userdata.participants.length) > userdata.seats) {
-                        addeventfullNotification(data._id,data.createdby)
+                    if ((userdata.participants.length+1) == userdata.seats || (userdata.participants.length) > userdata.seats) {
+                        addeventfullNotification(data._id, data.createdby)
                     }
                     addjoineventNotification(data._id, obj.id, data.createdby)
                     userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
@@ -442,15 +442,21 @@ function preferenceBasedList(req, res) {
                                     })
                                 }
                                 if ((data.length - 1) == inx) {
+                                    let participantIds = []
                                     data.map((el, i) => {
-                                        var participatedinevent = false;
+                                        var participatedinevent;
                                         el.participants.map((ele) => {
-                                            if (ele._id == userToken.id) {
-                                                participatedinevent = true;
-                                            } else {
-                                                participatedinevent = false;
-                                            }
+                                            participantIds.push(ele._id)
+                                            // console.log("preferenceBasedList -> ele._id == userToken.id", ele._id == userToken.id,_id,userToken.id)
+                                            // if (ele._id == userToken.id) {
+                                            //     participatedinevent = true;
+
+                                            // } else {
+                                            //     participatedinevent = false;
+                                            // }
                                         })
+                                        participatedinevent = (participantIds) ? (participantIds.includes(userToken.id)) : false;
+
                                         let obj = {
                                             ...el._doc,
                                             participatedinevent: participatedinevent,
