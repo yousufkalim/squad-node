@@ -185,7 +185,7 @@ function joinevent(req, res) {
         update = { $push: { participants: obj.id } },
         options = { new: true };
     eventdao.findone(query).then((data) => {
-        if ((data.participants.length + 1) == data.seats || (data.participants.length + 1) > data.seats) {
+        if ((data.participants.length) == data.seats || (data.participants.length) > data.seats) {
             return res.json({ code: code.badRequest, msg: msg.eventfull })
         } else {
             return eventdao.findOneAndUpdate(query, update, options).then((data) => {
