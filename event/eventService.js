@@ -133,11 +133,10 @@ function eventlist(req, res) {
                         console.log("preferenceBasedList -> kmobj", kmobj.distance)
                         var participatedinevent;
                         el.participants.map((ele) => {
-                            participantIds.push(ele._id)
+                            participantIds.push(JSON.stringify(ele._id))
                         })
-                        console.log("eventlist -> participatedinevent", participantIds, user.id)
-                        participatedinevent = (user.id) ? (participantIds.includes(user.id)) : false;
-                        console.log("eventlist -> participatedinevent", participatedinevent, participantIds.includes(user.id))
+                      
+                        participatedinevent = (user.id) ? (participantIds.includes(JSON.stringify(user.id))) : false;
                         let obj = {
                             ...el._doc,
                             participatedinevent: participatedinevent,
@@ -446,16 +445,10 @@ function preferenceBasedList(req, res) {
                                     data.map((el, i) => {
                                         var participatedinevent;
                                         el.participants.map((ele) => {
-                                            participantIds.push(ele._id)
-                                            // console.log("preferenceBasedList -> ele._id == userToken.id", ele._id == userToken.id,_id,userToken.id)
-                                            // if (ele._id == userToken.id) {
-                                            //     participatedinevent = true;
-
-                                            // } else {
-                                            //     participatedinevent = false;
-                                            // }
+                                            participantIds.push(JSON.stringify(ele._id))
+                                 
                                         })
-                                        participatedinevent = (participantIds) ? (participantIds.includes(userToken.id)) : false;
+                                        participatedinevent = (participantIds) ?(participantIds.includes(JSON.stringify(userToken.id))): false;
 
                                         let obj = {
                                             ...el._doc,
