@@ -742,6 +742,7 @@ async function gamenotification(req, res) {
         .then((data) => {
             let gameinvitationnotification = []
             if (data.rateyouNotification) {
+                console.log("if1")
                 data.rateyouNotification.map((rtyou) => {
                     rtyou = {
                         ...rtyou._doc,
@@ -749,8 +750,9 @@ async function gamenotification(req, res) {
                     }
                     gameinvitationnotification.push(rtyou)
                 })
-            }
+            } 
             if (data.invitationtogame) {
+                console.log("if 2")
                 data.invitationtogame.map((rtyou) => {
                     rtyou = {
                         ...rtyou._doc,
@@ -759,52 +761,58 @@ async function gamenotification(req, res) {
                     gameinvitationnotification.push(rtyou)
                 })
             }
-            if (data.joineventnotification) {
-                data.joineventnotification.map((joevent) => {
+            if (data.joineventNotification) {
+                console.log("if3")
+                data.joineventNotification.map((joevent) => {
                     joevent = {
-                        ...joevent,
+                        ...joevent._doc,
                         "notificationType": "joineventnotification"
                     }
                     gameinvitationnotification.push(joevent)
                 })
             }
             if (data.eventhappenNotification) {
+                console.log("if4")
                 data.eventhappenNotification.map((eventhapp) => {
                     eventhapp = {
-                        ...eventhapp,
+                        ...eventhapp._doc,
                         "notificationType": "eventhappenNotification"
                     }
                     gameinvitationnotification.push(eventhapp)
                 })
             }
+            
             if (data.eventafterhourNotification) {
+                console.log("if5")
                 data.eventafterhourNotification.map((eventhappone) => {
                     eventhappone = {
-                        ...eventhappone,
+                        ...eventhappone._doc,
                         "notificationType": "eventafterhourNotification"
                     }
                     gameinvitationnotification.push(eventhappone)
                 })
             }
             if (data.rateplayerNotification) {
+                console.log("if6")
                 data.rateplayerNotification.map((rtplayer) => {
                     rtplayer = {
-                        ...rtplayer,
+                        ...rtplayer._doc,
                         "notificationType": "rateplayerNotification"
                     }
                     gameinvitationnotification.push(rtplayer)
                 })
             }
             if (data.rateallNotification) {
+                console.log("if7")
                 data.rateallNotification.map((rtall) => {
                     rtall = {
-                        ...rtall,
+                        ...rtall._doc,
                         "notificationType": "rateallNotification"
                     }
                     gameinvitationnotification.push(rtall)
                 })
             }
-            res.json({ code: code.ok, gameinvitationnotification: gameinvitationnotification })
+            res.json({ code: code.ok, gamenotification: gameinvitationnotification })
         }).catch((err) => {
             console.log("gamenotification -> err", err)
             res.json({ code: code.ineternalError, message: msg.internalServerError })
