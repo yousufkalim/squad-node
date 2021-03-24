@@ -135,7 +135,7 @@ function eventlist(req, res) {
                         el.participants.map((ele) => {
                             participantIds.push(JSON.stringify(ele._id))
                         })
-                      
+
                         participatedinevent = (user.id) ? (participantIds.includes(JSON.stringify(user.id))) : false;
                         let obj = {
                             ...el._doc,
@@ -197,9 +197,15 @@ function joinevent(req, res) {
                     update1 = { $push: { participatedin: { eventId: data._id } } },
                     options1 = { new: true };
                 userDao.findOneAndUpdate(query1, update1, options1).then((userdata) => {
-                    if ((userdata.participants.length+1) == userdata.seats || (userdata.participants.length) > userdata.seats) {
-                        addeventfullNotification(data._id, data.createdby)
+                    if (userdata.participants) {
+
+                        if ((userdata.participants.length + 1) == userdata.seats || (userdata.participants.length) > userdata.seats) {
+                            addeventfullNotification(data._id, data.createdby)
+                        }
                     }
+                    //remove invitation notification  from particular sender
+                    console.log("joinevent -> obj.id, req.query.senderId, req.query.eventId", obj.id, req.query.senderId, req.query.eventId);
+                    (req.query.senderId) ? userService.removeJoineventInviteNotif(obj.id, req.query.senderId, req.query.eventId) : "";
                     addjoineventNotification(data._id, obj.id, data.createdby)
                     userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
                     res.json({ code: code.ok, msg: msg.eventjoin })
@@ -446,9 +452,9 @@ function preferenceBasedList(req, res) {
                                         var participatedinevent;
                                         el.participants.map((ele) => {
                                             participantIds.push(JSON.stringify(ele._id))
-                                 
+
                                         })
-                                        participatedinevent = (participantIds) ?(participantIds.includes(JSON.stringify(userToken.id))): false;
+                                        participatedinevent = (participantIds) ? (participantIds.includes(JSON.stringify(userToken.id))) : false;
 
                                         let obj = {
                                             ...el._doc,

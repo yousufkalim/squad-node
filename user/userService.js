@@ -747,7 +747,7 @@ async function gamenotification(req, res) {
                     }
                     gameinvitationnotification.push(rtyou)
                 })
-            } 
+            }
             if (data.invitationtogame) {
                 data.invitationtogame.map((rtyou) => {
                     rtyou = {
@@ -775,7 +775,7 @@ async function gamenotification(req, res) {
                     gameinvitationnotification.push(eventhapp)
                 })
             }
-            
+
             if (data.eventafterhourNotification) {
                 data.eventafterhourNotification.map((eventhappone) => {
                     eventhappone = {
@@ -812,7 +812,7 @@ async function gamenotification(req, res) {
                     gameinvitationnotification.push(rtall)
                 })
             }
-           
+
             res.json({ code: code.ok, gamenotification: gameinvitationnotification })
         }).catch((err) => {
             console.log("gamenotification -> err", err)
@@ -1179,6 +1179,18 @@ function declinerequest(req, res) {
 function removeFriendNotif(userId, requestuserId) {
     let query = { _id: userId },
         update = { "$pull": { friendrequestNotification: { "userId": ObjectId(requestuserId) } } },
+        options = { new: true };
+    user.findOneAndUpdate(query, update, options).then(data => {
+
+    }).catch(err => {
+
+    })
+
+}
+function removeJoineventInviteNotif(userId, senderId, eventId) {
+    console.log("userId, senderId, eventId", userId, senderId, eventId)
+    let query = { _id: userId },
+        update = { "$pull": { invitationtogame: { "senderId": ObjectId(senderId), "eventId": ObjectId(eventId) } } },
         options = { new: true };
     user.findOneAndUpdate(query, update, options).then(data => {
 
@@ -1621,5 +1633,6 @@ module.exports = {
     addratingnotif,
     friendrequestNotification,
     friendnotification,
+    removeJoineventInviteNotif
 
 }
