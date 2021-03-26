@@ -185,6 +185,10 @@ userRouter.route('/gamenotifdecline')
     .post([validate.verifyToken], (req, res) => {
         actions.gamenotifdecline(req, res)
     })
+userRouter.route('/logout')
+    .post([validate.verifyToken], (req, res) => {
+        actions.logout(req, res)
+    })
 
 
 module.exports = userRouter;

@@ -1577,6 +1577,19 @@ function friendrequestnotif(users) {//sent to user
         }
     });
 }
+function logout(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token);
+    let query = { _id: obj.id },
+        update = { $set: { fcmToken: "" } },
+        options = { new: true }
+    userdao.findOneAndUpdate(query, update, options).then((data) => {
+        return res.json({ code: code.ok })
+    }).catch((err) => {
+        console.log("update -> err", err)
+        return res.json({ code: code.ineternalError, messages: msg.internalServerError })
+    })
+}
 module.exports = {
     registerUser,
     // updateProfile,
@@ -1633,6 +1646,6 @@ module.exports = {
     addratingnotif,
     friendrequestNotification,
     friendnotification,
-    removeJoineventInviteNotif
-
+    removeJoineventInviteNotif,
+    logout
 }
