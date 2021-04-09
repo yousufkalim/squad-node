@@ -391,6 +391,7 @@ function getprofile(req, res) {
 
     let query = { _id: obj.id }
     userdao.findone(query).then(async (data) => {
+              console.log("get profile=>",data);
         let avgrage = 0,
             rates = (data.rateasplayer) ? data.rateasplayer : [];
 
@@ -413,11 +414,9 @@ function getprofile(req, res) {
             imageUrl: data.imageUrl,
             role: data.role,
             gender: data.gender,
-
             rating: (avgrage / rates.length).toFixed(1),
-            //default
-            events: 0,
-            Calendercount: 0
+            events: data.friends.length,
+            Calendercount: data.participatedin.length
         }
         res.json({ code: code.ok, data: response })
     }).catch((err) => {

@@ -79,6 +79,7 @@ function eventdetail(req, res) {
 function myevents(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
+    console.log(obj);
     let query = { createdby: obj.id }
     return eventdao.find(query).then((data) => {
         res.json({ code: code.ok, data: data })
@@ -367,7 +368,8 @@ function eventwillplayed(req, res) {
     let obj = util.decodeToken(token)
     let query = { date: { "$gt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
     console.log("query====================>", query)
-    return event.find(query).populate('placeId', '_id sportId').populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer').then((data) => {
+    let mysort={date:-1}
+    return event.find(query).sort(mysort).populate('placeId', '_id sportId').populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer').then((data) => {
         console.log("eventwillplayed -> !data", data.length)
         if (data.length == 0) {
             return res.json({ code: code.ok, data: data })
@@ -405,6 +407,7 @@ function eventwillplayed(req, res) {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
+
 function preferenceBasedList(req, res) {
     let token = req.headers['authorization']
     let userToken = util.decodeToken(token)
@@ -413,6 +416,8 @@ function preferenceBasedList(req, res) {
         var levelfilter = req.query.level;
     if (req.query.sport)
         var sportfilter = req.query.sport;
+        if (req.query.km)
+        var km = req.query.km;
     user.findById(userToken.id).then((userdata) => {
         if (userdata.preferences.length >= 1) {
             const promiseArray = userdata.preferences.map(function (el) {
@@ -431,7 +436,20 @@ function preferenceBasedList(req, res) {
                         level: { $in: [el.level, "ALL"] },// el.level,
                         gender: { $in: [userdata.gender, "BOTH"] }
                     };
-                    (req.query.date) ? (query.date = req.query.date + "T00:00:00.000Z") : '';
+                   // (req.query.date) ? (query.date = req.query.date + "T00:00:00.000Z") : ''; 
+
+                    if(req.query.date)
+                    {
+                        var start = req.query.date + "T00:00:00.000Z";
+                        var end = req.query.date + "T23:59:59.000Z";
+ 
+                         query.date =  {$gte: start, $lt: end};  
+
+
+                    }
+
+                    
+
                     event.find(query).populate('participants', '_id imageUrl firstname lastname').then((data) => {
                         // resolve(eventdata)
                         if (data[0] != null) {
@@ -467,7 +485,9 @@ function preferenceBasedList(req, res) {
                                 }
                             })
                         } else {
-                            resolve()
+
+                            res.json({ code: code.notFound, data: [] })
+
                         }
                     }).catch((err) => {
                         reject(err)
@@ -477,14 +497,19 @@ function preferenceBasedList(req, res) {
             Promise.all(promiseArray).then(function (eventsdata) {
                 let eventlist = [];
 
+
                 eventsdata.map((data) => {
-                    let kmobj = {
-                        ...data,
-                        distance: this.latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
-                            data.location.coordinates[0], data.location.coordinates[1])
-                    }
-                    console.log("preferenceBasedList -> kmobj", kmobj.distance)
-                        (data) ? eventlist.push(data) : '';
+
+                    // let kmobj = {
+                    //     ...data,
+                    //     distance: latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
+                    //         data.location.coordinates[0], data.location.coordinates[1])
+                    // }
+
+                   let myDistnce = latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
+                                                    data.location.coordinates[0], data.location.coordinates[1])
+                    data.distance = myDistnce;
+                    (data) ? eventlist.push(data) : '';  
                 })
                 if (free == 1) {        //1
                     eventlist.sort((a, b) => a.price - b.price);
@@ -524,6 +549,10 @@ function preferenceBasedList(req, res) {
 
     })
 }
+
+
+
+
 function eventinvitation(req, res) {
     console.log("eventinvitation", req.body)
 
