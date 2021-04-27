@@ -21,6 +21,8 @@ var serverKey = process.env.SERVER_KEY;
 var fcm = new FCM(serverKey);
 var ObjectId = require('mongodb').ObjectID;
 
+const event = require('../schema/event');
+
 
 function registerUser(req, res) {
     // const newpass = util.generateRandomPassword().toUpperCase()
@@ -390,18 +392,25 @@ function getprofile(req, res) {
     let obj = util.decodeToken(token)
 
     let query = { _id: obj.id }
+    
     userdao.findone(query).then(async (data) => {
-              console.log("get profile=>",data);
+              //console.log("get profile=>",data);
         let avgrage = 0,
-            rates = (data.rateasplayer) ? data.rateasplayer : [];
+        rates = (data.rateasplayer) ? data.rateasplayer : [];
 
         Array.prototype.push.apply(rates, data.rateasorganizer);
-        console.log("getprofile -> rates", rates)
+        //console.log("getprofile -> rates", rates)
+
+    
+        //let eventcount = event.count({createdby:ObjectId(obj.id).toString()});
+        let eventcount = await event.count({createdby:ObjectId(obj.id).toString()});
+ 
+        console.log("eventcount=>",eventcount);
 
         await rates.forEach(element => {
             avgrage += element.ratedwith;
         });
-        console.log("getprofile -> avgrate", avgrage)
+      //  console.log("getprofile -> avgrate", avgrage)
         let response = {
             firstname: data.firstname,
             lastname: data.lastname,
@@ -415,8 +424,8 @@ function getprofile(req, res) {
             role: data.role,
             gender: data.gender,
             rating: (avgrage / rates.length).toFixed(1),
-            events: data.friends.length,
-            Calendercount: data.participatedin.length
+            events: data.participatedin.length,
+            Calendercount: eventcount
         }
         res.json({ code: code.ok, data: response })
     }).catch((err) => {
@@ -437,6 +446,7 @@ function update(req, res) {
 }
 function sportlist(req, res) {
     let query = { status: status.active }
+    console.log("query=>",query);
     sportdao.find(query).then((data) => {
         return res.json({ code: code.ok, data: data })
     }).catch((err) => {

@@ -409,8 +409,10 @@ function eventwillplayed(req, res) {
 }
 
 function preferenceBasedList(req, res) {
+    console.log('-----------hello----------')
     let token = req.headers['authorization']
     let userToken = util.decodeToken(token)
+    
     var free = (req.query.free) ? req.query.free : 0;
     if (req.query.level)
         var levelfilter = req.query.level;
@@ -422,36 +424,35 @@ function preferenceBasedList(req, res) {
         if (userdata.preferences.length >= 1) {
             const promiseArray = userdata.preferences.map(function (el) {
                 return new Promise(function (resolve, reject) {
-                    let query = {//db.events.createIndex( {location: "2dsphere" } )
-                        location: {
-                            $nearSphere: {
-                                $geometry: {
-                                    type: "Point",
-                                    coordinates: [userdata.location.coordinates[0], userdata.location.coordinates[1]]
-                                },
-                                $maxDistance: parseFloat(el.radius) * 1000
-                            }
-                        },
-                        sport: el.sportId,
-                        level: { $in: [el.level, "ALL"] },// el.level,
-                        gender: { $in: [userdata.gender, "BOTH"] }
-                    };
+                    //let query = {//db.events.createIndex( {location: "2dsphere" } )
+                        // location: {
+                        //     $nearSphere: {
+                        //         $geometry: {
+                        //             type: "Point",
+                        //             coordinates: [userdata.location.coordinates[0], userdata.location.coordinates[1]]
+                        //         },
+                        //         $maxDistance: parseFloat(el.radius) * 1000
+                        //     }
+                        // },
+                        // sport: el.sportId,
+                        // level: { $in: [el.level, "ALL"] },// el.level,
+                        // gender: { $in: [userdata.gender, "BOTH"] }
+                    //}; 
                    // (req.query.date) ? (query.date = req.query.date + "T00:00:00.000Z") : ''; 
-
+                    let query ={}
                     if(req.query.date)
                     {
-                        var start = req.query.date + "T00:00:00.000Z";
-                        var end = req.query.date + "T23:59:59.000Z";
+                        var start = new Date(req.query.date + "T00:00:00.000Z");
+                        var end = new Date(req.query.date + "T23:59:59.000Z");
  
                          query.date =  {$gte: start, $lt: end};  
-
-
                     }
 
-                    
+                    console.log(query, userdata.location.coordinates[0], userdata.location.coordinates[1])
 
                     event.find(query).populate('participants', '_id imageUrl firstname lastname').then((data) => {
                         // resolve(eventdata)
+                        console.log(data, '==================data==================')
                         if (data[0] != null) {
                             data.map((el, inx) => {
                                 if (el.participants && el.participants.length >= 1) {
