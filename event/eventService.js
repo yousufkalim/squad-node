@@ -13,8 +13,8 @@ const geolib = require('geolib');
 
 function latlongtokm(userlong, userlat, eventlong, eventlang) {
     let km = geolib.getDistance(
-        { latitude: 22.2685379, longitude: 70.7935891 },
-        { latitude: 23.0006665, longitude: 72.5022646 }
+        { latitude: userlong, longitude: userlat },
+        { latitude: eventlong, longitude: eventlang }
     );
     return km
 
@@ -409,17 +409,19 @@ function eventwillplayed(req, res) {
 }
 
 function preferenceBasedList(req, res) {
-    console.log('-----------hello----------')
+    // console.log('-----------hello----------')
     let token = req.headers['authorization']
     let userToken = util.decodeToken(token)
     
-    var free = (req.query.free) ? req.query.free : 0;
-    if (req.query.level)
-        var levelfilter = req.query.level;
-    if (req.query.sport)
-        var sportfilter = req.query.sport;
-        if (req.query.km)
-        var km = req.query.km;
+    // var free = (req.query.free) ? req.query.free : 0;
+    // if (req.query.level)
+        // var levelfilter = req.query.level;
+    // if (req.query.sport)
+        // var sportfilter = req.query.sport;
+        // if (req.query.km)
+        // var km = req.query.km;
+        // console.log(req.query.level)
+        // return
     user.findById(userToken.id).then((userdata) => {
         if (userdata.preferences.length >= 1) {
             const promiseArray = userdata.preferences.map(function (el) {
@@ -434,27 +436,66 @@ function preferenceBasedList(req, res) {
                         //         $maxDistance: parseFloat(el.radius) * 1000
                         //     }
                         // },
-                        // sport: el.sportId,
-                        // level: { $in: [el.level, "ALL"] },// el.level,
-                        // gender: { $in: [userdata.gender, "BOTH"] }
-                    //}; 
+                        //sport: el.sportId,
+                        //level: { $in: [el.level, "ALL"] },// el.level,
+                        //gender: { $in: [userdata.gender, "BOTH"] }
+                    // }; 
+
+
                    // (req.query.date) ? (query.date = req.query.date + "T00:00:00.000Z") : ''; 
                     let query ={}
+
+                    var km = 1000000
+                    if(req.query.km){
+                        var km = parseInt(req.query.km) * 1000
+                    }
+                    query.location = {
+                        $nearSphere: {
+                            $geometry: {
+                                type: "Point",
+                                coordinates: [userdata.location.coordinates[0], userdata.location.coordinates[1]]
+                            },
+                            $maxDistance: parseFloat(el.radius) * km
+                        }
+                    }
+                    if(req.query.free){
+                        query.price = 0
+                    }
+                    if(req.query.sport){
+                        query.sport = {$in: [req.query.sport]}
+                    }
+                    if(req.query.level){
+                        query.level = {$in: [req.query.level]}
+                    }
                     if(req.query.date)
                     {
                         var start = new Date(req.query.date + "T00:00:00.000Z");
                         var end = new Date(req.query.date + "T23:59:59.000Z");
- 
                          query.date =  {$gte: start, $lt: end};  
                     }
+                    
+                    if(req.query.gender){
+                        if(!Array.isArray(req.query.gender)){
+                            req.query.gender = [req.query.gender]
+                        }
+                        // const equals = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+                        // if(equals(req.query.gender, ['MEN', 'WOMEN'])){
+                        if(req.query.gender[1]){
+                            query.gender = {$in: ['BOTH']}
+                        } else {
+                            query.gender = {$in: req.query.gender}
+                        }
+                    }
 
-                    console.log(query, userdata.location.coordinates[0], userdata.location.coordinates[1])
-
+                    // console.log(query, userdata.location.coordinates[0], userdata.location.coordinates[1])
+                    // console.log(req.query, '==================data==================')
+                    // return
                     event.find(query).populate('participants', '_id imageUrl firstname lastname').then((data) => {
                         // resolve(eventdata)
-                        console.log(data, '==================data==================')
+                        // console.log(data, '=====================first')
                         if (data[0] != null) {
                             data.map((el, inx) => {
+                                
                                 if (el.participants && el.participants.length >= 1) {
                                     el.participants.map((par, i) => {
                                         var fr = (userdata.friends) ? userdata.friends.includes(par._id) : false;
@@ -467,24 +508,41 @@ function preferenceBasedList(req, res) {
                                 }
                                 if ((data.length - 1) == inx) {
                                     let participantIds = []
-                                    data.map((el, i) => {
+                                    data.map((el, xl) => {
+
+                                        // let kmobj = {
+                                            
+                                        // }
+                                        // data[xl] = kmobj
+                                        // console.log("preferenceBasedList -> kmobj", kmobj.distance)
+                                        
                                         var participatedinevent;
                                         el.participants.map((ele) => {
                                             participantIds.push(JSON.stringify(ele._id))
-
                                         })
                                         participatedinevent = (participantIds) ? (participantIds.includes(JSON.stringify(userToken.id))) : false;
 
                                         let obj = {
                                             ...el._doc,
                                             participatedinevent: participatedinevent,
-                                            seatsremain: el.seats - el.participants.length
+                                            seatsremain: el.seats - el.participants.length,
+                                            distance: latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
+                                                el.location.coordinates[0], el.location.coordinates[1])
                                         }
-                                        console.log("preferenceBasedList -> obj", obj)
-                                        resolve(obj)
-                                    })
+
+                                        data[xl] = obj
+
+                                      })
+                                      
                                 }
+
+                                if (data.length == (inx + 1)) {
+                                    res.json({ code: code.notFound, data: data })
+                                }
+                                
+                                
                             })
+
                         } else {
 
                             res.json({ code: code.notFound, data: [] })
@@ -495,51 +553,72 @@ function preferenceBasedList(req, res) {
                     })
                 });
             });
-            Promise.all(promiseArray).then(function (eventsdata) {
-                let eventlist = [];
+
+            // console.log(promiseArray) 
+            // return
+            // Promise.all(promiseArray).then(function (eventsdata) {
+            //     let eventlist = [];
 
 
-                eventsdata.map((data) => {
 
-                    // let kmobj = {
-                    //     ...data,
-                    //     distance: latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
-                    //         data.location.coordinates[0], data.location.coordinates[1])
-                    // }
+            //     // console.log(eventsdata)
+            //     // let myDistnce = []
+            //     eventsdata.map((data, index) => {
 
-                   let myDistnce = latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
-                                                    data.location.coordinates[0], data.location.coordinates[1])
-                    data.distance = myDistnce;
-                    (data) ? eventlist.push(data) : '';  
-                })
-                if (free == 1) {        //1
-                    eventlist.sort((a, b) => a.price - b.price);
-                }
-                if (levelfilter) {      //2
-                    var arr1 = [], arr2 = [];
-                    eventlist.map((el) => {
-                        (levelfilter.includes(el.level)) ? arr1.push(el) : arr2.push(el);
-                    })
-                    eventlist = arr1.concat(arr2);
-                }
-                if (sportfilter) {      //3
-                    var arr1 = [], arr2 = [];
-                    eventlist.map((el) => {
-                        (sportfilter.includes(el.sport)) ? arr1.push(el) : arr2.push(el);
-                    })
-                    eventlist = arr1.concat(arr2);
-                }
-                if (km) {       //4
-                    let arr1 = [], arr2 = [];
-                    data.map((el) => {
-                        (km == el.km) ? arr1.push(el) : arr2.push(el);
-                    })
-                    data = arr1.concat(arr2);
-                }
-                res.json({ code: code.ok, data: eventlist })
+            //         //console.log(data[index].location.coordinates[0], index, userdata.location.coordinates[0])
+
+            //         // let kmobj = {
+            //         //     ...data,
+            //         //     distance: latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
+            //         //         data.location.coordinates[0], data.location.coordinates[1])
+            //         // }
+
+            //         myDistnce = latlongtokm(userdata.location.coordinates[0], 
+            //                                     userdata.location.coordinates[1],
+            //                                     data[index].location.coordinates[0], 
+            //                                     data[index].location.coordinates[1])
+            //         data[index].distance = myDistnce;
+            //         // console.log(myDistnce)
+            //         let obj = {
+            //             ...data._doc,
+            //             distance: myDistnce
+            //         }
+
+            //         eventsdata[index] = obj
+            //         if(eventsdata.length == (index + 1)){
+            //             console.log(data)
+            //             eventlist.push(data)
+            //         }
+            //         // (data) ? eventlist.push(data) : '';
+            //     })
+            //     // if (free == 1) {        //1
+            //     //     eventlist.sort((a, b) => a.price - b.price);
+            //     // }
+            //     // if (levelfilter) {      //2
+            //     //     var arr1 = [], arr2 = [];
+            //     //     eventlist.map((el) => {
+            //     //         (levelfilter.includes(el.level)) ? arr1.push(el) : arr2.push(el);
+            //     //     })
+            //     //     eventlist = arr1.concat(arr2);
+            //     // }
+            //     // if (sportfilter) {      //3
+            //     //     var arr1 = [], arr2 = [];
+            //     //     eventlist.map((el) => {
+            //     //         (sportfilter.includes(el.sport)) ? arr1.push(el) : arr2.push(el);
+            //     //     })
+            //     //     eventlist = arr1.concat(arr2);
+            //     // }
+            //     // if (km) {       //4
+            //     //     let arr1 = [], arr2 = [];
+            //     //     data.map((el) => {
+            //     //         (km == el.km) ? arr1.push(el) : arr2.push(el);
+            //     //     })
+            //     //     data = arr1.concat(arr2);
+            //     // }
+            //     res.json({ code: code.ok, data: eventlist })
 
 
-            })
+            // })
         } else if (userdata.preferences.length == 0) {
             req.body.userdata = userdata;
             this.eventlist(req, res)
