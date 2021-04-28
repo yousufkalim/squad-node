@@ -21,8 +21,6 @@ var serverKey = process.env.SERVER_KEY;
 var fcm = new FCM(serverKey);
 var ObjectId = require('mongodb').ObjectID;
 
-const event = require('../schema/event');
-
 
 function registerUser(req, res) {
     // const newpass = util.generateRandomPassword().toUpperCase()
@@ -392,25 +390,18 @@ function getprofile(req, res) {
     let obj = util.decodeToken(token)
 
     let query = { _id: obj.id }
-    
     userdao.findone(query).then(async (data) => {
-              //console.log("get profile=>",data);
+              console.log("get profile=>",data);
         let avgrage = 0,
-        rates = (data.rateasplayer) ? data.rateasplayer : [];
+            rates = (data.rateasplayer) ? data.rateasplayer : [];
 
         Array.prototype.push.apply(rates, data.rateasorganizer);
-        //console.log("getprofile -> rates", rates)
-
-    
-        //let eventcount = event.count({createdby:ObjectId(obj.id).toString()});
-        let eventcount = await event.count({createdby:ObjectId(obj.id).toString()});
- 
-        console.log("eventcount=>",eventcount);
+        console.log("getprofile -> rates", rates)
 
         await rates.forEach(element => {
             avgrage += element.ratedwith;
         });
-      //  console.log("getprofile -> avgrate", avgrage)
+        console.log("getprofile -> avgrate", avgrage)
         let response = {
             firstname: data.firstname,
             lastname: data.lastname,
@@ -424,8 +415,8 @@ function getprofile(req, res) {
             role: data.role,
             gender: data.gender,
             rating: (avgrage / rates.length).toFixed(1),
-            events: data.participatedin.length,
-            Calendercount: eventcount
+            events: data.friends.length,
+            Calendercount: data.participatedin.length
         }
         res.json({ code: code.ok, data: response })
     }).catch((err) => {
@@ -446,7 +437,6 @@ function update(req, res) {
 }
 function sportlist(req, res) {
     let query = { status: status.active }
-    console.log("query=>",query);
     sportdao.find(query).then((data) => {
         return res.json({ code: code.ok, data: data })
     }).catch((err) => {
@@ -608,38 +598,51 @@ async function removepreference(req, res) {
 async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsphere" } )
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
-    const { eventId, level, gender } = req.body;
+    // const { eventId, level, gender } = req.body;
 
-    var query = {
-        $and: [
-            { participatedin: { $elemMatch: { "eventId": { $nin: eventId } } } },
-            { preferences: { $elemMatch: { "level": { $in: level } } } },
-            { gender: { $in: gender } },
-        ],
-    }
-    if (req.query.radius && req.query.long && req.query.lat) {
-        query = {
-            $and: [
-                // ...query,
-                { participatedin: { $elemMatch: { "eventId": { $nin: eventId } } } },
-                { preferences: { $elemMatch: { "level": { $in: level } } } },
-                { gender: { $in: gender } },
-                {
-                    location: {
-                        $nearSphere: {
-                            $geometry: { type: "Point", coordinates: [req.query.long, req.query.lat] },
-                            $maxDistance: parseFloat(req.query.radius) * 1000
-                        }
-                    }
-                }]
+    // var query = {
+    //     $and: [
+    //         { participatedin: { $elemMatch: { "eventId": { $nin: eventId } } } },
+    //         { preferences: { $elemMatch: { "level": { $in: level } } } },
+    //         { gender: { $in: gender } },
+    //     ],
+    // }
+    // if (req.query.radius && req.query.long && req.query.lat) {
+    //     console.log('hello there')
+    //     query = {
+    //         $and: [
+    //             // ...query,
+    //             { participatedin: { $elemMatch: { "eventId": { $nin: eventId } } } },
+    //             { preferences: { $elemMatch: { "level": { $in: level } } } },
+    //             { gender: { $in: gender } },
+    //             {
+    //                 location: {
+    //                     $nearSphere: {
+    //                         $geometry: { type: "Point", coordinates: [req.query.long, req.query.lat] },
+    //                         $maxDistance: parseFloat(req.query.radius) * 1000
+    //                     }
+    //                 }
+    //             }]
+    //     }
+    // }
+    user.findOne({ _id: obj.id }).then(async (userdat) => {
+    let query = {
+        location: {
+            $nearSphere: {
+                $geometry: { type: "Point", coordinates: [userdat.location.coordinates[0], userdat.location.coordinates[1]] },
+                $maxDistance: parseFloat(100) * 1000
+            }
         }
     }
+
     user.find(query, '_id firstname lastname imageUrl').exec((err, data) => {//have to add friend flag here
         if (err) {
             console.log("peoplearound -> err", err)
 
             return res.json({ code: code.internalError, message: msg.internalServerError })
         } else {
+            // return res.send({data: data.length})
+            console.log(data)
             let finallist = []
 
             if (data.length == 0) {
@@ -658,6 +661,7 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
             })
         }
     })
+})
 }
 function invitepeople(req, res) {
     let token = req.headers['authorization'];
