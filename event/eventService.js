@@ -465,6 +465,9 @@ function preferenceBasedList(req, res) {
                         query.sport = {$in: [req.query.sport]}
                     }
                     if(req.query.level){
+                        if(req.query.level == 'ALL'){
+                            query.level = {$in: ['BEGINNER', 'INTERMEDIATE', 'ALL', ]} 
+                        }
                         query.level = {$in: [req.query.level]}
                     }
                     if(req.query.date)
@@ -474,18 +477,18 @@ function preferenceBasedList(req, res) {
                          query.date =  {$gte: start, $lt: end};  
                     }
                     
-                    if(req.query.gender){
-                        if(!Array.isArray(req.query.gender)){
-                            req.query.gender = [req.query.gender]
-                        }
-                        // const equals = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-                        // if(equals(req.query.gender, ['MEN', 'WOMEN'])){
-                        if(req.query.gender[1]){
-                            query.gender = {$in: ['BOTH']}
-                        } else {
-                            query.gender = {$in: req.query.gender}
-                        }
-                    }
+                    // if(req.query.gender){
+                    //     if(!Array.isArray(req.query.gender)){
+                    //         req.query.gender = [req.query.gender]
+                    //     }
+                    //     // const equals = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+                    //     // if(equals(req.query.gender, ['MEN', 'WOMEN'])){
+                    //     if(req.query.gender[1]){
+                    //         query.gender = {$in: ['BOTH']}
+                    //     } else {
+                    //         query.gender = {$in: req.query.gender}
+                    //     }
+                    // }
 
                     // console.log(query, userdata.location.coordinates[0], userdata.location.coordinates[1])
                     // console.log(req.query, '==================data==================')
@@ -537,7 +540,7 @@ function preferenceBasedList(req, res) {
                                 }
 
                                 if (data.length == (inx + 1)) {
-                                    res.json({ code: code.notFound, data: data })
+                                    res.json({ code: code.ok, data: data })
                                 }
                                 
                                 
@@ -554,71 +557,6 @@ function preferenceBasedList(req, res) {
                 });
             });
 
-            // console.log(promiseArray) 
-            // return
-            // Promise.all(promiseArray).then(function (eventsdata) {
-            //     let eventlist = [];
-
-
-
-            //     // console.log(eventsdata)
-            //     // let myDistnce = []
-            //     eventsdata.map((data, index) => {
-
-            //         //console.log(data[index].location.coordinates[0], index, userdata.location.coordinates[0])
-
-            //         // let kmobj = {
-            //         //     ...data,
-            //         //     distance: latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
-            //         //         data.location.coordinates[0], data.location.coordinates[1])
-            //         // }
-
-            //         myDistnce = latlongtokm(userdata.location.coordinates[0], 
-            //                                     userdata.location.coordinates[1],
-            //                                     data[index].location.coordinates[0], 
-            //                                     data[index].location.coordinates[1])
-            //         data[index].distance = myDistnce;
-            //         // console.log(myDistnce)
-            //         let obj = {
-            //             ...data._doc,
-            //             distance: myDistnce
-            //         }
-
-            //         eventsdata[index] = obj
-            //         if(eventsdata.length == (index + 1)){
-            //             console.log(data)
-            //             eventlist.push(data)
-            //         }
-            //         // (data) ? eventlist.push(data) : '';
-            //     })
-            //     // if (free == 1) {        //1
-            //     //     eventlist.sort((a, b) => a.price - b.price);
-            //     // }
-            //     // if (levelfilter) {      //2
-            //     //     var arr1 = [], arr2 = [];
-            //     //     eventlist.map((el) => {
-            //     //         (levelfilter.includes(el.level)) ? arr1.push(el) : arr2.push(el);
-            //     //     })
-            //     //     eventlist = arr1.concat(arr2);
-            //     // }
-            //     // if (sportfilter) {      //3
-            //     //     var arr1 = [], arr2 = [];
-            //     //     eventlist.map((el) => {
-            //     //         (sportfilter.includes(el.sport)) ? arr1.push(el) : arr2.push(el);
-            //     //     })
-            //     //     eventlist = arr1.concat(arr2);
-            //     // }
-            //     // if (km) {       //4
-            //     //     let arr1 = [], arr2 = [];
-            //     //     data.map((el) => {
-            //     //         (km == el.km) ? arr1.push(el) : arr2.push(el);
-            //     //     })
-            //     //     data = arr1.concat(arr2);
-            //     // }
-            //     res.json({ code: code.ok, data: eventlist })
-
-
-            // })
         } else if (userdata.preferences.length == 0) {
             req.body.userdata = userdata;
             this.eventlist(req, res)
