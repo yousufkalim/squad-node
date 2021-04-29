@@ -81,7 +81,8 @@ function myevents(req, res) {
     let obj = util.decodeToken(token)
     console.log(obj);
     let query = { createdby: obj.id }
-    return eventdao.find(query).then((data) => {
+    
+    return event.find(query).sort({date: -1}).then((data) => {
         res.json({ code: code.ok, data: data })
     }).catch((err) => {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
