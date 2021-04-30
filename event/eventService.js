@@ -410,7 +410,6 @@ function eventwillplayed(req, res) {
 }
 
 function preferenceBasedList(req, res) {
-    // console.log('-----------hello----------')
     let token = req.headers['authorization']
     let userToken = util.decodeToken(token)
     
@@ -466,10 +465,10 @@ function preferenceBasedList(req, res) {
                         query.sport = {$in: [req.query.sport]}
                     }
                     if(req.query.level){
-                        if(req.query.level == 'ALL'){
-                            query.level = {$in: ['BEGINNER', 'INTERMEDIATE', 'ALL', ]} 
-                        }
                         query.level = {$in: [req.query.level]}
+                        if(req.query.level == 'ALL'){
+                            query.level = {$in: ['BEGINNER', 'INTERMEDIATE', 'ALL', 'ADVANCED']} 
+                        }
                     }
                     if(req.query.date)
                     {
@@ -477,6 +476,8 @@ function preferenceBasedList(req, res) {
                         var end = new Date(req.query.date + "T23:59:59.000Z");
                          query.date =  {$gte: start, $lt: end};  
                     }
+
+                    query.public = true
                     
                     // if(req.query.gender){
                     //     if(!Array.isArray(req.query.gender)){
