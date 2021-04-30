@@ -177,6 +177,10 @@ userRouter.route('/list/gamenotification')
     .get([validate.verifyToken], (req, res) => {
         actions.gamenotification(req, res)
     })
+userRouter.route('/list/removegamenotification')
+    .get([validate.verifyToken], (req, res) => {
+        actions.removegamenotification(req, res)
+    })
 userRouter.route('/list/friendnotification')
     .get([validate.verifyToken], (req, res) => {
         actions.friendnotification(req, res)

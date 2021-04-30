@@ -183,8 +183,10 @@ function getresetpassword(req, res) {
         .then((user) => {
             if (!user) return res.json({ code: code.unAuthorized, message: msg.tokeninvalidorexpire })
             else {
-                console.log("getresetpassword -> user.resetPasswordToken", user.resetPasswordToken)
-                res.redirect('squad://reset/' + user.resetPasswordToken)
+                console.log("getresetpassword -> user.resetPasswordToken", ua, user.resetPasswordToken)
+               res.redirect('squad://reset/' + user.resetPasswordToken)
+                res.render('reset.jade')
+                //==================
                 // if (browserName == "Firefox") {
                 //     res.redirect('squad://reset/' + user.resetPasswordToken)
                 //     res.render('reset.jade', { user });
@@ -197,6 +199,7 @@ function getresetpassword(req, res) {
                 //     res.redirect('squad://reset/' + user.resetPasswordToken)
                 //     res.render('reset.jade', { user });
                 // }
+                //=======================
             }
         })
         .catch(err => {
@@ -205,8 +208,10 @@ function getresetpassword(req, res) {
         });
 }
 function resetpassword(req, res) {
+    console.log('hell------------------------------------------------')
     let query = { resetPasswordToken: req.params.token, resetPasswordExpires: { $gt: Date.now() } }
     userdao.findone(query).then((result) => {
+        console.log(result)
         if (!result) return res.json({ code: code.unAuthorized, message: msg.tokeninvalidorexpire })
         else {
             const { password } = req.body;
@@ -233,6 +238,7 @@ function resetpassword(req, res) {
     })
 }
 function socialloginGmail(req, res) {
+    console.log('data here-----------------------------')
     const socialId = req.body.id.trim(),
         email = req.body.email.trim();
     let query = { $or: [{ socialId: socialId }, { email: email }] };
@@ -247,6 +253,7 @@ function socialloginGmail(req, res) {
                 imageUrl: user.imageUrl,
                 token: token
             }
+            console.log(data, '---------------------------11111111')
             return res.json({ code: code.ok, message: msg.loggedIn, data: data })
         } else {
             let addobj = {
@@ -265,6 +272,7 @@ function socialloginGmail(req, res) {
             else {
                 addobj.imageUrl = ""
             }
+            console.log(addobj, '-------------------------22222222')
             return userdao.create(addobj).then((user) => {
                 let token = util.generateToken(user, process.env.USER_SECRET)
                 let data = {
@@ -275,6 +283,7 @@ function socialloginGmail(req, res) {
                     imageUrl: user.imageUrl,
                     token: token
                 }
+                console.log(data, '---------------------3333333333333')
                 return res.json({ code: code.ok, message: msg.loggedIn, data: data })
             })
         }
@@ -558,6 +567,7 @@ function getvalidateemail(req, res) {
         .then((user) => {
             if (!user) return res.json({ code: code.unAuthorized, message: msg.notFound })
             else {
+                console.log('h-----------------------------')
                 res.redirect('squad://authenticate/' + user._id)
                 res.render('validateemail.jade', { user });
             }
@@ -825,12 +835,30 @@ async function gamenotification(req, res) {
                     gameinvitationnotification.push(rtall)
                 })
             }
+            gameinvitationnotification.reverse();
 
             res.json({ code: code.ok, gamenotification: gameinvitationnotification })
         }).catch((err) => {
             console.log("gamenotification -> err", err)
             res.json({ code: code.ineternalError, message: msg.internalServerError })
         })
+}
+function removegamenotification(req, res) {
+
+    let token = req.headers['authorization']
+    let obj = util.decodeToken(token)
+    let query = { _id: obj.id },
+        update = { $pull: { joineventNotification: { "_id": ObjectId(req.query._id) } } },
+        options = { new: true };
+    return userdao.findOneAndUpdate(query, update, options).then((data) => {
+        console.log(data)
+        if (data) {
+            res.json({ code: code.ok, msg: msg.removeNotification })
+        }
+    }).catch((err) => {
+        console.log("joinevent -> err", err)
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
 }
 async function friendnotification(req, res) {
     let token = req.headers['authorization'],
@@ -1650,6 +1678,7 @@ module.exports = {
     declinerequest,
     addgameinvitation,
     gamenotification,
+    removegamenotification,
     gamenotifdecline,
     listorsentrequest,
     canclerequest,

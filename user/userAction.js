@@ -104,6 +104,9 @@ function declinerequest(req, res) {
 function gamenotification(req, res) {
     service.gamenotification(req, res)
 }
+function removegamenotification(req, res) {
+    service.removegamenotification(req, res)
+}
 function gamenotifdecline(req, res) {
     service.gamenotifdecline(req, res)
 }
@@ -163,6 +166,7 @@ module.exports = {
     acceptrequest,
     declinerequest,
     gamenotification,
+    removegamenotification,
     gamenotifdecline,
     listorsentrequest,
     canclerequest,
