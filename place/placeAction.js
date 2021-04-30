@@ -10,9 +10,13 @@ function placelist(req, res, next) {
 function addRating(req, res, next) {
     service.addRating(req, res, next)
 }
+function nearPlace(req, res, next) {
+    service.nearPlace(req, res, next)
+}
 
 module.exports = {
     addplace,
     placelist,
-    addRating
+    addRating,
+    nearPlace
 }

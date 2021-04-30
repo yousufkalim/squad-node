@@ -20,5 +20,9 @@ placeRouter.route('/add/rating')
     .post([validate.verifyToken], (req, res, next) => {
         actions.addRating(req, res, next)
     });
+placeRouter.route('/nearPlace')
+    .get([validate.verifyToken], (req, res, next) => {
+        actions.nearPlace(req, res, next)
+    });
 
 module.exports = placeRouter;
