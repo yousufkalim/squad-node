@@ -206,7 +206,7 @@ function joinevent(req, res) {
                         }
                     }
                     //remove invitation notification  from particular sender
-                    console.log("joinevent -> obj.id, req.query.senderId, req.query.eventId", obj.id, req.query.senderId, req.query.eventId);
+                    //console.log("joinevent -> obj.id, req.query.senderId, req.query.eventId", obj.id, req.query.senderId, req.query.eventId);
                     (req.query.senderId) ? userService.removeJoineventInviteNotif(obj.id, req.query.senderId, req.query.eventId) : "";
                     addjoineventNotification(data._id, obj.id, data.createdby)
                     userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
@@ -261,21 +261,26 @@ function joinevent2(req, res) {
     let eventIdlist = [];
     user.findOne(query).then((data) => {
         if (data.participatedin.length == 0) {
+            console.log('1')
             //join event
             this.joinevent(req, res)
             // res.json({ code: code.ok, message: "you can join event" })
         } else {
+            console.log('2')
             data.participatedin.map((eventId, eindex) => {
                 eventIdlist.push(eventId.eventId);
                 if (data.participatedin.length == (eindex + 1)) {
+                    console.log('3')
                     let query = { _id: { $in: eventIdlist }, starttime: { $eq: new Date(req.body.starttime) } };
                     console.log("query", query)
                     event.find(query).then((eventdata) => {
                         console.log("eventdata====================>", eventdata.length)
                         if (eventdata.length == 0) {
+                            console.log('4')
                             this.joinevent(req, res)
                             // res.json({ code: code.ok, message: "you can join event" })
                         } else {
+                            console.log('5')
                             res.json({ code: code.badRequest, msg: msg.cannotjoinevent })
                         }
 
@@ -446,8 +451,8 @@ function preferenceBasedList(req, res) {
                     let query ={}
 
                     var km = 1000000
-                    if(req.query.km){
-                        var km = parseInt(req.query.km) * 1000
+                    if(req.query.radius){
+                        var km = parseInt(req.query.radius) * 1000
                     }
                     query.location = {
                         $nearSphere: {
@@ -462,11 +467,16 @@ function preferenceBasedList(req, res) {
                         query.price = 0
                     }
                     if(req.query.sport){
-                        query.sport = {$in: [req.query.sport]}
+                        let lrtrim = req.query.sport.substring(1, req.query.sport.length-1);
+                        let split = lrtrim.split(",")
+                        query.sport = {$in: split}
                     }
                     if(req.query.level){
-                        query.level = {$in: [req.query.level]}
-                        if(req.query.level == 'ALL'){
+                        
+                        let lrtrim = req.query.level.substring(1, req.query.level.length-1);
+                        let split = lrtrim.split(",")
+                        query.level = {$in: split}
+                        if(JSON.stringify(split) == JSON.stringify(['ALL'])){
                             query.level = {$in: ['BEGINNER', 'INTERMEDIATE', 'ALL', 'ADVANCED']} 
                         }
                     }
@@ -495,6 +505,7 @@ function preferenceBasedList(req, res) {
                     // console.log(query, userdata.location.coordinates[0], userdata.location.coordinates[1])
                     // console.log(req.query, '==================data==================')
                     // return
+                    console.log(query)
                     event.find(query).populate('participants', '_id imageUrl firstname lastname').then((data) => {
                         // resolve(eventdata)
                         // console.log(data, '=====================first')
