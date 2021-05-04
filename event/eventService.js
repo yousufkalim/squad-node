@@ -307,6 +307,7 @@ function eventplayed(req, res) {
             if (data.length == 0) {
                 return res.json({ code: code.ok, data: data })
             }
+
             data.map((events, index) => {
                 var avrratvanue = 0,
                     avrratorganizer = 0
@@ -324,17 +325,18 @@ function eventplayed(req, res) {
                     })
                 }
 
-                events.createdby.rateasorganizer.map((organizerrate, oindex) => {
-                    avrratorganizer += organizerrate.ratedwith
-                    if (events.createdby.rateasorganizer.length == (oindex + 1)) {
-                        data[index] = {
-                            ...events._doc,
-                            "avrratorganizer": avrratorganizer / (oindex + 1),
-                            "avrratvanue": avrratvanue
+                if (events.createdby != null) {
+                    events.createdby.rateasorganizer.map((organizerrate, oindex) => {
+                        avrratorganizer += organizerrate.ratedwith
+                        if (events.createdby.rateasorganizer.length == (oindex + 1)) {
+                            data[index] = {
+                                ...events._doc,
+                                "avrratorganizer": avrratorganizer / (oindex + 1),
+                                "avrratvanue": avrratvanue
+                            }
                         }
-                    }
-                })
-
+                    })
+                }
 
                 //organizer average rate
                 events.participants.map((userdata, i) => {
@@ -467,6 +469,7 @@ function preferenceBasedList(req, res) {
                         query.price = 0
                     }
                     if(req.query.sport){
+                        console.log(Array.from(req.query.sport, x => x + x))
                         let lrtrim = req.query.sport.substring(1, req.query.sport.length-1);
                         let split = lrtrim.split(",")
                         query.sport = {$in: split}
