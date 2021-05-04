@@ -636,23 +636,38 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
     //     }
     // }
     user.findOne({ _id: obj.id }).then(async (userdat) => {
-    let query = {
-        location: {
-            $nearSphere: {
-                $geometry: { type: "Point", coordinates: [userdat.location.coordinates[0], userdat.location.coordinates[1]] },
-                $maxDistance: parseFloat(100) * 1000
+        if (req.query.radius && req.query.long && req.query.lat && req.query.Gender) {
+
+            if (!((-90 <= parseFloat(req.query.lat) <= 90) && (-180 <= parseFloat(req.query.long) <= 180))) {
+                return res.json({ code: code.badRequest, message: msg.latlongincorrect })
+            }
+            var query = {
+                gender: { $in: [req.query.Gender] },
+                location: {
+                    $nearSphere: {
+                        $geometry: { type: "Point", coordinates: [parseFloat(req.query.long), parseFloat(req.query.lat)] },
+                        $maxDistance: parseFloat(req.query.radius) * 1000
+                    }
+                }
+            }
+        } else {
+            var query = {
+                location: {
+                    $nearSphere: {
+                        $geometry: { type: "Point", coordinates: [userdat.location.coordinates[0], userdat.location.coordinates[1]] },
+                        $maxDistance: parseFloat(100) * 1000
+                    }
+                }
             }
         }
-    }
 
     user.find(query, '_id firstname lastname imageUrl').exec((err, data) => {//have to add friend flag here
         if (err) {
             console.log("peoplearound -> err", err)
-
             return res.json({ code: code.internalError, message: msg.internalServerError })
         } else {
             // return res.send({data: data.length})
-            console.log(data)
+            
             let finallist = []
 
             if (data.length == 0) {
