@@ -608,55 +608,33 @@ async function removepreference(req, res) {
 async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsphere" } )
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
-    // const { eventId, level, gender } = req.body;
 
-    // var query = {
-    //     $and: [
-    //         { participatedin: { $elemMatch: { "eventId": { $nin: eventId } } } },
-    //         { preferences: { $elemMatch: { "level": { $in: level } } } },
-    //         { gender: { $in: gender } },
-    //     ],
-    // }
-    // if (req.query.radius && req.query.long && req.query.lat) {
-    //     console.log('hello there')
-    //     query = {
-    //         $and: [
-    //             // ...query,
-    //             { participatedin: { $elemMatch: { "eventId": { $nin: eventId } } } },
-    //             { preferences: { $elemMatch: { "level": { $in: level } } } },
-    //             { gender: { $in: gender } },
-    //             {
-    //                 location: {
-    //                     $nearSphere: {
-    //                         $geometry: { type: "Point", coordinates: [req.query.long, req.query.lat] },
-    //                         $maxDistance: parseFloat(req.query.radius) * 1000
-    //                     }
-    //                 }
-    //             }]
-    //     }
-    // }
     user.findOne({ _id: obj.id }).then(async (userdat) => {
-        if (req.query.radius && req.query.long && req.query.lat && req.query.Gender) {
 
-            if (!((-90 <= parseFloat(req.query.lat) <= 90) && (-180 <= parseFloat(req.query.long) <= 180))) {
-                return res.json({ code: code.badRequest, message: msg.latlongincorrect })
-            }
-            var query = {
-                gender: { $in: [req.query.Gender] },
-                location: {
-                    $nearSphere: {
-                        $geometry: { type: "Point", coordinates: [parseFloat(req.query.long), parseFloat(req.query.lat)] },
-                        $maxDistance: parseFloat(req.query.radius) * 1000
-                    }
+        const { eventId, level, gender } = req.body;
+        var query = {}
+
+        if(eventId){
+            query.participatedin = { $elemMatch: { "eventId": { $nin: eventId } } }
+        }
+        // if(level){
+        //     query.preferences = { $elemMatch: { "level": { $in: level } } }
+        // }
+        if(gender){
+            query.gender = { $in: gender }
+        }
+        if(req.query.radius){
+            query.location = {
+                $nearSphere: {
+                    $geometry: { type: "Point", coordinates: [userdat.location.coordinates[0], userdat.location.coordinates[1]] },
+                    $maxDistance: parseFloat(req.query.radius) * 1000
                 }
             }
         } else {
-            var query = {
-                location: {
-                    $nearSphere: {
-                        $geometry: { type: "Point", coordinates: [userdat.location.coordinates[0], userdat.location.coordinates[1]] },
-                        $maxDistance: parseFloat(100) * 1000
-                    }
+            query.location = {
+                $nearSphere: {
+                    $geometry: { type: "Point", coordinates: [userdat.location.coordinates[0], userdat.location.coordinates[1]] },
+                    $maxDistance: parseFloat(100) * 1000
                 }
             }
         }
@@ -915,8 +893,8 @@ async function invitemail(res, req, users, eventId) {
         let data = {
             username: el.firstname,
             subject: "Invitation Link",
-            html: `Hi ${el.firstname} \n 
-           Someone invites you to the event click on these link and join ${link}`
+            html: `Hi ${el.firstname}, <br /><br />
+           Someone invites you to the event click on these link and join ${link} <br /><br />Best Regards,<br />Squad XYZ Team`
         }
         await util.sendEMail(el.email, data).then((data) => {
             let fcm_token = (users.fcmToken) ? users.fcmToken : '';
