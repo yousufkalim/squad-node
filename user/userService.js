@@ -1121,18 +1121,28 @@ function sendrequest(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token)//will push userId to sentrequest 
     const { userId } = req.body;//whome you want to send request push obj.id to friend request
+
     let query = { _id: userId },
         update = { $push: { friendRequest: obj.id } },
         options = { new: true };
-    userdao.findOneAndUpdate(query, update, options).then((receiverdata) => {
-        friendrequestnotif(receiverdata);
-        let query1 = { _id: obj.id },
-            update1 = { $push: { sentRequest: userId } },
-            options1 = { new: true };
-        userdao.findOneAndUpdate(query1, update1, options1).then((senderdata) => {
-            friendrequestNotification(obj.id, userId)
-            return res.json({ code: code.ok, msg: "request sent" })
-        })
+    user.findOne({ _id: userId, friends: { $in: [obj.id] } }).then((data) => {
+        console.log(data, '===================================')
+        if (data) {
+            return res.json({ code: code.ok, msg: "user are aready your friend" })
+        } else {
+            userdao.findOneAndUpdate(query, update, options).then((receiverdata) => {
+                friendrequestnotif(receiverdata);
+                let query1 = { _id: obj.id },
+                    update1 = { $push: { sentRequest: userId } },
+                    options1 = { new: true };
+                userdao.findOneAndUpdate(query1, update1, options1).then((senderdata) => {
+                    friendrequestNotification(obj.id, userId)
+                    return res.json({ code: code.ok, msg: "request sent" })
+                })
+            }).catch((err) => {
+                return res.json({ code: code.internalError, message: msg.internalServerError })
+            })
+        }
     }).catch((err) => {
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
@@ -1146,7 +1156,7 @@ function friendrequestNotification(senderId, receiverId) {
         update = { $push: { friendrequestNotification: friendrequestNotification } },
         options = { new: true };
     user.findOneAndUpdate(query, update, options).then((data) => {
-        console.log("friendrequestNotification -> data", data)
+        // console.log("friendrequestNotification -> data", data)
     }).catch((err) => {
         console.log("err", err)
 
@@ -1591,7 +1601,7 @@ function eventhappens(participantIds) {//sent to all participants
 
 }
 function friendrequestnotif(users) {//sent to user
-    console.log("invitenotification -> users", users)
+    // console.log("invitenotification -> users", users)
     var message = {
         to: (users.fcmToken) ? users.fcmToken : '',//fcm token whom you want to notify
         notification: {
@@ -1607,7 +1617,7 @@ function friendrequestnotif(users) {//sent to user
         if (err) {
             console.log("Something has gone wrong!");
         } else {
-            console.log("Successfully sent with response: ", response);
+            // console.log("Successfully sent with response: ", response);
         }
     });
 }

@@ -95,7 +95,7 @@ function eventlist(req, res) {
     let user = util.decodeToken(token)
     var sorttype = '';
     var free = (req.query.free) ? req.query.free : 0;
-    // var km = (req.query.km) ? req.query.km : 0;
+    var km = (req.query.km) ? req.query.km : 0;
     const { userdata } = req.body;
     if (req.query.sport)
         var sportfilter = req.query.sport;
@@ -104,6 +104,7 @@ function eventlist(req, res) {
     if (req.query.km)
         var km = req.query.km;
     (req.query.date) ? (query.date = req.query.date + "T00:00:00.000Z") : '';
+    query.public = {$in: [true]}
     return event.find(query).populate('participants', '_id imageUrl firstname lastname')
         .sort({ starttime: sorttype }).then((data) => {
 
@@ -127,12 +128,12 @@ function eventlist(req, res) {
                 if ((data.length - 1) == inx) {
                     let participantIds = []
                     data.map((el, i) => {
-                        let kmobj = {
-                            ...el,
-                            distance: this.latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
-                                el.location.coordinates[0], el.location.coordinates[1])
-                        }
-                        console.log("preferenceBasedList -> kmobj", kmobj.distance)
+                        // let kmobj = {
+                        //     ...el,
+                        //     distance: latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
+                        //         el.location.coordinates[0], el.location.coordinates[1])
+                        // }
+                        // console.log("preferenceBasedList -> kmobj", kmobj.distance)
                         var participatedinevent;
                         el.participants.map((ele) => {
                             participantIds.push(JSON.stringify(ele._id))
@@ -142,7 +143,9 @@ function eventlist(req, res) {
                         let obj = {
                             ...el._doc,
                             participatedinevent: participatedinevent,
-                            seatsremain: el.seats - el.participants.length
+                            seatsremain: el.seats - el.participants.length,
+                            distance: latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
+                                el.location.coordinates[0], el.location.coordinates[1])
                         }
 
                         data[i] = obj
@@ -194,24 +197,29 @@ function joinevent(req, res) {
                 if (data.participants.length == data.seats) {
                     userService.eventfullnotification(data.createdby, data.id)
                 }
-                //have to event id in users as well
-                let query1 = { _id: obj.id },
-                    update1 = { $push: { participatedin: { eventId: data._id } } },
-                    options1 = { new: true };
-                userDao.findOneAndUpdate(query1, update1, options1).then((userdata) => {
-                    if (userdata.participants) {
 
-                        if ((userdata.participants.length + 1) == userdata.seats || (userdata.participants.length) > userdata.seats) {
-                            addeventfullNotification(data._id, data.createdby)
+                if (data.endtime < new Date()) {
+                    res.json({ code: code.badRequest, msg: 'event already finished' })
+                } else {
+                    //have to event id in users as well
+                    let query1 = { _id: obj.id },
+                        update1 = { $push: { participatedin: { eventId: data._id } } },
+                        options1 = { new: true };
+                    userDao.findOneAndUpdate(query1, update1, options1).then((userdata) => {
+                        if (userdata.participants) {
+
+                            if ((userdata.participants.length + 1) == userdata.seats || (userdata.participants.length) > userdata.seats) {
+                                addeventfullNotification(data._id, data.createdby)
+                            }
                         }
-                    }
-                    //remove invitation notification  from particular sender
-                    //console.log("joinevent -> obj.id, req.query.senderId, req.query.eventId", obj.id, req.query.senderId, req.query.eventId);
-                    (req.query.senderId) ? userService.removeJoineventInviteNotif(obj.id, req.query.senderId, req.query.eventId) : "";
-                    addjoineventNotification(data._id, obj.id, data.createdby)
-                    userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
-                    res.json({ code: code.ok, msg: msg.eventjoin })
-                })
+                        //remove invitation notification  from particular sender
+                        //console.log("joinevent -> obj.id, req.query.senderId, req.query.eventId", obj.id, req.query.senderId, req.query.eventId);
+                        (req.query.senderId) ? userService.removeJoineventInviteNotif(obj.id, req.query.senderId, req.query.eventId) : "";
+                        addjoineventNotification(data._id, obj.id, data.createdby)
+                        userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
+                        res.json({ code: code.ok, msg: msg.eventjoin })
+                    })
+                }
             })
         }
     }).catch((err) => {
@@ -420,36 +428,11 @@ function preferenceBasedList(req, res) {
     let token = req.headers['authorization']
     let userToken = util.decodeToken(token)
     
-    // var free = (req.query.free) ? req.query.free : 0;
-    // if (req.query.level)
-        // var levelfilter = req.query.level;
-    // if (req.query.sport)
-        // var sportfilter = req.query.sport;
-        // if (req.query.km)
-        // var km = req.query.km;
-        // console.log(req.query.level)
-        // return
     user.findById(userToken.id).then((userdata) => {
         if (userdata.preferences.length >= 1) {
             const promiseArray = userdata.preferences.map(function (el) {
                 return new Promise(function (resolve, reject) {
-                    //let query = {//db.events.createIndex( {location: "2dsphere" } )
-                        // location: {
-                        //     $nearSphere: {
-                        //         $geometry: {
-                        //             type: "Point",
-                        //             coordinates: [userdata.location.coordinates[0], userdata.location.coordinates[1]]
-                        //         },
-                        //         $maxDistance: parseFloat(el.radius) * 1000
-                        //     }
-                        // },
-                        //sport: el.sportId,
-                        //level: { $in: [el.level, "ALL"] },// el.level,
-                        //gender: { $in: [userdata.gender, "BOTH"] }
-                    // }; 
-
-
-                   // (req.query.date) ? (query.date = req.query.date + "T00:00:00.000Z") : ''; 
+                    
                     let query ={}
 
                     var km = 1000000
@@ -469,7 +452,6 @@ function preferenceBasedList(req, res) {
                         query.price = 0
                     }
                     if(req.query.sport){
-                        console.log(Array.from(req.query.sport, x => x + x))
                         let lrtrim = req.query.sport.substring(1, req.query.sport.length-1);
                         let split = lrtrim.split(",")
                         query.sport = {$in: split}
@@ -490,25 +472,9 @@ function preferenceBasedList(req, res) {
                          query.date =  {$gte: start, $lt: end};  
                     }
 
-                    query.public = true
-                    
-                    // if(req.query.gender){
-                    //     if(!Array.isArray(req.query.gender)){
-                    //         req.query.gender = [req.query.gender]
-                    //     }
-                    //     // const equals = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-                    //     // if(equals(req.query.gender, ['MEN', 'WOMEN'])){
-                    //     if(req.query.gender[1]){
-                    //         query.gender = {$in: ['BOTH']}
-                    //     } else {
-                    //         query.gender = {$in: req.query.gender}
-                    //     }
-                    // }
-
-                    // console.log(query, userdata.location.coordinates[0], userdata.location.coordinates[1])
-                    // console.log(req.query, '==================data==================')
-                    // return
+                    query.public = {$in: [true]}
                     console.log(query)
+                    
                     event.find(query).populate('participants', '_id imageUrl firstname lastname').then((data) => {
                         // resolve(eventdata)
                         // console.log(data, '=====================first')
@@ -528,12 +494,6 @@ function preferenceBasedList(req, res) {
                                 if ((data.length - 1) == inx) {
                                     let participantIds = []
                                     data.map((el, xl) => {
-
-                                        // let kmobj = {
-                                            
-                                        // }
-                                        // data[xl] = kmobj
-                                        // console.log("preferenceBasedList -> kmobj", kmobj.distance)
                                         
                                         var participatedinevent;
                                         el.participants.map((ele) => {
@@ -548,6 +508,7 @@ function preferenceBasedList(req, res) {
                                             distance: latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
                                                 el.location.coordinates[0], el.location.coordinates[1])
                                         }
+                                        console.log(obj)
 
                                         data[xl] = obj
 
