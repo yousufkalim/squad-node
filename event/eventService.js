@@ -107,10 +107,37 @@ function eventlist(req, res) {
         var sportfilter = req.query.sport;
     if (req.query.level)
         var levelfilter = req.query.level;
-    if (req.query.km)
-        var km = req.query.km;
+    // if (req.query.km)
+    //     var km = req.query.km;
     (req.query.date) ? (query.date = req.query.date + "T00:00:00.000Z") : '';
     query.public = {$in: [true]}
+
+    var meters = 30000
+    if(req.query.radius){
+        var meters = parseInt(req.query.radius) * 1000
+    }
+    if(parseInt(req.query.radius) < 1000){
+        query.location = {
+            $nearSphere: {
+                $geometry: {
+                    type : "Point",
+                    coordinates : [userdata.location.coordinates[0],  userdata.location.coordinates[1]]
+                },
+                $maxDistance: meters
+            }
+        }
+    } else {
+        query.location = {
+            $nearSphere: {
+                $geometry: {
+                    type : "Point",
+                    coordinates : [userdata.location.coordinates[0],  userdata.location.coordinates[1]]
+                },
+                $minDistance: meters
+            }
+        }
+    }
+
     return event.find(query).populate('participants', '_id imageUrl firstname lastname')
         .sort({ starttime: sorttype }).then((data) => {
 
@@ -173,13 +200,13 @@ function eventlist(req, res) {
                         })
                         data = arr1.concat(arr2);
                     }
-                    if (km) {
-                        let arr1 = [], arr2 = [];
-                        data.map((el) => {
-                            (km == el.km) ? arr1.push(el) : arr2.push(el);
-                        })
-                        data = arr1.concat(arr2);
-                    }
+                    // if (km) {
+                    //     let arr1 = [], arr2 = [];
+                    //     data.map((el) => {
+                    //         (km == el.km) ? arr1.push(el) : arr2.push(el);
+                    //     })
+                    //     data = arr1.concat(arr2);
+                    // }
                     res.json({ code: code.ok, data: data })
                 }
             })
@@ -441,25 +468,41 @@ function preferenceBasedList(req, res) {
                     
                     let query ={}
 
-                    var km = 1000000
+                    var meters = 30000
                     if(req.query.radius){
-                        var km = parseInt(req.query.radius) * 1000
+                        var meters = parseInt(req.query.radius) * 1000
                     }
-                    query.location = {
-                        $nearSphere: {
-                            $geometry: {
-                                type: "Point",
-                                coordinates: [userdata.location.coordinates[0], userdata.location.coordinates[1]]
-                            },
-                            $maxDistance: parseFloat(el.radius) * km
+                    if(parseInt(req.query.radius) < 1000){
+                        query.location = {
+                            $nearSphere: {
+                                $geometry: {
+                                   type : "Point",
+                                   coordinates : [userdata.location.coordinates[0],  userdata.location.coordinates[1]]
+                                },
+                                $maxDistance: meters
+                            }
+                        }
+                    } else {
+                        query.location = {
+                            $nearSphere: {
+                                $geometry: {
+                                   type : "Point",
+                                   coordinates : [userdata.location.coordinates[0],  userdata.location.coordinates[1]]
+                                },
+                                $minDistance: meters
+                            }
                         }
                     }
+                    
                     if(req.query.free){
                         query.price = 0
                     }
                     if(req.query.sport){
                         let lrtrim = req.query.sport.substring(1, req.query.sport.length-1);
                         let split = lrtrim.split(",")
+                        // for(var i = 0; i < split.length; i++){
+                        //     split.push(ObjectId(split[i]))
+                        // }
                         query.sport = {$in: split}
                     }
                     if(req.query.level){
@@ -479,7 +522,7 @@ function preferenceBasedList(req, res) {
                     }
 
                     query.public = {$in: [true]}
-                    console.log(query)
+                    // console.log(query)
                     
                     event.find(query).populate('participants', '_id imageUrl firstname lastname').then((data) => {
                         // resolve(eventdata)
@@ -514,14 +557,12 @@ function preferenceBasedList(req, res) {
                                             distance: latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
                                                 el.location.coordinates[0], el.location.coordinates[1])
                                         }
-                                        console.log(obj)
+                                        // console.log(obj)
 
                                         data[xl] = obj
 
                                       })
-                                      
                                 }
-
                                 if (data.length == (inx + 1)) {
                                     res.json({ code: code.ok, data: data })
                                 }
@@ -531,7 +572,7 @@ function preferenceBasedList(req, res) {
 
                         } else {
 
-                            res.json({ code: code.notFound, data: [] })
+                            res.json({ code: code.ok, data: data })
 
                         }
                     }).catch((err) => {

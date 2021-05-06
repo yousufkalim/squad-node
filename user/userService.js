@@ -617,9 +617,9 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
         if(eventId){
             query.participatedin = { $elemMatch: { "eventId": { $nin: eventId } } }
         }
-        // if(level){
-        //     query.preferences = { $elemMatch: { "level": { $in: level } } }
-        // }
+        if(level){
+            query.preferences = { $elemMatch: { "level": { $in: level } } }
+        }
         if(gender){
             query.gender = { $in: gender }
         }
@@ -669,9 +669,10 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
 function invitepeople(req, res) {
     let token = req.headers['authorization'];
     let userId = util.decodeToken(token)
-    const { users, eventId } = req.body;
-    console.log("invitepeople ->  users, eventId", users, eventId)
+    var { users, eventId } = req.body;
+    // console.log("invitepeople ->  users, eventId", users, eventId)
     var obj = []
+    users = users.filter(e => e !== userId.id);
     users.map((el, i) => {
         let query = { _id: el }
         userdao.findone(query).then((data) => {
@@ -682,9 +683,7 @@ function invitepeople(req, res) {
                 userid: data._id
             }
             obj.push(info)
-            console.log("invitepeople -> i == (users.length - 1)", i, users.length, i == (users.length - 1))
             if (i == (users.length - 1)) {
-                console.log("invitepeople -> req.body.manualInvite.length", req.body.manualInvite.length)
                 if (req.body.manualInvite.length != 0) {
                     var manualinv = req.body.manualInvite
                     manualinv.map(async (el, index) => {
@@ -697,15 +696,13 @@ function invitepeople(req, res) {
                         }
                     })
                 } else {
-                    console.log("invitepeople -> else")
+                    // console.log("invitepeople -> else")
                     addgameinvitation(obj, userId.id, eventId)
                     invitemail(res, req, obj, eventId);
                 }
-
-
             }
         }).catch((err) => {
-            console.log("invitepeople -> err", err)
+            // console.log("invitepeople -> err", err)
         })
     })
 }
@@ -740,6 +737,7 @@ async function gamenotification(req, res) {
         .populate('invitationtogame.senderId', '_id firstname lastname imageUrl')
         .populate('invitationtogame.eventId', '_id date starttime endtime Address')
         .populate('rateyouNotification.userId', '_id firstname lastname imageUrl')
+        .populate('rateyouNotification.eventId', '_id date starttime endtime Address')
         // "NotificationType": "joineventnotification"
         .populate('joineventNotification.userId', '_id firstname lastname imageUrl')
         .populate('joineventNotification.eventId', '_id date starttime endtime Address')
@@ -828,7 +826,10 @@ async function gamenotification(req, res) {
                     gameinvitationnotification.push(rtall)
                 })
             }
-            gameinvitationnotification.reverse();
+            //sort by date...
+            gameinvitationnotification.sort(function(a,b){
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            });
 
             res.json({ code: code.ok, gamenotification: gameinvitationnotification })
         }).catch((err) => {
@@ -993,20 +994,23 @@ function addRatingasplayer(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token)
     const { ratearray } = req.body;
+    
     ratearray.map((ele, index) => {
-        console.log("addRatingasplayer -> ele", ratearray.length, index + 1)
+        // console.log("addRatingasplayer -> ele", ratearray.length, index + 1)
         let rating = {
             by: obj.id,
-            ratedwith: ele.rate
+            ratedwith: ele.rate,
+            eventId: ele.eventId
         }
         let query = { _id: ele.userId },
             update = { $push: { "rateasplayer": rating } },
             options = { new: true };
         userdao.findOneAndUpdate(query, update, options).then((userdata) => {
-            addratingnotif(rateas.player, obj.id, ele.userId)
+            addratingnotif(rateas.player, obj.id, ele.userId, ele.eventId)
                 (userdata.fcmToken) ? rateyounotification(userdata.fcmToken) : '';
         }).catch((err) => {
-            console.log("addRating -> err==================================", err)
+            return res.json({ code: code.internalError, message: msg.internalServerError })
+            // console.log("addRating -> err==================================", err)
         })
         if (ratearray.length == index + 1) {
             return res.json({ code: code.ok, msg: msg.addrate })
@@ -1016,44 +1020,44 @@ function addRatingasplayer(req, res) {
 function addRatingasorganizer(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token)
-    const { rate, userId } = req.body;
+    const { rate, userId, eventId } = req.body;
     let rating = {
         by: obj.id,
-        ratedwith: rate
+        ratedwith: rate,
+        eventId: eventId
     }
     let query = { _id: userId },
         update = { $push: { "rateasorganizer": rating } },
         options = { new: true };
     userdao.findOneAndUpdate(query, update, options).then((userdata) => {
-        addratingnotif(rateas.organizer, obj.id, userId);
+        addratingnotif(rateas.organizer, obj.id, userId, eventId);
         (userdata.fcmToken) ? rateyounotification(userdata.fcmToken) : '';
         return res.json({ code: code.ok, msg: msg.addrate })
     }).catch((err) => {
-        console.log("addRating -> err===============================", err)
+        // console.log("addRating -> err===============================", err)
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
 
 }
-function addratingnotif(type, senderId, receiverId) {
+function addratingnotif(type, senderId, receiverId, eventId) {
 
     let rateyouNotification = {
         type: type,
-        userId: senderId
+        userId: senderId,
+        eventId: eventId
     };
 
     let query = { _id: receiverId },
         update = { $push: { rateyouNotification: rateyouNotification } },
         options = { new: true };
     user.findOneAndUpdate(query, update, options).then((data) => {
-        console.log("rateyou notification added -> data", data)
+        // console.log("rateyou notification added -> data", data)
 
     }).catch((err) => {
         console.log("err", err)
-
     })
-
-
 }
+
 function peoplenewtosquad(req, res) {
     let query = {
         participatedin: { $exists: true, $size: 0 }

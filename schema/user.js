@@ -44,10 +44,12 @@ var userSchema = new schema({
     sentRequest: [{ type: mongoose.Schema.Types.ObjectId, ref: schmaName.user }],
     rateasplayer: [{
         ratedwith: { type: Number, min: 0, max: 5 },
+        eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
         by: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
     }],
     rateasorganizer: [{
         ratedwith: { type: Number, min: 0, max: 5 },
+        eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
         by: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
     }],
     participatedin: [{
@@ -61,6 +63,7 @@ var userSchema = new schema({
     }],//notification for game invitation
     rateyouNotification: [{
         type: { type: String, enum: [rateas.beginner, rateas.intermediate] },
+        eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
         userId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
         createdAt: { type: Date, default: Date.now() }
     }],
