@@ -34,9 +34,9 @@ function registerUser(req, res) {
         let data = {
             username: result.name,
             subject: "Validate Your EmailID for SQUAD",
-            html: `Hi ${result.name} \n 
-            Please click on ${link} to Validate Your EmailID. \n\n 
-            If you did not request this, please ignore this email.\n`
+            html: `Hi ${result.name} <br /> 
+            Please click on ${link} to Validate Your EmailID. <br /><br /> 
+            If you did not request this, please ignore this email.<br /> <br />Best Regards,<br />Squad XYZ Team`
         }
         await util.sendEMail(result.email, data).then((data) => {
 
@@ -160,7 +160,7 @@ function forgotPassword(req, res) {
                    
                     ${link} <br>
                     If you didn't request this, please ignore this email. <br>
-                    Your password won't change until you access the link above and create a new one.`
+                    Your password won't change until you access the link above and create a new one. <br /><br />Best Regards,<br />Squad XYZ Team`
 
                 }
                 await util.sendEMail(user.email, data).then((data) => {
@@ -223,8 +223,8 @@ function resetpassword(req, res) {
                 let data = {
                     username: user.firstname,
                     subject: "Your Password has been changed",
-                    html: `Hi ${user.firstname} \n 
-                    //                         This is a confirmation that the password for your account ${user.email} has just been changed.\n`
+                    html: `Hi ${user.firstname} <br /><br /> 
+                     This is a confirmation that the password for your account ${user.email} has just been changed.<br /><br />Best Regards,<br />Squad XYZ Team`
                 }
                 await util.sendEMail(user.email, data).then((data) => {
                     return (data == true) ? res.json({ code: code.ok, message: msg.passwordChanged })

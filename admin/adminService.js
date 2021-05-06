@@ -48,6 +48,7 @@ function updateuser(req, res) {
     let query = { _id: req.query.userId },
         update = { $set: req.body },
         options = { new: true }
+        console.log(update)
     userdao.findOneAndUpdate(query, update, options).then((data) => {
         return res.json({ code: code.ok, data: data })
     }).catch((err) => {
@@ -79,6 +80,7 @@ function deleteuser(req, res) {
     })
 }
 function resetpassword(req, res) {
+    console.log('==============================hello=======================')
     const newpass = util.generateRandomPassword().toUpperCase()
     const hash = bcrypt.hashSync(newpass, bcrypt.genSaltSync(10))
     let query = { _id: req.query.userId },
@@ -88,8 +90,8 @@ function resetpassword(req, res) {
         let obj = {
             username: result.name,
             subject: "New Password",
-            html: `Hi ${result.name} \n 
-            // Your password has been reset here is your new password ${newpass}\n`
+            html: `Hi ${result.name} <br /> 
+            // Your password has been reset here is your new password ${newpass}<br /> <br />Best Regards, <br />Squad XYZ Team `
         }
         await util.sendEMail(result.email, obj).then(async (result) => {
             (result == true) ? res.json({ code: code.ok, message: msg.passwordreset })

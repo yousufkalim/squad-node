@@ -46,10 +46,16 @@ function updateevent(req, res) {
     let query = { _id: req.query.eventId },
         update = { $set: req.body },
         options = { new: true }
-    return eventdao.findOneAndUpdate(query, update, options).then((result) => {
-        return res.json({ code: code.ok, data: result })
-    }).catch((err) => {
-        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    event.findOne(query).then((data) => {
+        if (data.starttime < new Date()) {
+            res.json({ code: code.badRequest, msg: `You can't edit beacuse of event is finished` })
+        } else {
+            return eventdao.findOneAndUpdate(query, update, options).then((result) => {
+                return res.json({ code: code.ok, data: result })
+            }).catch((err) => {
+                res.json({ code: code.ineternalError, message: msg.internalServerError })
+            })
+        }
     })
 }
 function eventdetail(req, res) {
@@ -198,7 +204,7 @@ function joinevent(req, res) {
                     userService.eventfullnotification(data.createdby, data.id)
                 }
 
-                if (data.endtime < new Date()) {
+                if (data.starttime < new Date()) {
                     res.json({ code: code.badRequest, msg: 'event already finished' })
                 } else {
                     //have to event id in users as well
