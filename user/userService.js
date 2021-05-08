@@ -609,7 +609,7 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
 
-    user.findOne({ _id: obj.id }).then(async (userdat) => {
+    user.findOne({ _id: obj.id }).then(async (userdata) => {
 
         const { eventId, level, gender } = req.body;
         var query = {}
@@ -622,22 +622,38 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
         }
         if(gender){
             query.gender = { $in: gender }
+            if(JSON.stringify(gender) == JSON.stringify(['BOTH'])){
+                query.gender = ['MEN','WOMEN']
+            }
         }
+        var meters = 30000
         if(req.query.radius){
+            var meters = parseInt(req.query.radius) * 1000
+        }
+
+        if(parseInt(req.query.radius) < 1000){
             query.location = {
                 $nearSphere: {
-                    $geometry: { type: "Point", coordinates: [userdat.location.coordinates[0], userdat.location.coordinates[1]] },
-                    $maxDistance: parseFloat(req.query.radius) * 1000
+                    $geometry: {
+                        type : "Point",
+                        coordinates : [userdata.location.coordinates[0],  userdata.location.coordinates[1]]
+                    },
+                    $maxDistance: meters
                 }
             }
         } else {
             query.location = {
                 $nearSphere: {
-                    $geometry: { type: "Point", coordinates: [userdat.location.coordinates[0], userdat.location.coordinates[1]] },
-                    $maxDistance: parseFloat(100) * 1000
+                    $geometry: {
+                        type : "Point",
+                        coordinates : [userdata.location.coordinates[0],  userdata.location.coordinates[1]]
+                    },
+                    $minDistance: meters
                 }
             }
         }
+
+        console.log(query)
 
     user.find(query, '_id firstname lastname imageUrl').exec((err, data) => {//have to add friend flag here
         if (err) {
@@ -945,7 +961,10 @@ async function peoplecount(req, res) {
             let query = {
                 location: {
                     $nearSphere: {
-                        $geometry: { type: "Point", coordinates: [userdat.location.coordinates[0], userdat.location.coordinates[1]] },
+                        $geometry: { 
+                            type: "Point", 
+                            coordinates: [userdat.location.coordinates[0], userdat.location.coordinates[1]] 
+                        },
                         $maxDistance: parseFloat(100) * 1000
                     }
                 }
