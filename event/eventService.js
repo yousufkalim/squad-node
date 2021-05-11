@@ -3,7 +3,6 @@ const code = require('../constants').http_codes;
 const msg = require('../constants').messages;
 const eventdao = require('./eventDao');
 const event = require('../schema/event');
-const moment = require("moment");
 
 const user = require('../schema/user');
 const userService = require('../user/userService');
@@ -97,7 +96,6 @@ function myevents(req, res) {
 }
 
 function eventlist(req, res) {
-    console.log('call eventlist')
     let query = {};
     let token = req.headers['authorization']
     let userToken = util.decodeToken(token)
@@ -154,7 +152,7 @@ function eventlist(req, res) {
 
         query.public = { $in: [true] }
 
-        return event.find(query).populate('participants', '_id imageUrl firstname lastname').then((data) => {
+        return event.find(query).populate('participants', '_id imageUrl firstname lastname').sort({starttime: 1}).then((data) => {
             if (data[0] != null) {
                 data.map((el, inx) => {
 
@@ -221,12 +219,7 @@ function joinevent(req, res) {
                     userService.eventfullnotification(data.createdby, data.id)
                 }
 
-                var date = moment(data.starttime).format('YYYY-MM-DD')
-                var time = moment(data.date).format('h:mm:ss')
-
-                var dueTime = new Date(date+time)
-                console.log(dueTime, '&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
-                if (dueTime < new Date()) {
+                if (data.starttime < new Date()) {
                     res.json({ code: code.badRequest, msg: 'event already finished' })
                 } else {
                     //have to event id in users as well
@@ -404,7 +397,6 @@ function eventwillplayed(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     let query = { date: { "$gt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
-    console.log("query====================>", query)
     let mysort={date:-1}
     return event.find(query).sort(mysort).populate('placeId', '_id sportId').populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer').then((data) => {
         console.log("eventwillplayed -> !data", data.length)
@@ -451,7 +443,6 @@ function preferenceBasedList(req, res) {
     
     user.findById(userToken.id).then((userdata) => {
         if (userdata.preferences.length >= 1) {
-             console.log('call preferncebaselist')
             // const promiseArray = userdata.preferences.map(function (el) {
                 return new Promise(function (resolve, reject) {
                     
@@ -513,7 +504,7 @@ function preferenceBasedList(req, res) {
                     query.public = {$in: [true]}
                     console.log(query)
                     
-                    event.find(query).populate('participants', '_id imageUrl firstname lastname').then((data) => {
+                    event.find(query).populate('participants', '_id imageUrl firstname lastname').sort({starttime: -1}).then((data) => {
                         // resolve(eventdata)
                         // console.log(data, '=====================first')
                         if (data[0] != null) {

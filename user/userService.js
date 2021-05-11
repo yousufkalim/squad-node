@@ -35,7 +35,7 @@ function registerUser(req, res) {
             username: result.name,
             subject: "Validate Your EmailID for SQUAD",
             html: `Hi ${result.name} <br /> 
-            Please click on ${link} to Validate Your EmailID. <br /><br /> 
+            Please click on <a href="${link}">it will be hyperlink</a> to Validate Your EmailID. <br /><br /> 
             If you did not request this, please ignore this email.<br /> <br />Best Regards,<br />Squad XYZ Team`
         }
         await util.sendEMail(result.email, data).then((data) => {
@@ -158,7 +158,7 @@ function forgotPassword(req, res) {
                     Someone has requested to change your password.
                     You can do this through the link below. <br>
                    
-                    ${link} <br>
+                    <a href="${link}">it will be hyperlink</a> <br>
                     If you didn't request this, please ignore this email. <br>
                     Your password won't change until you access the link above and create a new one. <br /><br />Best Regards,<br />Squad XYZ Team`
 
@@ -911,7 +911,7 @@ async function invitemail(res, req, users, eventId) {
             username: el.firstname,
             subject: "Invitation Link",
             html: `Hi ${el.firstname}, <br /><br />
-           Someone invites you to the event click on these link and join ${link} <br /><br />Best Regards,<br />Squad XYZ Team`
+           Someone invites you to the event click on these link and join <a href="${link}">it will be hyperlink</a> <br /><br />Best Regards,<br />Squad XYZ Team`
         }
         await util.sendEMail(el.email, data).then((data) => {
             let fcm_token = (users.fcmToken) ? users.fcmToken : '';
