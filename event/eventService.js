@@ -34,7 +34,6 @@ function addevent(req, res) {
     let obj = util.decodeToken(token)
     req.body.createdby = obj.id
     const data = req.body;
-    console.log("addevent -> req.body=============================================================================================", req.body)
     return eventdao.create(data).then((response) => {
         res.json({ code: code.created, eventId: response._id, message: msg.eventcreated })
     }).catch((err) => {
@@ -150,7 +149,7 @@ function eventlist(req, res) {
             query.date = { $gte: start, $lt: end };
         }
 
-        query.public = { $in: [true] }
+        query.public = { $in: [true] } 
 
         return event.find(query).populate('participants', '_id imageUrl firstname lastname').sort({starttime: 1}).then((data) => {
             if (data[0] != null) {
@@ -245,6 +244,7 @@ function joinevent(req, res) {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
+
 function addjoineventNotification(eventId, userId, creatorId) {
     let joineventNotification = {
         eventId: eventId,
@@ -262,6 +262,7 @@ function addjoineventNotification(eventId, userId, creatorId) {
 
     })
 }
+
 function addeventfullNotification(eventId, creatorId) {
     let eventfullNotification = {
         eventId: eventId,
@@ -276,47 +277,36 @@ function addeventfullNotification(eventId, creatorId) {
         console.log("err", err)
     })
 }
+
 function joinevent2(req, res) {
-    console.log("req.body.starttime", req.body.starttime)
     let token = req.headers['authorization']
     let obj = util.decodeToken(token);
     let query = { _id: obj.id };
     let eventIdlist = [];
     user.findOne(query).then((data) => {
         if (data.participatedin.length == 0) {
-            console.log('1')
-            //join event
             this.joinevent(req, res)
-            // res.json({ code: code.ok, message: "you can join event" })
         } else {
             data.participatedin.map((eventId, eindex) => {
                 eventIdlist.push(eventId.eventId);
                 if (data.participatedin.length == (eindex + 1)) {
-                    console.log('3')
                     let query = { _id: { $in: eventIdlist }, starttime: { $eq: new Date(req.body.starttime) } };
-                    console.log("query", query)
                     event.find(query).then((eventdata) => {
-                        console.log("eventdata====================>", eventdata.length)
                         if (eventdata.length == 0) {
-                            console.log('4')
                             this.joinevent(req, res)
-                            // res.json({ code: code.ok, message: "you can join event" })
                         } else {
-                            console.log('5')
                             res.json({ code: code.badRequest, msg: msg.cannotjoinevent })
                         }
-
                     })
-
                 }
             })
-
         }
     }).catch((err) => {
         console.log("joinevent -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
+
 function eventplayed(req, res) {
     //"avrratvanue" "avrratorganizer"
     let token = req.headers['authorization']
@@ -324,7 +314,7 @@ function eventplayed(req, res) {
     let query = { date: { "$lt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
     event.find(query).populate('placeId', '_id sportId rates')
         .populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer')
-        .populate('createdby', '_id rateasorganizer').then((data) => {//
+        .populate('createdby', '_id rateasorganizer').sort({starttime: -1}).then((data) => {//
             // console.log("eventplayed -> data==================================>", data.length)
             if (data.length == 0) {
                 return res.json({ code: code.ok, data: data })
@@ -393,6 +383,7 @@ function eventplayed(req, res) {
             return res.json({ code: code.ineternalError, message: msg.internalServerError })
         })
 }
+
 function eventwillplayed(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
@@ -437,19 +428,28 @@ function eventwillplayed(req, res) {
     })
 }
 
+
+
 function preferenceBasedList(req, res) {
     let token = req.headers['authorization']
     let userToken = util.decodeToken(token)
     
     user.findById(userToken.id).then((userdata) => {
         if (userdata.preferences.length >= 1) {
+
+            // console.log(userdata.preferences)
+            // var prefSport = []
+            // for(let i = 0; i < (userdata.preferences).length; i++){
+            //     prefSport.push(userdata.preferences[i].sportId)
+            // }
+            // console.log(prefSport)
             // const promiseArray = userdata.preferences.map(function (el) {
                 return new Promise(function (resolve, reject) {
                     
                     let query ={}
 
                     var meters = 30000
-                    if(req.query.radius){
+                    if(req.query.radius){ 
                         var meters = parseInt(req.query.radius) * 1000
                     }
                     if(parseInt(req.query.radius) < 1000){
@@ -475,18 +475,18 @@ function preferenceBasedList(req, res) {
                     }
                     
                     if(req.query.free){
-                        query.price = 0
+                        if(req.query.free == 0){
+                            query.price = 0
+                        }
                     }
                     if(req.query.sport){
                         let lrtrim = req.query.sport.substring(1, req.query.sport.length-1);
                         let split = lrtrim.split(",")
-                        // for(var i = 0; i < split.length; i++){
-                        //     split.push(ObjectId(split[i]))
-                        // }
                         query.sport = {$in: split}
+                    } else {
+                        // query.sport = {$in: prefSport}
                     }
                     if(req.query.level){
-                        
                         let lrtrim = req.query.level.substring(1, req.query.level.length-1);
                         let split = lrtrim.split(",")
                         query.level = {$in: split}
@@ -502,11 +502,13 @@ function preferenceBasedList(req, res) {
                     }
 
                     query.public = {$in: [true]}
-                    console.log(query)
-                    
+                    // console.log(query)
+
                     event.find(query).populate('participants', '_id imageUrl firstname lastname').sort({starttime: -1}).then((data) => {
                         // resolve(eventdata)
                         // console.log(data, '=====================first')
+                        var mydata = []
+                        // var mydatas = []
                         if (data[0] != null) {
                             data.map((el, inx) => {
                                 
@@ -537,23 +539,41 @@ function preferenceBasedList(req, res) {
                                             distance: latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
                                                 el.location.coordinates[0], el.location.coordinates[1])
                                         }
-                                        // console.log(obj)
-
                                         data[xl] = obj
-
                                       })
                                 }
-                                if (data.length == (inx + 1)) {
-                                    res.json({ code: code.ok, data: data })
-                                }
-                                
-                                
+
+                                // function myArray(arr, obj) {
+                                //    for (var i = 0; i < arr.length; i++) {
+                                //     //    console.log(arr[i] == obj)
+                                //         if (arr[i] == obj) {
+                                //             return true;
+                                //         } else {
+                                //             return false;
+                                //         }
+                                //     }
+                                // }
+
+                                // if (!req.query.radius) {
+                                //     for (let i = 0; i < data.length; i++) {
+                                //         for (let j = 0; j < userdata.preferences.length; j++) {
+                                //             var findArrayFalse = myArray(data[i].level, userdata.preferences[j].level);
+                                //             if (parseInt(userdata.preferences[j].radius * 1000) > parseInt(data[i].distance) && findArrayFalse && data[i].sport == userdata.preferences[j].sportId.toString()) {
+                                //                 mydatas.push(data[i])
+                                //             }
+                                //         }
+                                //     }
+                                // }
+
                             })
 
+                            // if (!req.query.radius) {
+                            // return res.json({ code: code.ok, data: mydatas })
+                            // } else {
+                            return res.json({ code: code.ok, data: data })
+                            // }
                         } else {
-
                             res.json({ code: code.ok, data: data })
-
                         }
                     }).catch((err) => {
                         reject(err)
@@ -574,10 +594,11 @@ function preferenceBasedList(req, res) {
 
 
 
+
 function eventinvitation(req, res) {
     console.log("eventinvitation", req.body)
-
 }
+
 function twodaysbeforenotification() {
     const currentDate = new Date();
     const afterTwoDaysDate = currentDate.addDays(2);//greater than this
@@ -593,6 +614,7 @@ function twodaysbeforenotification() {
 
     })
 }
+
 function onedaysbeforenotification() {
     const currentDate = new Date();
     const afterOneDaysDate = currentDate.addDays(1);//greater than this
