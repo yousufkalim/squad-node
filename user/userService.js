@@ -23,10 +23,8 @@ var ObjectId = require('mongodb').ObjectID;
 
 
 function getFcm(req, res) {
-    let token = req.headers['authorization']
-    let obj = util.decodeToken(token)
 
-    let query = { _id: obj.id }
+    let query = { _id: req.query.id }
     return userdao.findone(query).then((result) => {
         if(result){
             return res.json({ code: code.ok, data: result.fcmToken })
