@@ -107,6 +107,9 @@ function gamenotification(req, res) {
 function removegamenotification(req, res) {
     service.removegamenotification(req, res)
 }
+function getFcm(req, res){
+    service.getFcm(req, res)
+}
 function gamenotifdecline(req, res) {
     service.gamenotifdecline(req, res)
 }
@@ -174,5 +177,6 @@ module.exports = {
     userdetail,
     getuserpreference,
     friendnotification,
+    getFcm,
     logout
 }

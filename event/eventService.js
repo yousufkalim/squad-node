@@ -209,18 +209,18 @@ function joinevent(req, res) {
         update = { $push: { participants: obj.id } },
         options = { new: true };
     eventdao.findone(query).then((data) => {
-        if ((data.participants.length) == data.seats || (data.participants.length) > data.seats) {
-            addeventfullNotification()
-            return res.json({ code: code.badRequest, msg: msg.eventfull })
+        if (data.starttime < new Date()) {
+            return res.json({ code: code.badRequest, msg: 'event already finished' })
         } else {
-            return eventdao.findOneAndUpdate(query, update, options).then((data) => {
-                if (data.participants.length == data.seats) {
-                    userService.eventfullnotification(data.createdby, data.id)
-                }
+            if ((data.participants.length) == data.seats || (data.participants.length) > data.seats) {
+                addeventfullNotification()
+                return res.json({ code: code.badRequest, msg: msg.eventfull })
+            } else {
+                return eventdao.findOneAndUpdate(query, update, options).then((data) => {
+                    if (data.participants.length == data.seats) {
+                        userService.eventfullnotification(data.createdby, data.id)
+                    }
 
-                if (data.starttime < new Date()) {
-                    res.json({ code: code.badRequest, msg: 'event already finished' })
-                } else {
                     //have to event id in users as well
                     let query1 = { _id: obj.id },
                         update1 = { $push: { participatedin: { eventId: data._id } } },
@@ -236,14 +236,16 @@ function joinevent(req, res) {
                         userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
                         res.json({ code: code.ok, msg: msg.eventjoin })
                     })
-                }
-            })
+
+                })
+            }
         }
     }).catch((err) => {
         console.log("joinevent -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
+
 
 function addjoineventNotification(eventId, userId, creatorId) {
     let joineventNotification = {

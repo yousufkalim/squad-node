@@ -185,6 +185,10 @@ userRouter.route('/list/friendnotification')
     .get([validate.verifyToken], (req, res) => {
         actions.friendnotification(req, res)
     })
+userRouter.route('/getFcm')
+    .get([validate.verifyToken], (req, res) => {
+        actions.getFcm(req, res)
+    })
 userRouter.route('/gamenotifdecline')
     .post([validate.verifyToken], (req, res) => {
         actions.gamenotifdecline(req, res)

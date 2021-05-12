@@ -22,6 +22,23 @@ var fcm = new FCM(serverKey);
 var ObjectId = require('mongodb').ObjectID;
 
 
+function getFcm(req, res) {
+    let token = req.headers['authorization']
+    let obj = util.decodeToken(token)
+
+    let query = { _id: obj.id }
+    return userdao.findone(query).then((result) => {
+        if(result){
+            return res.json({ code: code.ok, data: result.fcmToken })
+        } else {
+            return res.json({ code:404, message: 'data not found' })
+        }
+    }).catch((err) => {
+        console.log("fcm -> err", err)
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+}
+
 function registerUser(req, res) {
     // const newpass = util.generateRandomPassword().toUpperCase()
     const hash = bcrypt.hashSync(req.body.password, bcrypt.genSaltSync(10))
@@ -263,6 +280,7 @@ function socialloginGmail(req, res) {
                 email: req.body.email.trim(),
                 fcmToken: req.body.fcm,
                 location: req.body.location,
+                gender: 'MEN',
                 isSocialLogin: true
             }
             if (req.body.photo) {
@@ -316,10 +334,10 @@ function socialloginFacebook(req, res) {
                 email: req.body.email.trim(),
                 fcmToken: req.body.fcm,
                 location: req.body.location,
+                gender: 'MEN',
                 isSocialLogin: true
             }
             if (req.body.photo) {
-
                 addobj.imageUrl = req.body.photo.trim()
             }
             else {
@@ -367,6 +385,7 @@ function socialloginLinkedin(req, res) {
                 email: req.body.email.trim(),
                 fcmToken: req.body.fcm,
                 location: req.body.location,
+                gender: 'MEN',
                 isSocialLogin: true
             }
             if (req.body.photo) {
@@ -642,16 +661,18 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
                 }
             }
         } else {
-            query.location = {
-                $nearSphere: {
-                    $geometry: {
-                        type : "Point",
-                        coordinates : [userdata.location.coordinates[0],  userdata.location.coordinates[1]]
-                    },
-                    $minDistance: meters
-                }
-            }
+            // query.location = {
+            //     $nearSphere: {
+            //         $geometry: {
+            //             type : "Point",
+            //             coordinates : [userdata.location.coordinates[0],  userdata.location.coordinates[1]]
+            //         },
+            //         $minDistance: meters
+            //     }
+            // }
         }
+
+        query._id = {$nin: {_id: obj.id}}
 
         console.log(query)
 
@@ -961,7 +982,7 @@ async function peoplecount(req, res) {
             let query = {
                 location: {
                     $nearSphere: {
-                        $geometry: { 
+                        $geometry: {
                             type: "Point", 
                             coordinates: [userdat.location.coordinates[0], userdat.location.coordinates[1]] 
                         },
@@ -969,7 +990,7 @@ async function peoplecount(req, res) {
                     }
                 }
             }
-            await user.find(query).then((data) => {
+            await user.find().then((data) => {
                 myResolve(data.length)
             }).catch((err) => {
                 myReject(err)
@@ -1715,5 +1736,6 @@ module.exports = {
     friendrequestNotification,
     friendnotification,
     removeJoineventInviteNotif,
+    getFcm,
     logout
 }
