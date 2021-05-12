@@ -4,6 +4,19 @@ const msg = require('../constants').messages;
 const status = require('../constants').status;
 const placedao = require('./placeDao');
 const eventdao = require('../event/eventDao');
+const user = require('../schema/user');
+const geolib = require('geolib');
+
+
+function latlongtokm(userlong, userlat, eventlong, eventlang) {
+    let km = geolib.getDistance(
+        { latitude: userlong, longitude: userlat },
+        { latitude: eventlong, longitude: eventlang }
+    );
+    return km
+}
+
+
 function addplace(req, res) {
     const data = req.body
     const { sportId, location } = req.body;
@@ -36,15 +49,41 @@ function addplace(req, res) {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
+
 function placelist(req, res) {
-    let query = (req.query.sportId) ? { sportId: req.query.sportId } : {};
-    return placedao.find(query).then((data) => {
-        res.json({ code: code.ok, data: data })
-    }).catch((err) => {
-        console.log("placelist -> err", err)
-        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    let token = req.headers['authorization']
+    let userToken = util.decodeToken(token)
+    user.findById(userToken.id).then((userdata) => {
+
+        var query = {}
+
+        if(req.query.sportId){
+            query.sportId = {$in : [req.query.sportId, '6013faa12944c45b089af469']}
+        }
+        return placedao.find(query).then((data) => {
+
+            var mydata = []
+            for(var i = 0; i < data.length; i++){
+                let nearToplace = {
+                    ...data[i]._doc,
+                    distance: latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
+                        data[i].location.coordinates[0], data[i].location.coordinates[1])
+                }
+                mydata.push(nearToplace)
+            }
+
+            mydata.sort(function(a, b) {
+                return a.distance - b.distance;
+              });
+            res.json({ code: code.ok, data: mydata })
+
+        }).catch((err) => {
+            console.log("placelist -> err", err)
+            res.json({ code: code.ineternalError, message: msg.internalServerError })
+        })
     })
 }
+
 function addRating(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token)
@@ -292,6 +331,7 @@ function addplaceevent(events, placeid) {
     })
 }
 module.exports = {
+    latlongtokm,
     addplace,
     placelist,
     addRating,
