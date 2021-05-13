@@ -485,10 +485,8 @@ function preferenceBasedList(req, res) {
                                     
                                     var participatedinevent;
                                     el.participants.map((ele) => {
-                                        participantIds.push(JSON.stringify(ele._id))
+                                        participantIds.push(ele._id)
                                     })
-                                    participatedinevent = (participantIds) ? (participantIds.includes(JSON.stringify(userToken.id))) : false;
-
                                     let obj = {
                                         ...el._doc,
                                         participatedinevent: participatedinevent,
@@ -499,6 +497,8 @@ function preferenceBasedList(req, res) {
                                     data[xl] = obj
                                   })
                             }
+
+                            
 
                             function myArray(arr, obj) {
                                 if(JSON.stringify([obj]) == JSON.stringify(['ALL'])){
@@ -514,6 +514,18 @@ function preferenceBasedList(req, res) {
 
                             var findArrayFalse;
                             for (let i = 0; i < data.length; i++) {
+
+                                if (data[i].participants.length == 0) {
+                                    data[i].participatedinevent = false
+                                } else {
+                                    data[i].participatedinevent = false
+                                    for (let z = 0; z < data[i].participants.length; z++) {
+                                        if (data[i].participants[z]._id.toString() == userToken.id.toString()) {
+                                            data[i].participatedinevent = true
+                                        }
+                                    }
+                                }
+
                                 if (JSON.stringify(data[i].level) == JSON.stringify(['ALL'])) {
                                     alldata = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'ALL']
                                 } else {
