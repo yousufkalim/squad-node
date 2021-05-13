@@ -70,7 +70,7 @@ async function registerUser(req, res) {
 
         let data = {
             username: result.name,
-            subject: "Validate Your EmailID for SQUAD",
+            subject: "Squad XYZ: Validate Your EmailID for SQUAD",
             html: `Hi ${result.name} <br /> 
             Please click on here:<a href="${link}"> Squad XYZ</a> to Validate Your EmailID. <br /><br /> 
             If you did not request this, please ignore this email.<br /> <br />Best Regards,<br />Squad XYZ Team`
@@ -191,7 +191,7 @@ function forgotPassword(req, res) {
 
                 let data = {
                     username: user.firstname,
-                    subject: "Reset password instructions",
+                    subject: "Squad XYZ: Reset password instructions",
                     html: `Hello ${user.firstname}! <br>
                     Someone has requested to change your password.
                     You can do this through the link below. <br>
@@ -260,7 +260,7 @@ function resetpassword(req, res) {
             userdao.findOneAndUpdate(query, update, options).then(async (user) => {
                 let data = {
                     username: user.firstname,
-                    subject: "Your Password has been changed",
+                    subject: "Squad XYZ: Your Password has been changed",
                     html: `Hi ${user.firstname} <br /><br /> 
                      This is a confirmation that the password for your account ${user.email} has just been changed.<br /><br />Best Regards,<br />Squad XYZ Team`
                 }
@@ -954,9 +954,9 @@ async function invitemail(res, req, users, eventId) {
         usersemail.push(el.email)
         let data = {
             username: el.firstname,
-            subject: "Invitation Link",
+            subject: "Squad XYZ: Invitation Link",
             html: `Hi ${el.firstname}, <br /><br />
-           Someone invites you to the event click on these link and join here:<a href="${link}">Squad XYZ</a> <br /><br />Best Regards,<br />Squad XYZ Team`
+            Someone has invited you to the event. Click on this link and join here:<a href="${link}">Squad XYZ</a> <br /><br />Best Regards,<br />Squad XYZ Team`
         }
         await util.sendEMail(el.email, data).then((data) => {
             let fcm_token = (users.fcmToken) ? users.fcmToken : '';
