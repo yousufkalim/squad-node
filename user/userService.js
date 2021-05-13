@@ -37,7 +37,27 @@ function getFcm(req, res) {
     })
 }
 
-function registerUser(req, res) {
+function DefaultPreference(id){
+    return sportdao.find().then((data) => {
+        var deff = []
+        for(let i = 0; i < data.length; i++){
+            var defaultPref = {
+                sportId: data[i]._id,
+                radius: 1000,
+                level: 'ALL'
+            }
+            deff.push(defaultPref)
+        }
+
+        let query = { _id: id },
+        update = { $push: { "preferences": deff } },
+        options = { new: true };
+        userdao.findOneAndUpdate(query, update, options)
+    })
+}
+
+async function registerUser(req, res) {
+    console.log('here arrive')
     // const newpass = util.generateRandomPassword().toUpperCase()
     const hash = bcrypt.hashSync(req.body.password, bcrypt.genSaltSync(10))
     req.body.password = hash;
@@ -46,11 +66,13 @@ function registerUser(req, res) {
     return userdao.create(data).then(async (result) => {
         let link = "http://" + req.headers.host + "/user/validateemail/" + result._id;
 
+        const defultvar = DefaultPreference(result._id)
+
         let data = {
             username: result.name,
             subject: "Validate Your EmailID for SQUAD",
             html: `Hi ${result.name} <br /> 
-            Please click on <a href="${link}">it will be hyperlink</a> to Validate Your EmailID. <br /><br /> 
+            Please click on here:<a href="${link}"> Squad XYZ</a> to Validate Your EmailID. <br /><br /> 
             If you did not request this, please ignore this email.<br /> <br />Best Regards,<br />Squad XYZ Team`
         }
         await util.sendEMail(result.email, data).then((data) => {
@@ -72,6 +94,7 @@ function registerUser(req, res) {
             }
 
         }
+
         res.json({ code: code.created, message: msg.registered, data: dataresponse })
 
     }).catch((err) => {
@@ -173,7 +196,7 @@ function forgotPassword(req, res) {
                     Someone has requested to change your password.
                     You can do this through the link below. <br>
                    
-                    <a href="${link}">it will be hyperlink</a> <br>
+                    here: <a href="${link}">Squad XYZ</a> <br>
                     If you didn't request this, please ignore this email. <br>
                     Your password won't change until you access the link above and create a new one. <br /><br />Best Regards,<br />Squad XYZ Team`
 
@@ -290,6 +313,7 @@ function socialloginGmail(req, res) {
             }
             console.log(addobj, '-------------------------22222222')
             return userdao.create(addobj).then((user) => {
+                DefaultPreference(user._id)
                 let token = util.generateToken(user, process.env.USER_SECRET)
                 let data = {
                     _id: user._id,
@@ -342,6 +366,7 @@ function socialloginFacebook(req, res) {
                 addobj.imageUrl = ""
             }
             return userdao.create(addobj).then((user) => {
+                DefaultPreference(user._id)
                 let token = util.generateToken(user, process.env.USER_SECRET)
                 let data = {
                     _id: user._id,
@@ -394,6 +419,7 @@ function socialloginLinkedin(req, res) {
                 addobj.imageUrl = ""
             }
             return userdao.create(addobj).then((user) => {
+                DefaultPreference(user._id)
                 let token = util.generateToken(user, process.env.USER_SECRET)
                 let data = {
                     _id: user._id,
@@ -930,7 +956,7 @@ async function invitemail(res, req, users, eventId) {
             username: el.firstname,
             subject: "Invitation Link",
             html: `Hi ${el.firstname}, <br /><br />
-           Someone invites you to the event click on these link and join <a href="${link}">it will be hyperlink</a> <br /><br />Best Regards,<br />Squad XYZ Team`
+           Someone invites you to the event click on these link and join here:<a href="${link}">Squad XYZ</a> <br /><br />Best Regards,<br />Squad XYZ Team`
         }
         await util.sendEMail(el.email, data).then((data) => {
             let fcm_token = (users.fcmToken) ? users.fcmToken : '';
@@ -1735,5 +1761,6 @@ module.exports = {
     friendnotification,
     removeJoineventInviteNotif,
     getFcm,
+    DefaultPreference,
     logout
 }
