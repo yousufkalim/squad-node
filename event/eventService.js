@@ -601,6 +601,9 @@ function preferenceBasedList(req, res) {
                             mydatas = sortSport(mydatas, split)
                         }
 
+                        var uniq = {}
+                        mydatas = mydatas.filter(obj => !uniq[obj._id] && (uniq[obj._id] = true));
+
                         return res.json({ code: code.ok, data: mydatas })
                     } else {
                         res.json({ code: code.ok, data: data })

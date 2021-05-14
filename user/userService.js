@@ -12,6 +12,7 @@ const { rateas } = require('../constants');
 const env = require('dotenv').config();
 const UAParser = require('ua-parser-js');
 var FCM = require('fcm-node');
+const geolib = require('geolib');
 // const { response } = require('express');
 // const { strict } = require('assert');
 const userDao = require('./userDao');
@@ -648,84 +649,85 @@ async function removepreference(req, res) {
         }
     })
 }
+
+function latlongtokm(userlong, userlat, eventlong, eventlang) {
+    let km = geolib.getDistance(
+        { latitude: userlong, longitude: userlat },
+        { latitude: eventlong, longitude: eventlang }
+    );
+    return km
+}
+
 async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsphere" } )
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
 
     user.findOne({ _id: obj.id }).then(async (userdata) => {
 
-        const { eventId, level, gender } = req.body;
+        const { level, gender, sportId } = req.body;
+        const { lat, long } = req.query;
         var query = {}
 
-        if(eventId){
-            query.participatedin = { $elemMatch: { "eventId": { $nin: eventId } } }
+        if (level) {
+            query.preferences = { $elemMatch: { "level": { $in: level }, "sportId": { $in: [sportId] } } }
+            if (JSON.stringify(level) == JSON.stringify(['ALL'])) {
+                query.preferences = { $elemMatch: { "level": { $in: ['BEGINNER', 'INTERMEDIATE', 'ALL', 'ADVANCED'] }, "sportId": { $in: [sportId] } } }
+            }
         }
-        if(level){
-            query.preferences = { $elemMatch: { "level": { $in: level } } }
-        }
-        if(gender){
+        if (gender) {
             query.gender = { $in: gender }
-            if(JSON.stringify(gender) == JSON.stringify(['BOTH'])){
-                query.gender = ['MEN','WOMEN']
+            if (JSON.stringify(gender) == JSON.stringify(['BOTH'])) {
+                query.gender = { $in: ['MEN', 'WOMEN'] }
             }
         }
         var meters = 30000
-        if(req.query.radius){
+        if (req.query.radius) {
             var meters = parseInt(req.query.radius) * 1000
         }
-
-        if(parseInt(req.query.radius) < 1000){
+        if (lat && long) {
+            let distance = latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1], long, lat)
+            meters = distance
+        }
+        if (parseInt(req.query.radius) != 0) {
             query.location = {
                 $nearSphere: {
                     $geometry: {
-                        type : "Point",
-                        coordinates : [userdata.location.coordinates[0],  userdata.location.coordinates[1]]
+                        type: "Point",
+                        coordinates: [userdata.location.coordinates[0], userdata.location.coordinates[1]]
                     },
                     $maxDistance: meters
                 }
             }
-        } else {
-            // query.location = {
-            //     $nearSphere: {
-            //         $geometry: {
-            //             type : "Point",
-            //             coordinates : [userdata.location.coordinates[0],  userdata.location.coordinates[1]]
-            //         },
-            //         $minDistance: meters
-            //     }
-            // }
         }
-
-        query._id = {$nin: {_id: obj.id}}
-
+        query._id = { $nin: { _id: obj.id } }
         console.log(query)
 
-    user.find(query, '_id firstname lastname imageUrl').exec((err, data) => {//have to add friend flag here
-        if (err) {
-            console.log("peoplearound -> err", err)
-            return res.json({ code: code.internalError, message: msg.internalServerError })
-        } else {
-            // return res.send({data: data.length})
-            
-            let finallist = []
+        user.find(query, '_id firstname lastname imageUrl').exec((err, data) => {//have to add friend flag here
+            if (err) {
+                console.log("peoplearound -> err", err)
+                return res.json({ code: code.internalError, message: msg.internalServerError })
+            } else {
+                // return res.send({data: data.length})
 
-            if (data.length == 0) {
-                return res.json({ code: code.ok, data: data, count: 0 })
+                let finallist = []
+
+                if (data.length == 0) {
+                    return res.json({ code: code.ok, data: data, count: 0 })
+                }
+                data.map((userdata, index) => {
+                    var fr = (userdata.friends) ? userdata.friends.includes(obj.id) : false;
+                    userdata = {
+                        ...userdata._doc,
+                        friend: fr
+                    }
+                    finallist.push(userdata)
+                    if (data.length == (index + 1)) {
+                        return res.json({ code: code.ok, data: finallist, count: finallist.length })
+                    }
+                })
             }
-            data.map((userdata, index) => {
-                var fr = (userdata.friends) ? userdata.friends.includes(obj.id) : false;
-                userdata = {
-                    ...userdata._doc,
-                    friend: fr
-                }
-                finallist.push(userdata)
-                if (data.length == (index + 1)) {
-                    return res.json({ code: code.ok, data: finallist, count: finallist.length })
-                }
-            })
-        }
+        })
     })
-})
 }
 function invitepeople(req, res) {
     let token = req.headers['authorization'];
@@ -1003,18 +1005,11 @@ async function peoplecount(req, res) {
     })
     let peoplearound = new Promise(function (myResolve, myReject) {
         user.findOne({ _id: obj.id }).then(async (userdat) => {
-            let query = {
-                location: {
-                    $nearSphere: {
-                        $geometry: {
-                            type: "Point", 
-                            coordinates: [userdat.location.coordinates[0], userdat.location.coordinates[1]] 
-                        },
-                        $maxDistance: parseFloat(100) * 1000
-                    }
-                }
-            }
-            await user.find().then((data) => {
+            const { sportId } = req.query;
+            var query = {}
+            query._id = {$nin: {_id: obj.id}}
+            query.preferences = { $elemMatch: { "sportId": {$in: [sportId]} } }
+            await user.find(query).then((data) => {
                 myResolve(data.length)
             }).catch((err) => {
                 myReject(err)
