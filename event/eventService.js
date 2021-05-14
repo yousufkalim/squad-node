@@ -433,12 +433,12 @@ function eventwillplayed(req, res) {
 function preferenceBasedList(req, res) {
     let token = req.headers['authorization']
     let userToken = util.decodeToken(token)
-    
+
     user.findById(userToken.id).then((userdata) => {
         if (userdata.preferences.length >= 1) {
 
             var prefSport = []
-            for(let i = 0; i < (userdata.preferences).length; i++){
+            for (let i = 0; i < (userdata.preferences).length; i++) {
                 prefSport.push(userdata.preferences[i].sportId)
             }
 
@@ -452,23 +452,23 @@ function preferenceBasedList(req, res) {
                     query.date = { $gte: start, $lt: end };
                 }
 
-                if (req.query.sport){
+                if (req.query.sport) {
                     var sportfilter = req.query.sport;
                 }
-                if (req.query.level){
+                if (req.query.level) {
                     var levelfilter = req.query.level;
                 }
-                if (req.query.radius){
+                if (req.query.radius) {
                     var km = req.query.radius;
                 }
                 var free = (req.query.free) ? req.query.free : 1;
 
-                event.find(query).populate('participants', '_id imageUrl firstname lastname').sort({starttime: -1}).then((data) => {
- 
+                event.find(query).populate('participants', '_id imageUrl firstname lastname').sort({ starttime: -1 }).then((data) => {
+
                     var mydatas = []
                     if (data[0] != null) {
                         data.map((el, inx) => {
-                            
+
                             if (el.participants && el.participants.length >= 1) {
                                 el.participants.map((par, i) => {
                                     var fr = (userdata.friends) ? userdata.friends.includes(par._id) : false;
@@ -482,7 +482,7 @@ function preferenceBasedList(req, res) {
                             if ((data.length - 1) == inx) {
                                 let participantIds = []
                                 data.map((el, xl) => {
-                                    
+
                                     var participatedinevent;
                                     el.participants.map((ele) => {
                                         participantIds.push(ele._id)
@@ -495,13 +495,11 @@ function preferenceBasedList(req, res) {
                                             el.location.coordinates[0], el.location.coordinates[1])
                                     }
                                     data[xl] = obj
-                                  })
+                                })
                             }
 
-                            
-
                             function myArray(arr, obj) {
-                                if(JSON.stringify([obj]) == JSON.stringify(['ALL'])){
+                                if (JSON.stringify([obj]) == JSON.stringify(['ALL'])) {
                                     return true
                                 } else {
                                     for (var i = 0; i < arr.length; i++) {
@@ -509,7 +507,7 @@ function preferenceBasedList(req, res) {
                                             return true;
                                         }
                                     }
-                                }   
+                                }
                             }
 
                             var findArrayFalse;
@@ -526,14 +524,14 @@ function preferenceBasedList(req, res) {
                                     }
                                 }
 
-                                if (JSON.stringify(data[i].level) == JSON.stringify(['ALL'])) {
+                                if (data[i].level == JSON.stringify(['ALL'])) {
                                     alldata = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'ALL']
                                 } else {
                                     alldata = data[i].level
                                 }
                                 for (let j = 0; j < userdata.preferences.length; j++) {
                                     findArrayFalse = myArray(alldata, userdata.preferences[j].level);
-                                    if (parseInt(userdata.preferences[j].radius * 10000) > parseInt(data[i].distance) && findArrayFalse && data[i].sport == userdata.preferences[j].sportId.toString()) {
+                                    if (parseInt(userdata.preferences[j].radius * 1000) > parseInt(data[i].distance) && findArrayFalse && data[i].sport == userdata.preferences[j].sportId.toString()) {
                                         mydatas.push(data[i])
                                     }
                                 }
@@ -541,14 +539,14 @@ function preferenceBasedList(req, res) {
                         })
 
                         var sorted = [], nonsorted = []
-                        function sortlevel(data, level){
-                            for(let i = 0; i < data.length; i++){
-                                for(let j = 0; j < level.length; j++){
-                                    for(let k = 0; k < data[i].level.length; k++){
-                                        if(data[i].level[k] == level[j] || data[i].level[k] == JSON.stringify(['ALL'])){
+                        function sortlevel(data, level) {
+                            for (let i = 0; i < data.length; i++) {
+                                for (let j = 0; j < level.length; j++) {
+                                    for (let k = 0; k < data[i].level.length; k++) {
+                                        if (data[i].level[k] == level[j] || data[i].level[k] == JSON.stringify(['ALL'])) {
                                             sorted.push(data[i])
                                         }
-                                        if(data[i].level[k] != level[j] || data[i].level[k] != JSON.stringify(['ALL'])){
+                                        if (data[i].level[k] != level[j] || data[i].level[k] != JSON.stringify(['ALL'])) {
                                             nonsorted.push(data[i])
                                         }
                                     }
@@ -580,12 +578,12 @@ function preferenceBasedList(req, res) {
 
                         if (km) {
                             mydatas.sort(function (a, b) {
-                                 if(km < 1000){
+                                if (km < 1000) {
                                     return a.distance - b.distance;
-                                }else {
+                                } else {
                                     return b.distance - a.distance;
                                 }
-                                
+
                             })
                         }
 
@@ -601,6 +599,16 @@ function preferenceBasedList(req, res) {
                             mydatas = sortSport(mydatas, split)
                         }
 
+                        // if (req.query.level) {
+                        //     let lrtrim = req.query.level.substring(1, req.query.level.length - 1);
+                        //     let split = lrtrim.split(",")
+                        //     if (km == 1000 && JSON.stringify(split) == JSON.stringify(['ALL']) && free == 0 && !sportfilter) {
+                        //         mydatas.sort(function (a, b) {
+                        //             return a.seatsremain - b.seatsremain;
+                        //         })
+                        //     }
+                        // }
+
                         var uniq = {}
                         mydatas = mydatas.filter(obj => !uniq[obj._id] && (uniq[obj._id] = true));
 
@@ -613,7 +621,6 @@ function preferenceBasedList(req, res) {
                 })
 
             })
-
 
         } else if (userdata.preferences.length == 0) {
             res.json({ code: code.ok, data: [] })

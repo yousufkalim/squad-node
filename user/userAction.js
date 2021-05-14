@@ -131,6 +131,12 @@ function getuserpreference(req, res) {
 function friendnotification(req, res) {
     service.friendnotification(req, res)
 }
+function notificationCount(req, res) {
+    service.notificationCount(req, res)
+}
+function removeNotificationCount(req, res) {
+    service.removeNotificationCount(req, res)
+}
 function logout(req, res) {
     service.logout(req, res)
 }
@@ -178,5 +184,7 @@ module.exports = {
     getuserpreference,
     friendnotification,
     getFcm,
+    notificationCount,
+    removeNotificationCount,
     logout
 }

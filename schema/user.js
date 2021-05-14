@@ -59,42 +59,51 @@ var userSchema = new schema({
     invitationtogame: [{
         senderId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
         eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
+        notify: {type: Number, default: 0 },
         createdAt: { type: Date, default: Date.now() }
     }],//notification for game invitation
     rateyouNotification: [{
         type: { type: String, enum: [rateas.beginner, rateas.intermediate] },
         eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
         userId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
+        notify: {type: Number, default: 0 },
         createdAt: { type: Date, default: Date.now() }
     }],
     joineventNotification: [{
         eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
         userId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
+        notify: {type: Number, default: 0 },
         createdAt: { type: Date, default: Date.now() }
     }],
     friendrequestNotification: [{
         userId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.user },
+        notify: {type: Number, default: 0 },
         createdAt: { type: Date, default: Date.now() }
     }],
     eventhappenNotification: [{
         eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
+        notify: {type: Number, default: 0 },
         createdAt: { type: Date, default: Date.now() }
     }],
     eventafterhourNotification: [{
         hours: { type: Number },
         eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
+        notify: {type: Number, default: 0 },
         createdAt: { type: Date, default: Date.now() }
     }],
     rateplayerNotification: [{
         eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
+        notify: {type: Number, default: 0 },
         createdAt: { type: Date, default: Date.now() }
     }],
     rateallNotification: [{
         eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
+        notify: {type: Number, default: 0 },
         createdAt: { type: Date, default: Date.now() }
     }],
     eventfullNotification: [{
         eventId: { type: mongoose.Schema.Types.ObjectId, ref: schmaName.event },
+        notify: {type: Number, default: 0 },
         createdAt: { type: Date, default: Date.now() }
     }]
 });

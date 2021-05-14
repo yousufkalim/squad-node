@@ -790,10 +790,130 @@ async function addgameinvitation(userlist, sederId, eventId) {
         }
     })
 }
+
+function notificationCount(req, res) {
+    let token = req.headers['authorization'],
+    obj = util.decodeToken(token);
+
+    let query = { _id: obj.id };
+    user.findOne(query).then((data) => {
+
+        var invitationCount = []
+        for(let i = 0; i < data.invitationtogame.length; i++){
+            if(data.invitationtogame[i].notify == 0){
+                invitationCount.push(data.invitationtogame[i].notify)
+            }
+        }
+
+        var rateyouNotificationCount = []
+        for(let i = 0; i < data.rateyouNotification.length; i++){
+            if(data.rateyouNotification[i].notify == 0){
+                rateyouNotificationCount.push(data.rateyouNotification[i].notify)
+            }
+        }
+
+        var joineventNotificationCount = []
+        for(let i = 0; i < data.joineventNotification.length; i++){
+            if(data.joineventNotification[i].notify == 0){
+                joineventNotificationCount.push(data.joineventNotification[i].notify)
+            }
+        }
+
+        var friendrequestNotificationCount = []
+        for(let i = 0; i < data.friendrequestNotification.length; i++){
+            if(data.friendrequestNotification[i].notify == 0){
+                friendrequestNotificationCount.push(data.friendrequestNotification[i].notify)
+            }
+        }
+
+        var eventhappenNotificationCount = []
+        for(let i = 0; i < data.eventhappenNotification.length; i++){
+            if(data.eventhappenNotification[i].notify == 0){
+                eventhappenNotificationCount.push(data.eventhappenNotification[i].notify)
+            }
+        }
+
+        var eventafterhourNotificationCount = []
+        for(let i = 0; i < data.eventafterhourNotification.length; i++){
+            if(data.eventafterhourNotification[i].notify == 0){
+                eventafterhourNotificationCount.push(data.eventafterhourNotification[i].notify)
+            }
+        }
+
+        var rateplayerNotificationCount = []
+        for(let i = 0; i < data.rateplayerNotification.length; i++){
+            if(data.rateplayerNotification[i].notify == 0){
+                rateplayerNotificationCount.push(data.rateplayerNotification[i].notify)
+            }
+        }
+
+        var rateallNotificationCount = []
+        for(let i = 0; i < data.rateallNotification.length; i++){
+            if(data.rateallNotification[i].notify == 0){
+                rateallNotificationCount.push(data.rateallNotification[i].notify)
+            }
+        }
+
+        var eventfullNotificationCount = []
+        for(let i = 0; i < data.eventfullNotification.length; i++){
+            if(data.eventfullNotification[i].notify == 0){
+                eventfullNotificationCount.push(data.eventfullNotification[i].notify)
+            }
+        }
+
+        return res.json({
+            code: code.ok, data: joineventNotificationCount.length +
+                friendrequestNotificationCount.length +
+                eventhappenNotificationCount.length +
+                eventafterhourNotificationCount.length +
+                invitationCount.length +
+                rateyouNotificationCount.length +
+                eventfullNotificationCount.length +
+                rateallNotificationCount.length +
+                rateplayerNotificationCount.length
+        })
+
+    }).catch((err) => {
+        console.log(err)
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+}
+
+function removeNotificationCount(req, res) {
+    let token = req.headers['authorization'],
+        obj = util.decodeToken(token)
+
+    let query = { _id: obj.id }
+    let update = {
+        $set: {
+            'invitationtogame.$[].notify': 1,
+            'rateyouNotification.$[].notify': 1,
+            'joineventNotification.$[].notify': 1,
+            'friendrequestNotification.$[].notify': 1,
+            'eventhappenNotification.$[].notify': 1,
+            'eventafterhourNotification.$[].notify': 1,
+            'rateplayerNotification.$[].notify': 1,
+            'rateallNotification.$[].notify': 1,
+            'eventfullNotification.$[].notify': 1,
+        }
+    }
+
+    console.log(query, update)
+
+    user.updateOne(query, update).exec((err, data) => {
+
+        if(err){
+            return res.json({ code: code.ineternalError, message: msg.internalServerError })
+        } else {
+            return res.json({ code: code.ok, data: 'successfully' })
+        }
+    })
+}
+
 async function gamenotification(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);
-    console.log("gamenotification -> obj", obj)
+    // console.log("gamenotification -> obj", obj)
     let query = { _id: obj.id };
     await user.findOne(query)
         // "NotificationType": "invitenotification"
@@ -1757,5 +1877,7 @@ module.exports = {
     removeJoineventInviteNotif,
     getFcm,
     DefaultPreference,
+    notificationCount,
+    removeNotificationCount,
     logout
 }

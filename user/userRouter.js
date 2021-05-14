@@ -189,6 +189,14 @@ userRouter.route('/getFcm')
     .get([validate.verifyToken], (req, res) => {
         actions.getFcm(req, res)
     })
+userRouter.route('/notificationCount')
+    .get([validate.verifyToken], (req, res) => {
+        actions.notificationCount(req, res)
+    })
+userRouter.route('/removeNotificationCount')
+    .get([validate.verifyToken], (req, res) => {
+        actions.removeNotificationCount(req, res)
+    })
 userRouter.route('/gamenotifdecline')
     .post([validate.verifyToken], (req, res) => {
         actions.gamenotifdecline(req, res)
