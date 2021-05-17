@@ -14,7 +14,8 @@ const geolib = require('geolib');
 function latlongtokm(userlong, userlat, eventlong, eventlang) {
     let km = geolib.getDistance(
         { latitude: userlong, longitude: userlat },
-        { latitude: eventlong, longitude: eventlang }
+        { latitude: eventlong, longitude: eventlang },
+        accuracy = 1
     );
     return km
 
@@ -76,10 +77,10 @@ function eventdetail(req, res) {
             res.json({ code: code.ok, data: data })
         })
     })
-        .catch((err) => {
-            console.log("eventdetail -> err", err)
-            res.json({ code: code.ineternalError, message: msg.internalServerError })
-        })
+    .catch((err) => {
+        console.log("eventdetail -> err", err)
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
 }
 function myevents(req, res) {
     let token = req.headers['authorization']
@@ -232,7 +233,9 @@ function joinevent(req, res) {
                             }
                         }
                         (req.query.senderId) ? userService.removeJoineventInviteNotif(obj.id, req.query.senderId, req.query.eventId) : "";
-                        addjoineventNotification(data._id, obj.id, data.createdby)
+                        if(obj.id != data.createdby){
+                            addjoineventNotification(data._id, obj.id, data.createdby)
+                        }
                         userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
                         res.json({ code: code.ok, msg: msg.eventjoin })
                     })
@@ -254,7 +257,7 @@ function addjoineventNotification(eventId, userId, creatorId) {
     };
 
     let query = { _id: creatorId },
-        update = { $push: { joineventNotification: joineventNotification } },
+        update = { $push: { joineventNotification: joineventNotification, createdAt: new Date() } },
         options = { new: true };
     userDao.findOneAndUpdate(query, update, options).then((data) => {
         // console.log("rateyou notification added -> data", data)
@@ -271,7 +274,7 @@ function addeventfullNotification(eventId, creatorId) {
     };
 
     let query = { _id: creatorId },
-        update = { $push: { eventfullNotification: eventfullNotification } },
+        update = { $push: { eventfullNotification: eventfullNotification, createdAt: new Date() } },
         options = { new: true };
     userDao.findOneAndUpdate(query, update, options).then((data) => {
         console.log("addeventfullNotification -> data", data)
@@ -483,18 +486,19 @@ function preferenceBasedList(req, res) {
                                 let participantIds = []
                                 data.map((el, xl) => {
 
-                                    var participatedinevent;
-                                    el.participants.map((ele) => {
-                                        participantIds.push(ele._id)
-                                    })
+                                    // var participatedinevent;
+                                    // el.participants.map((ele) => {
+                                    //     participantIds.push(ele._id)
+                                    // })
                                     let obj = {
                                         ...el._doc,
-                                        participatedinevent: participatedinevent,
+                                        // participatedinevent: participatedinevent,
                                         seatsremain: el.seats - el.participants.length,
                                         distance: latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
                                             el.location.coordinates[0], el.location.coordinates[1])
                                     }
                                     data[xl] = obj
+                                    // console.log(data)
                                 })
                             }
 
@@ -530,7 +534,7 @@ function preferenceBasedList(req, res) {
                                     alldata = data[i].level
                                 }
                                 for (let j = 0; j < userdata.preferences.length; j++) {
-                                    findArrayFalse = myArray(alldata, userdata.preferences[j].level);
+                                    findArrayFalse = myArray(alldata, userdata.preferences[j].level)
                                     if (parseInt(userdata.preferences[j].radius * 1000) > parseInt(data[i].distance) && findArrayFalse && data[i].sport == userdata.preferences[j].sportId.toString()) {
                                         mydatas.push(data[i])
                                     }
@@ -598,6 +602,8 @@ function preferenceBasedList(req, res) {
                             let split = lrtrim.split(",")
                             mydatas = sortSport(mydatas, split)
                         }
+
+                        // console.log(mydatas)
 
                         // if (req.query.level) {
                         //     let lrtrim = req.query.level.substring(1, req.query.level.length - 1);
@@ -840,7 +846,7 @@ function addeventafterhourNotification(hours, eventId, creatorId) {
     };
 
     let query = { _id: creatorId },
-        update = { $push: { eventafterhourNotification: eventafterhourNotification } },
+        update = { $push: { eventafterhourNotification: eventafterhourNotification, createdAt: new Date() } },
         options = { new: true };
     userDao.findOneAndUpdate(query, update, options).then((data) => {
         console.log("rateyou notification added -> data", data)
@@ -869,7 +875,7 @@ function addrateplayerNotification(eventId, creatorId) {//this will add into cre
         eventId: eventId,
     };
     let query = { _id: creatorId },
-        update = { $push: { rateplayerNotification: rateplayerNotification } },
+        update = { $push: { rateplayerNotification: rateplayerNotification, createdAt: new Date() } },
         options = { new: true };
     userDao.findOneAndUpdate(query, update, options).then((data) => {
         console.log("addrateplayerNotification -> data", data)
@@ -883,7 +889,7 @@ function addrateallNotification(eventId, participantIds) {//this will add into c
             eventId: eventId,
         };
         let query = { _id: usr },
-            update = { $push: { rateallNotification: rateallNotification } },
+            update = { $push: { rateallNotification: rateallNotification, createdAt: new Date() } },
             options = { new: true };
         userDao.findOneAndUpdate(query, update, options).then((data) => {
             console.log("addrateallNotification -> data", data)
@@ -911,7 +917,7 @@ function addeventhappenNotification(eventId, participantIds) {
             eventId: eventId,
         };
         let query = { _id: usr },
-            update = { $push: { eventhappenNotification: eventhappenNotification } },
+            update = { $push: { eventhappenNotification: eventhappenNotification, createdAt: new Date() } },
             options = { new: true };
         userDao.findOneAndUpdate(query, update, options).then((data) => {
             console.log("rateyou notification added -> data", data)
@@ -963,7 +969,7 @@ function unjoinevent(req, res) {
         options = { new: true };
     // eventdao.findone(query).then((data) => {
     return eventdao.findOneAndUpdate(query, update, options).then((data) => {
-        if (data) {
+        if (data) { 
             console.log("unjoinevent -> data", data)
             let query1 = { _id: obj.id },
                 update1 = { $pull: { participatedin: { eventId: data._id } } },
