@@ -60,6 +60,11 @@ eventRouter.route('/invitation')
         actions.eventinvitation(req, res, next)
     });
 
+eventRouter.route('/eventFCM')
+    .get([validate.verifyToken], (req, res, next) => {
+        actions.eventFCM(req, res, next)
+    });
+
 
 
 

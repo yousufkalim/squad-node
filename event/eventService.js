@@ -43,6 +43,19 @@ function addevent(req, res) {
     })
 }
 function updateevent(req, res) {
+    console.log(req.body, '===============0')
+    if(req.body.Address){
+        let query = { _id: req.query.eventId },
+        update = { $set: {"location.$[].coordinates":req.body.location.coordinates, "Address": req.body.Address} },
+        options = { new: true }
+        eventdao.findOneAndUpdate(query, update, options)
+    }
+
+    delete req.body.location;
+    delete req.body.Address;
+
+    console.log(req.body, '===============1')
+
     let query = { _id: req.query.eventId },
         update = { $set: req.body },
         options = { new: true }
@@ -51,6 +64,7 @@ function updateevent(req, res) {
             res.json({ code: code.badRequest, msg: `You can't edit beacuse of event is finished` })
         } else {
             return eventdao.findOneAndUpdate(query, update, options).then((result) => {
+
                 return res.json({ code: code.ok, data: result })
             }).catch((err) => {
                 res.json({ code: code.ineternalError, message: msg.internalServerError })
@@ -206,43 +220,63 @@ function eventlist(req, res) {
 function joinevent(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
-    let query = { _id: req.query.eventId },
-        update = { $push: { participants: obj.id } },
-        options = { new: true };
-    eventdao.findone(query).then((data) => {
-        if (data.starttime < new Date()) {
-            return res.json({ code: code.badRequest, msg: 'event already finished' })
-        } else {
-            if ((data.participants.length) == data.seats || (data.participants.length) > data.seats) {
-                addeventfullNotification()
-                return res.json({ code: code.badRequest, msg: msg.eventfull })
+    var query = { _id: req.query.eventId }
+    var update = { $push: { participants: obj.id } }
+    var options = { new: true }
+    user.findOne({ _id: obj.id }, { firstname: 1 }).then((senderName) => {
+        eventdao.findone(query).then((data) => {
+            if (data.starttime < new Date()) {
+                return res.json({ code: code.badRequest, msg: 'Event has already finished' })
             } else {
-                return eventdao.findOneAndUpdate(query, update, options).then((data) => {
-                    if (data.participants.length == data.seats) {
-                        userService.eventfullnotification(data.createdby, data.id)
+                if ((data.participants.length) == data.seats || (data.participants.length) > data.seats) {
+                    addeventfullNotification()
+                    return res.json({ code: code.badRequest, msg: msg.eventfull })
+                } else {
+                    if (obj.id == data.createdby) {
+                        update = { $push: { participants: obj.id }, participate: true }
                     }
+                    return eventdao.findOneAndUpdate(query, update, options).then((data) => {
+                        if (data.participants.length == data.seats) {
+                            userService.eventfullnotification(data.createdby, data.id)
+                        }
 
-                    //have to event id in users as well
-                    let query1 = { _id: obj.id },
-                        update1 = { $push: { participatedin: { eventId: data._id } } },
-                        options1 = { new: true };
-                    userDao.findOneAndUpdate(query1, update1, options1).then((userdata) => {
-                        if (userdata.participants) {
-                            if ((userdata.participants.length + 1) == userdata.seats || (userdata.participants.length) > userdata.seats) {
-                                addeventfullNotification(data._id, data.createdby)
+                        //have to event id in users as well
+                        let query1 = { _id: obj.id },
+                            update1 = { $push: { participatedin: { eventId: data._id } } },
+                            options1 = { new: true };
+
+                        userDao.findOneAndUpdate(query1, update1, options1).then((userdata) => {
+                            if (userdata.participants) {
+                                if ((userdata.participants.length + 1) == userdata.seats || (userdata.participants.length) > userdata.seats) {
+                                    addeventfullNotification(data._id, data.createdby)
+                                }
                             }
-                        }
-                        (req.query.senderId) ? userService.removeJoineventInviteNotif(obj.id, req.query.senderId, req.query.eventId) : "";
-                        if(obj.id != data.createdby){
-                            addjoineventNotification(data._id, obj.id, data.createdby)
-                        }
-                        userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
-                        res.json({ code: code.ok, msg: msg.eventjoin })
-                    })
+                            (req.query.senderId) ? userService.removeJoineventInviteNotif(obj.id, req.query.senderId, req.query.eventId) : "";
+                            if (obj.id != data.createdby) {
+                                user.findOne({ _id: data.createdby }).then((data) => {
+                                    if (data.fcmToken) {
+                                        userService.FirebaseNotification(data.fcmToken, `${senderName.firstname} is joined your event`)
+                                    }
+                                })
+                                addjoineventNotification(data._id, obj.id, data.createdby)
+                            }
+                            userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
+                            res.json({ code: code.ok, msg: msg.eventjoin })
+                        }).catch((err) => {
+                            console.log("joinevent -> err", err)
+                            res.json({ code: code.ineternalError, message: msg.internalServerError })
+                        })
 
-                })
+                    }).catch((err) => {
+                        console.log("joinevent -> err", err)
+                        res.json({ code: code.ineternalError, message: msg.internalServerError })
+                    })
+                }
             }
-        }
+        }).catch((err) => {
+            console.log("joinevent -> err", err)
+            res.json({ code: code.ineternalError, message: msg.internalServerError })
+        })
     }).catch((err) => {
         console.log("joinevent -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
@@ -289,6 +323,7 @@ function joinevent2(req, res) {
     let query = { _id: obj.id };
     let eventIdlist = [];
     user.findOne(query).then((data) => {
+        // console.log(data)
         if (data.participatedin.length == 0) {
             this.joinevent(req, res)
         } else {
@@ -297,6 +332,7 @@ function joinevent2(req, res) {
                 if (data.participatedin.length == (eindex + 1)) {
                     let query = { _id: { $in: eventIdlist }, starttime: { $eq: new Date(req.body.starttime) } };
                     event.find(query).then((eventdata) => {
+                        // console.log(query)
                         if (eventdata.length == 0) {
                             this.joinevent(req, res)
                         } else {
@@ -317,7 +353,7 @@ function eventplayed(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     let query = { date: { "$lt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
-    event.find(query).populate('placeId', '_id sportId rates')
+    event.find(query)
         .populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer')
         .populate('createdby', '_id rateasorganizer').sort({starttime: -1}).then((data) => {//
             // console.log("eventplayed -> data==================================>", data.length)
@@ -330,13 +366,14 @@ function eventplayed(req, res) {
                     avrratorganizer = 0
 
                 //place average rate
-                if (!events.placeId) {
+                if (!events.rates) {
                     avrratvanue = 0
                 } else {
                     avrratvanue = 0;
-                    events.placeId.rates.map((placerate, pindex) => {
+                    console.log(events.rates, '====================')
+                    events.rates.map((placerate, pindex) => {
                         avrratvanue += placerate.ratedwith
-                        if (events.placeId.rates.length == (pindex + 1)) {
+                        if (events.rates.length == (pindex + 1)) {
                             avrratvanue = avrratvanue / (pindex + 1)
                         }
                     })
@@ -437,6 +474,8 @@ function preferenceBasedList(req, res) {
     let token = req.headers['authorization']
     let userToken = util.decodeToken(token)
 
+    const { lat, long } = req.query;
+
     user.findById(userToken.id).then((userdata) => {
         if (userdata.preferences.length >= 1) {
 
@@ -467,167 +506,342 @@ function preferenceBasedList(req, res) {
                 var free = (req.query.free) ? req.query.free : 1;
 
                 event.find(query).populate('participants', '_id imageUrl firstname lastname').sort({ starttime: -1 }).then((data) => {
+                    var start = new Date(req.query.date + "T00:00:00.000Z")
+                    var end = new Date(req.query.date + "T23:59:59.000Z")
 
-                    var mydatas = []
-                    if (data[0] != null) {
-                        data.map((el, inx) => {
+                    let privateQuery = {
+                        date: { $gte: start, $lt: end },
+                        participants: { "$in": [userToken.id] },
+                        public: { $in: [false] }
+                    };
+                    event.find(privateQuery).populate('participants', '_id imageUrl firstname lastname').then((Privatedata) => {
 
-                            if (el.participants && el.participants.length >= 1) {
-                                el.participants.map((par, i) => {
-                                    var fr = (userdata.friends) ? userdata.friends.includes(par._id) : false;
-                                    let obj = {
-                                        ...par._doc,
-                                        friend: fr
+                        var myPublicData = [], myPrivateData = []
+                        if (data[0] != null) {
+                            if (Privatedata[0] != null) {
+                                Privatedata.map((el, inx) => {
+
+                                    if (el.participants && el.participants.length >= 1) {
+                                        el.participants.map((par, i) => {
+                                            var fr = (userdata.friends) ? userdata.friends.includes(par._id) : false;
+                                            let obj = {
+                                                ...par._doc,
+                                                friend: fr
+                                            }
+                                            el.participants[i] = obj
+                                        })
                                     }
-                                    el.participants[i] = obj
-                                })
-                            }
-                            if ((data.length - 1) == inx) {
-                                let participantIds = []
-                                data.map((el, xl) => {
-
-                                    // var participatedinevent;
-                                    // el.participants.map((ele) => {
-                                    //     participantIds.push(ele._id)
-                                    // })
-                                    let obj = {
-                                        ...el._doc,
-                                        // participatedinevent: participatedinevent,
-                                        seatsremain: el.seats - el.participants.length,
-                                        distance: latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
-                                            el.location.coordinates[0], el.location.coordinates[1])
+                                    if ((Privatedata.length - 1) == inx) {
+                                        Privatedata.map((el, xl) => {
+                                            let obj = {
+                                                ...el._doc,
+                                                seatsremain: el.seats - el.participants.length,
+                                                distance: latlongtokm(long ? long : userdata.location.coordinates[0], lat ? lat :userdata.location.coordinates[1],
+                                                    el.location.coordinates[0], el.location.coordinates[1])
+                                            }
+                                            Privatedata[xl] = obj
+                                        })
                                     }
-                                    data[xl] = obj
-                                    // console.log(data)
+
+                                    if ((Privatedata.length - 1) == inx) {
+                                        for (let i = 0; i < Privatedata.length; i++) {
+                                            if (Privatedata[i].participants.length == 0) {
+                                                Privatedata[i].participatedinevent = false
+                                            } else {
+                                                Privatedata[i].participatedinevent = false
+                                                for (let z = 0; z < Privatedata[i].participants.length; z++) {
+                                                    if (Privatedata[i].participants[z]._id.toString() == userToken.id.toString()) {
+                                                        Privatedata[i].participatedinevent = true
+                                                    }
+                                                }
+                                            }
+                                            myPrivateData.push(Privatedata[i])
+                                        }
+                                    }
                                 })
+                            } else {
+                                myPrivateData = []
                             }
 
-                            function myArray(arr, obj) {
-                                if (JSON.stringify([obj]) == JSON.stringify(['ALL'])) {
-                                    return true
-                                } else {
-                                    for (var i = 0; i < arr.length; i++) {
-                                        if (arr[i] == obj) {
-                                            return true;
+                            data.map((el, inx) => {
+
+                                if (el.participants && el.participants.length >= 1) {
+                                    el.participants.map((par, i) => {
+                                        var fr = (userdata.friends) ? userdata.friends.includes(par._id) : false;
+                                        let obj = {
+                                            ...par._doc,
+                                            friend: fr
+                                        }
+                                        el.participants[i] = obj
+                                    })
+                                }
+                                if ((data.length - 1) == inx) {
+                                    data.map((el, xl) => {
+                                        let obj = {
+                                            ...el._doc,
+                                            seatsremain: el.seats - el.participants.length,
+                                            distance: latlongtokm((long && lat) ? long : userdata.location.coordinates[0], (lat && long) ? lat :userdata.location.coordinates[1],
+                                                el.location.coordinates[0], el.location.coordinates[1])
+                                        }
+                                        data[xl] = obj
+                                    })
+                                }
+
+                                function myArray(arr, obj) {
+                                    if (JSON.stringify([obj]) == JSON.stringify(['ALL'])) {
+                                        return true
+                                    } else {
+                                        for (var i = 0; i < arr.length; i++) {
+                                            if (arr[i] == obj) {
+                                                return true;
+                                            }
                                         }
                                     }
                                 }
-                            }
 
-                            var findArrayFalse;
-                            for (let i = 0; i < data.length; i++) {
+                                var findArrayFalse;
+                                for (let i = 0; i < data.length; i++) {
 
-                                if (data[i].participants.length == 0) {
-                                    data[i].participatedinevent = false
-                                } else {
-                                    data[i].participatedinevent = false
-                                    for (let z = 0; z < data[i].participants.length; z++) {
-                                        if (data[i].participants[z]._id.toString() == userToken.id.toString()) {
-                                            data[i].participatedinevent = true
+                                    if (data[i].participants.length == 0) {
+                                        data[i].participatedinevent = false
+                                    } else {
+                                        data[i].participatedinevent = false
+                                        for (let z = 0; z < data[i].participants.length; z++) {
+                                            if (data[i].participants[z]._id.toString() == userToken.id.toString()) {
+                                                data[i].participatedinevent = true
+                                            }
+                                        }
+                                    }
+
+                                    if (data[i].level == JSON.stringify(['ALL'])) {
+                                        alldata = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'ALL']
+                                    } else {
+                                        alldata = data[i].level
+                                    }
+                                    for (let j = 0; j < userdata.preferences.length; j++) {
+                                        findArrayFalse = myArray(alldata, userdata.preferences[j].level)
+                                        if (parseInt(userdata.preferences[j].radius * 1000) > parseInt(data[i].distance) && findArrayFalse && data[i].sport == userdata.preferences[j].sportId.toString()) {
+                                            myPublicData.push(data[i])
                                         }
                                     }
                                 }
+                            })
 
-                                if (data[i].level == JSON.stringify(['ALL'])) {
-                                    alldata = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'ALL']
-                                } else {
-                                    alldata = data[i].level
-                                }
-                                for (let j = 0; j < userdata.preferences.length; j++) {
-                                    findArrayFalse = myArray(alldata, userdata.preferences[j].level)
-                                    if (parseInt(userdata.preferences[j].radius * 1000) > parseInt(data[i].distance) && findArrayFalse && data[i].sport == userdata.preferences[j].sportId.toString()) {
-                                        mydatas.push(data[i])
+                            var mydatas = myPublicData.concat(myPrivateData)
+
+                            var sorted = [], nonsorted = []
+                            function sortlevel(data, level) {
+                                for (let i = 0; i < data.length; i++) {
+                                    for (let j = 0; j < level.length; j++) {
+                                        for (let k = 0; k < data[i].level.length; k++) {
+                                            if (data[i].level[k] == level[j] || data[i].level[k] == JSON.stringify(['ALL'])) {
+                                                sorted.push(data[i])
+                                            }
+                                            if (data[i].level[k] != level[j] || data[i].level[k] != JSON.stringify(['ALL'])) {
+                                                nonsorted.push(data[i])
+                                            }
+                                        }
                                     }
                                 }
+                                return sorted.concat(nonsorted);
                             }
-                        })
 
-                        var sorted = [], nonsorted = []
-                        function sortlevel(data, level) {
-                            for (let i = 0; i < data.length; i++) {
-                                for (let j = 0; j < level.length; j++) {
-                                    for (let k = 0; k < data[i].level.length; k++) {
-                                        if (data[i].level[k] == level[j] || data[i].level[k] == JSON.stringify(['ALL'])) {
+                            var sorted = [], nonsorted = []
+                            function sortSport(data, sport) {
+                                for (let i = 0; i < data.length; i++) {
+                                    for (let j = 0; j < sport.length; j++) {
+                                        if (data[i].sport == sport[j]) {
                                             sorted.push(data[i])
                                         }
-                                        if (data[i].level[k] != level[j] || data[i].level[k] != JSON.stringify(['ALL'])) {
+                                        if (data[i].sport != sport[j]) {
                                             nonsorted.push(data[i])
                                         }
                                     }
                                 }
+                                return sorted.concat(nonsorted);
                             }
-                            return sorted.concat(nonsorted);
-                        }
 
-                        var sorted = [], nonsorted = []
-                        function sortSport(data, sport) {
-                            for (let i = 0; i < data.length; i++) {
-                                for (let j = 0; j < sport.length; j++) {
-                                    if (data[i].sport == sport[j]) {
-                                        sorted.push(data[i])
+                            if (free == 0) {
+                                mydatas.sort(function (a, b) {
+                                    return a.price - b.price;
+                                })
+                            }
+
+                            if (km) {
+                                mydatas.sort(function (a, b) {
+                                    if (km < 1000) {
+                                        return a.distance - b.distance;
+                                    } else {
+                                        return b.distance - a.distance;
                                     }
-                                    if (data[i].sport != sport[j]) {
-                                        nonsorted.push(data[i])
-                                    }
+
+                                })
+                            }
+
+                            if (levelfilter) {
+                                let lrtrim = req.query.level.substring(1, req.query.level.length - 1);
+                                let split = lrtrim.split(",")
+                                mydatas = sortlevel(mydatas, split)
+                            }
+
+                            if (sportfilter) {
+                                let lrtrim = req.query.sport.substring(1, req.query.sport.length - 1);
+                                let split = lrtrim.split(",")
+                                mydatas = sortSport(mydatas, split)
+                            }
+
+                            if (req.query.level) {
+                                let lrtrim = req.query.level.substring(1, req.query.level.length - 1);
+                                let split = lrtrim.split(",")
+                                if (km == 1000 && JSON.stringify(split) == JSON.stringify(['ALL']) && free == 0 && !sportfilter) {
+                                    mydatas.sort(function (a, b) {
+                                        if (a.seatsremain > 0 && b.seatsremain > 0) {
+                                            return a.seatsremain - b.seatsremain;
+                                        } else {
+                                            return b.seatsremain - a.seatsremain;
+                                        }
+                                    })
                                 }
                             }
-                            return sorted.concat(nonsorted);
-                        }
 
-                        if (free == 0) {
-                            mydatas.sort(function (a, b) {
-                                return a.price - b.price;
-                            })
-                        }
+                            var uniq = {}
+                            mydatas = mydatas.filter(obj => !uniq[obj._id] && (uniq[obj._id] = true));
 
-                        if (km) {
-                            mydatas.sort(function (a, b) {
-                                if (km < 1000) {
-                                    return a.distance - b.distance;
-                                } else {
-                                    return b.distance - a.distance;
+                            return res.json({ code: code.ok, data: mydatas })
+                        } else {
+
+                            if (Privatedata[0] != null) {
+                                Privatedata.map((el, inx) => {
+
+                                    if (el.participants && el.participants.length >= 1) {
+                                        el.participants.map((par, i) => {
+                                            var fr = (userdata.friends) ? userdata.friends.includes(par._id) : false;
+                                            let obj = {
+                                                ...par._doc,
+                                                friend: fr
+                                            }
+                                            el.participants[i] = obj
+                                        })
+                                    }
+                                    if ((Privatedata.length - 1) == inx) {
+                                        Privatedata.map((el, xl) => {
+                                            let obj = {
+                                                ...el._doc,
+                                                seatsremain: el.seats - el.participants.length,
+                                                distance: latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1],
+                                                    el.location.coordinates[0], el.location.coordinates[1])
+                                            }
+                                            Privatedata[xl] = obj
+                                        })
+                                    }
+
+                                    if ((Privatedata.length - 1) == inx) {
+                                        for (let i = 0; i < Privatedata.length; i++) {
+                                            if (Privatedata[i].participants.length == 0) {
+                                                Privatedata[i].participatedinevent = false
+                                            } else {
+                                                Privatedata[i].participatedinevent = false
+                                                for (let z = 0; z < Privatedata[i].participants.length; z++) {
+                                                    if (Privatedata[i].participants[z]._id.toString() == userToken.id.toString()) {
+                                                        Privatedata[i].participatedinevent = true
+                                                    }
+                                                }
+                                            }
+                                            myPrivateData.push(Privatedata[i])
+                                        }
+                                    }
+                                    console.log(myPrivateData)
+                                })
+
+                                var sorted = [], nonsorted = []
+                                function sortlevel(data, level) {
+                                    for (let i = 0; i < data.length; i++) {
+                                        for (let j = 0; j < level.length; j++) {
+                                            for (let k = 0; k < data[i].level.length; k++) {
+                                                if (data[i].level[k] == level[j] || data[i].level[k] == JSON.stringify(['ALL'])) {
+                                                    sorted.push(data[i])
+                                                }
+                                                if (data[i].level[k] != level[j] || data[i].level[k] != JSON.stringify(['ALL'])) {
+                                                    nonsorted.push(data[i])
+                                                }
+                                            }
+                                        }
+                                    }
+                                    return sorted.concat(nonsorted);
                                 }
 
-                            })
+                                var sorted = [], nonsorted = []
+                                function sortSport(data, sport) {
+                                    for (let i = 0; i < data.length; i++) {
+                                        for (let j = 0; j < sport.length; j++) {
+                                            if (data[i].sport == sport[j]) {
+                                                sorted.push(data[i])
+                                            }
+                                            if (data[i].sport != sport[j]) {
+                                                nonsorted.push(data[i])
+                                            }
+                                        }
+                                    }
+                                    return sorted.concat(nonsorted);
+                                }
+
+                                if (free == 0) {
+                                    myPrivateData.sort(function (a, b) {
+                                        return a.price - b.price;
+                                    })
+                                }
+
+                                if (km) {
+                                    myPrivateData.sort(function (a, b) {
+                                        if (km < 1000) {
+                                            return a.distance - b.distance;
+                                        } else {
+                                            return b.distance - a.distance;
+                                        }
+
+                                    })
+                                }
+
+                                if (levelfilter) {
+                                    let lrtrim = req.query.level.substring(1, req.query.level.length - 1);
+                                    let split = lrtrim.split(",")
+                                    myPrivateData = sortlevel(myPrivateData, split)
+                                }
+
+                                if (sportfilter) {
+                                    let lrtrim = req.query.sport.substring(1, req.query.sport.length - 1);
+                                    let split = lrtrim.split(",")
+                                    myPrivateData = sortSport(myPrivateData, split)
+                                }
+
+                                if (req.query.level) {
+                                    let lrtrim = req.query.level.substring(1, req.query.level.length - 1);
+                                    let split = lrtrim.split(",")
+                                    if (km == 1000 && JSON.stringify(split) == JSON.stringify(['ALL']) && free == 0 && !sportfilter) {
+                                        myPrivateData.sort(function (a, b) {
+                                            if (a.seatsremain > 0 && b.seatsremain > 0) {
+                                                return a.seatsremain - b.seatsremain;
+                                            } else {
+                                                return b.seatsremain - a.seatsremain;
+                                            }
+                                        })
+                                    }
+                                }
+
+                                var uniq = {}
+                                let onlyPrivateEvent = myPrivateData.filter(obj => !uniq[obj._id] && (uniq[obj._id] = true));
+
+                                return res.json({ code: code.ok, data: onlyPrivateEvent })
+                            } else {
+                                return res.json({ code: code.ok, data: [] })
+                            }
+
                         }
-
-                        if (levelfilter) {
-                            let lrtrim = req.query.level.substring(1, req.query.level.length - 1);
-                            let split = lrtrim.split(",")
-                            mydatas = sortlevel(mydatas, split)
-                        }
-
-                        if (sportfilter) {
-                            let lrtrim = req.query.sport.substring(1, req.query.sport.length - 1);
-                            let split = lrtrim.split(",")
-                            mydatas = sortSport(mydatas, split)
-                        }
-
-                        // console.log(mydatas)
-
-                        // if (req.query.level) {
-                        //     let lrtrim = req.query.level.substring(1, req.query.level.length - 1);
-                        //     let split = lrtrim.split(",")
-                        //     if (km == 1000 && JSON.stringify(split) == JSON.stringify(['ALL']) && free == 0 && !sportfilter) {
-                        //         mydatas.sort(function (a, b) {
-                        //             return a.seatsremain - b.seatsremain;
-                        //         })
-                        //     }
-                        // }
-
-                        var uniq = {}
-                        mydatas = mydatas.filter(obj => !uniq[obj._id] && (uniq[obj._id] = true));
-
-                        return res.json({ code: code.ok, data: mydatas })
-                    } else {
-                        res.json({ code: code.ok, data: data })
-                    }
+                    })
                 }).catch((err) => {
                     reject(err)
                 })
-
             })
-
         } else if (userdata.preferences.length == 0) {
             res.json({ code: code.ok, data: [] })
         }
@@ -806,6 +1020,7 @@ function preferenceBasedList(req, res) {
 
 function eventinvitation(req, res) {
     console.log("eventinvitation", req.body)
+    
 }
 
 function twodaysbeforenotification() {
@@ -964,27 +1179,50 @@ function unjoinevent(req, res) {
 
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
-    let query = { _id: req.query.eventId },
-        update = { $pull: { participants: obj.id } },
-        options = { new: true };
-    // eventdao.findone(query).then((data) => {
-    return eventdao.findOneAndUpdate(query, update, options).then((data) => {
-        if (data) { 
-            console.log("unjoinevent -> data", data)
-            let query1 = { _id: obj.id },
-                update1 = { $pull: { participatedin: { eventId: data._id } } },
-                options1 = { new: true };
-            userDao.findOneAndUpdate(query1, update1, options1).then((userdata) => {
-                // console.log("joinevent -> userdata", userdata)
-                userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
-                res.json({ code: code.ok, msg: msg.eventunjoin })
-            })
+    var query = { _id: req.query.eventId }
+    var update = { $pull: { participants: obj.id } }
+    var options = { new: true }
+
+    eventdao.findone(query).then((findData) => {
+        if (obj.id == findData.createdby) {
+            update = { $pull: { participants: obj.id }, participate: false }
         }
+        return eventdao.findOneAndUpdate(query, update, options).then((data) => {
+            if (data) {
+                console.log("unjoinevent -> data", data)
+                let query1 = { _id: obj.id },
+                    update1 = { $pull: { participatedin: { eventId: data._id } } },
+                    options1 = { new: true };
+                if (obj.id == data.createdby) {
+                    update1 = { $push: { participatedin: { eventId: data._id, participate: false } } }
+                }
+                userDao.findOneAndUpdate(query1, update1, options1).then((userdata) => {
+                    // console.log("joinevent -> userdata", userdata)
+                    userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
+                    res.json({ code: code.ok, msg: msg.eventunjoin })
+                })
+            }
+        }).catch((err) => {
+            console.log("joinevent -> err", err)
+            res.json({ code: code.ineternalError, message: msg.internalServerError })
+        })
     }).catch((err) => {
         console.log("joinevent -> err", err)
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
+
+function eventFCM(req, res) {
+    let token = req.headers['authorization']
+    let obj = util.decodeToken(token)
+    var query = { _id: req.query.eventId }
+    event.findOne(query, {participants: 1}).populate('participants', '_id fcmToken').then((findData) => {
+        return res.json(findData.participants)
+    }).catch((error) => {
+        console.log(error)
+    })
+}
+
 module.exports = {
     addevent,
     eventdetail,
@@ -1010,5 +1248,6 @@ module.exports = {
     addeventafterhourNotification,
     addrateplayerNotification,
     addrateallNotification,
-    latlongtokm
+    latlongtokm,
+    eventFCM
 }

@@ -42,6 +42,9 @@ function deleteevent(req, res,next) {
 function unjoinevent(req, res,next) {
     service.unjoinevent(req, res,next)
 }
+function eventFCM(req, res, next){
+    service.eventFCM(req, res, next)
+}
 module.exports = {
     addevent,
     eventdetail,
@@ -55,5 +58,6 @@ module.exports = {
     preferenceBasedList,
     addeventunauthorized,
     deleteevent,
-    unjoinevent
+    unjoinevent,
+    eventFCM
 }

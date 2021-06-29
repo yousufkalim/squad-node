@@ -12,7 +12,11 @@ const { rateas } = require('../constants');
 const env = require('dotenv').config();
 const UAParser = require('ua-parser-js');
 var FCM = require('fcm-node');
+const fs = require('fs');
+const https = require('https');
 const geolib = require('geolib');
+const event = require('../schema/event')
+const dateFormat = require('dateformat');
 // const { response } = require('express');
 // const { strict } = require('assert');
 const userDao = require('./userDao');
@@ -21,6 +25,14 @@ const { promises } = require('fs');
 var serverKey = process.env.SERVER_KEY;
 var fcm = new FCM(serverKey);
 var ObjectId = require('mongodb').ObjectID;
+var admin = require("firebase-admin")
+var serviceAccount = require("../firebase_sdk/squad-xyz-61441-firebase-adminsdk-4zmx5-0330ac1321.json")
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: "https://squad-xyz-61441-default-rtdb.europe-west1.firebasedatabase.app"
+  })
+    
 
 
 function getFcm(req, res) {
@@ -44,7 +56,7 @@ function DefaultPreference(id){
         for(let i = 0; i < data.length; i++){
             var defaultPref = {
                 sportId: data[i]._id,
-                radius: 1000,
+                radius: 6000,
                 level: 'ALL'
             }
             deff.push(defaultPref)
@@ -58,10 +70,11 @@ function DefaultPreference(id){
 }
 
 async function registerUser(req, res) {
-    console.log('here arrive')
+    // console.log('here arrive')
     // const newpass = util.generateRandomPassword().toUpperCase()
     const hash = bcrypt.hashSync(req.body.password, bcrypt.genSaltSync(10))
     req.body.password = hash;
+    req.body.gender = 'MEN';
     const data = req.body
 
     return userdao.create(data).then(async (result) => {
@@ -93,7 +106,6 @@ async function registerUser(req, res) {
                 token: tokn,
                 role: result.role
             }
-
         }
 
         res.json({ code: code.created, message: msg.registered, data: dataresponse })
@@ -124,7 +136,7 @@ function loginUser(req, res) {
                 var data = {
                     _id: result._id,
                     name: result.name,
-                    firstname: (result.firstName) ? result.firstname : "",
+                    firstname: (result.firstname) ? result.firstname : "",
                     lastname: (result.lastname) ? result.lastname : "",
                     email: result.email,
                     contactNo: result.contactNo,
@@ -220,7 +232,7 @@ function getresetpassword(req, res) {
     let query = { resetPasswordToken: req.params.token, resetPasswordExpires: { $gt: Date.now() } }
     userdao.findone(query)
         .then((user) => {
-            if (!user) return res.json({ code: code.unAuthorized, message: msg.tokeninvalidorexpire })
+            if (!user) return res.send('<style>*{transition:all .6s}html{height:100%}body{font-family:Lato,sans-serif;color:#888;margin:0}#main{display:table;width:100%;height:100vh;text-align:center}.fof{display:table-cell;vertical-align:middle}.fof h1{font-size:50px;display:inline-block;padding-right:12px;animation:type .5s alternate infinite}@keyframes type{from{box-shadow:inset -3px 0 0 #888}to{box-shadow:inset -3px 0 0 transparent}}</style><div id="main"><div class="fof"><h1>Your Requested Link is Expired</h1></div></div>')
             else {
                 console.log("getresetpassword -> user.resetPasswordToken", ua, user.resetPasswordToken)
                res.redirect('squad://reset/' + user.resetPasswordToken)
@@ -243,7 +255,8 @@ function getresetpassword(req, res) {
         })
         .catch(err => {
             console.log("getresetpassword -> err", err)
-            res.json({ code: code.ineternalError, message: msg.internalServerError })
+            // res.json({ code: code.ineternalError, message: msg.internalServerError })
+            res.send('<style>*{transition:all .6s}html{height:100%}body{font-family:Lato,sans-serif;color:#888;margin:0}#main{display:table;width:100%;height:100vh;text-align:center}.fof{display:table-cell;vertical-align:middle}.fof h1{font-size:50px;display:inline-block;padding-right:12px;animation:type .5s alternate infinite}@keyframes type{from{box-shadow:inset -3px 0 0 #888}to{box-shadow:inset -3px 0 0 transparent}}</style><div id="main"><div class="fof"><h1>Your Requested Link is Expired</h1></div></div>')
         });
 }
 function resetpassword(req, res) {
@@ -277,12 +290,18 @@ function resetpassword(req, res) {
     })
 }
 function socialloginGmail(req, res) {
-    console.log('data here-----------------------------')
+    // console.log('data here-----------------------------', req.body)
     const socialId = req.body.id.trim(),
         email = req.body.email.trim();
     let query = { $or: [{ socialId: socialId }, { email: email }] };
     return userdao.findone(query).then((user) => {
         if (user) {
+            const fcmToken = (req.body.fcm) ? req.body.fcm : '';
+            let query1 = { _id: user._id },
+                update = { $set: { fcmToken: fcmToken } },
+                options = { new: true }
+                userdao.findOneAndUpdate(query1, update, options)
+
             let token = util.generateToken(user, process.env.USER_SECRET)
             let data = {
                 _id: user._id,
@@ -290,9 +309,11 @@ function socialloginGmail(req, res) {
                 firstname: user.firstname,
                 lastname: user.lastname,
                 imageUrl: user.imageUrl,
+                gender: user.gender,
+                contactNo: user.contactNo,
+                role: user.role,
                 token: token
             }
-            console.log(data, '---------------------------11111111')
             return res.json({ code: code.ok, message: msg.loggedIn, data: data })
         } else {
             let addobj = {
@@ -302,17 +323,19 @@ function socialloginGmail(req, res) {
                 email: req.body.email.trim(),
                 fcmToken: req.body.fcm,
                 location: req.body.location,
-                gender: 'MEN',
+                gender: 'MEN', 
                 isSocialLogin: true
             }
             if (req.body.photo) {
-
-                addobj.imageUrl = req.body.photo.trim()
-            }
-            else {
+                file_name = 'img-'+Date.now()+'.png';
+                var file = fs.createWriteStream('./img/' + file_name);
+                var request = https.get(req.body.photo, function (response) {
+                    response.pipe(file);
+                });
+                addobj.imageUrl = process.env.IMAGEPREFIX+''+file_name
+            } else {
                 addobj.imageUrl = ""
             }
-            console.log(addobj, '-------------------------22222222')
             return userdao.create(addobj).then((user) => {
                 DefaultPreference(user._id)
                 let token = util.generateToken(user, process.env.USER_SECRET)
@@ -322,9 +345,11 @@ function socialloginGmail(req, res) {
                     firstname: user.firstname,
                     lastname: user.lastname,
                     imageUrl: user.imageUrl,
+                    gender: user.gender,
+                    contactNo: user.contactNo,
+                    role: user.role,
                     token: token
                 }
-                console.log(data, '---------------------3333333333333')
                 return res.json({ code: code.ok, message: msg.loggedIn, data: data })
             })
         }
@@ -339,6 +364,11 @@ function socialloginFacebook(req, res) {
     let query = { $or: [{ socialId: socialId }, { email: email }] };
     return userdao.findone(query).then((user) => {
         if (user) {
+            const fcmToken = (req.body.fcm) ? req.body.fcm : '';
+            let query1 = { _id: user._id },
+                update = { $set: { fcmToken: fcmToken } },
+                options = { new: true }
+                userdao.findOneAndUpdate(query1, update, options)
             let token = util.generateToken(user, process.env.USER_SECRET)
             let data = {
                 _id: user._id,
@@ -346,6 +376,9 @@ function socialloginFacebook(req, res) {
                 firstname: user.firstname,
                 lastname: user.lastname,
                 imageUrl: user.imageUrl,
+                gender: user.gender,
+                contactNo: user.contactNo,
+                role: user.role,
                 token: token
             }
             return res.json({ code: code.ok, message: msg.loggedIn, data: data })
@@ -361,9 +394,13 @@ function socialloginFacebook(req, res) {
                 isSocialLogin: true
             }
             if (req.body.photo) {
-                addobj.imageUrl = req.body.photo.trim()
-            }
-            else {
+                file_name = 'img-'+Date.now()+'.png';
+                var file = fs.createWriteStream('./img/' + file_name);
+                var request = https.get(req.body.photo, function (response) {
+                    response.pipe(file);
+                });
+                addobj.imageUrl = process.env.IMAGEPREFIX+''+file_name
+            } else {
                 addobj.imageUrl = ""
             }
             return userdao.create(addobj).then((user) => {
@@ -375,6 +412,9 @@ function socialloginFacebook(req, res) {
                     firstname: user.firstname,
                     lastname: user.lastname,
                     imageUrl: user.imageUrl,
+                    gender: user.gender,
+                    contactNo: user.contactNo,
+                    role: user.role,
                     token: token
                 }
                 return res.json({ code: code.ok, message: msg.loggedIn, data: data })
@@ -391,6 +431,11 @@ function socialloginLinkedin(req, res) {
     let query = { $or: [{ socialId: socialId }, { email: email }] };
     return userdao.findone(query).then((user) => {
         if (user) {
+            const fcmToken = (req.body.fcm) ? req.body.fcm : '';
+            let query1 = { _id: user._id },
+                update = { $set: { fcmToken: fcmToken } },
+                options = { new: true }
+                userdao.findOneAndUpdate(query1, update, options)
             let token = util.generateToken(user, process.env.USER_SECRET)
             let data = {
                 _id: user._id,
@@ -398,6 +443,9 @@ function socialloginLinkedin(req, res) {
                 firstname: user.firstname,
                 lastname: user.lastname,
                 imageUrl: user.imageUrl,
+                gender: user.gender,
+                contactNo: user.contactNo,
+                role: user.role,
                 token: token
             }
             return res.json({ code: code.ok, message: msg.loggedIn, data: data })
@@ -413,10 +461,13 @@ function socialloginLinkedin(req, res) {
                 isSocialLogin: true
             }
             if (req.body.photo) {
-
-                addobj.imageUrl = req.body.photo.trim()
-            }
-            else {
+                file_name = 'img-'+Date.now()+'.png';
+                var file = fs.createWriteStream('./img/' + file_name);
+                var request = https.get(req.body.photo, function (response) {
+                    response.pipe(file);
+                });
+                addobj.imageUrl = process.env.IMAGEPREFIX+''+file_name
+            } else {
                 addobj.imageUrl = ""
             }
             return userdao.create(addobj).then((user) => {
@@ -428,6 +479,9 @@ function socialloginLinkedin(req, res) {
                     firstname: user.firstname,
                     lastname: user.lastname,
                     imageUrl: user.imageUrl,
+                    gender: user.gender,
+                    contactNo: user.contactNo,
+                    role: user.role,
                     token: token
                 }
                 return res.json({ code: code.ok, message: msg.loggedIn, data: data })
@@ -609,7 +663,7 @@ function getvalidateemail(req, res) {
     let query = { _id: req.params.id };
     userdao.findone(query)
         .then((user) => {
-            if (!user) return res.json({ code: code.unAuthorized, message: msg.notFound })
+            if (!user) return res.send('<style>*{transition:all .6s}html{height:100%}body{font-family:Lato,sans-serif;color:#888;margin:0}#main{display:table;width:100%;height:100vh;text-align:center}.fof{display:table-cell;vertical-align:middle}.fof h1{font-size:50px;display:inline-block;padding-right:12px;animation:type .5s alternate infinite}@keyframes type{from{box-shadow:inset -3px 0 0 #888}to{box-shadow:inset -3px 0 0 transparent}}</style><div id="main"><div class="fof"><h1>Your Requested Link is Expired</h1></div></div>')
             else {
                 console.log('h-----------------------------')
                 res.redirect('squad://authenticate/' + user._id)
@@ -618,7 +672,8 @@ function getvalidateemail(req, res) {
         })
         .catch(err => {
             console.log("getresetpassword -> err", err)
-            res.json({ code: code.ineternalError, message: msg.internalServerError })
+            res.send('<style>*{transition:all .6s}html{height:100%}body{font-family:Lato,sans-serif;color:#888;margin:0}#main{display:table;width:100%;height:100vh;text-align:center}.fof{display:table-cell;vertical-align:middle}.fof h1{font-size:50px;display:inline-block;padding-right:12px;animation:type .5s alternate infinite}@keyframes type{from{box-shadow:inset -3px 0 0 #888}to{box-shadow:inset -3px 0 0 transparent}}</style><div id="main"><div class="fof"><h1>Your Requested Link is Expired</h1></div></div>')
+            // res.json({ code: code.ineternalError, message: msg.internalServerError })
         });
 }
 function validateemail(req, res) {
@@ -682,20 +737,32 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
         }
         var meters = 30000
         if (req.query.radius) {
-            var meters = parseInt(req.query.radius) * 1000
+            meters = parseInt(req.query.radius) * 1000
         }
-        if (lat && long) {
-            let distance = latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1], long, lat)
-            meters = distance
-        }
+        // if (lat && long) {
+        //     let distance = latlongtokm(userdata.location.coordinates[0], userdata.location.coordinates[1], long, lat)
+        //     meters = distance
+        // }
         if (parseInt(req.query.radius) != 0) {
-            query.location = {
-                $nearSphere: {
-                    $geometry: {
-                        type: "Point",
-                        coordinates: [userdata.location.coordinates[0], userdata.location.coordinates[1]]
-                    },
-                    $maxDistance: meters
+            if (lat && long) {
+                query.location = {
+                    $nearSphere: {
+                        $geometry: {
+                            type: "Point",
+                            coordinates: [long, lat]
+                        },
+                        $maxDistance: meters
+                    }
+                }
+            } else {
+                query.location = {
+                    $nearSphere: {
+                        $geometry: {
+                            type: "Point",
+                            coordinates: [userdata.location.coordinates[0], userdata.location.coordinates[1]]
+                        },
+                        $maxDistance: meters
+                    }
                 }
             }
         }
@@ -708,6 +775,7 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
                 return res.json({ code: code.internalError, message: msg.internalServerError })
             } else {
                 // return res.send({data: data.length})
+                console.log(data.length)
 
                 let finallist = []
 
@@ -732,8 +800,10 @@ async function peoplearound(req, res) {// db.users.createIndex( {location: "2dsp
 function invitepeople(req, res) {
     let token = req.headers['authorization'];
     let userId = util.decodeToken(token)
+    // console.log(userId.id, 'kk')
+    req.user_id = userId.id
     var { users, eventId } = req.body;
-    // console.log("invitepeople ->  users, eventId", users, eventId)
+    
     var obj = []
     users = users.filter(e => e !== userId.id);
     users.map((el, i) => {
@@ -747,26 +817,20 @@ function invitepeople(req, res) {
             }
             obj.push(info)
             if (i == (users.length - 1)) {
-                if (req.body.manualInvite.length != 0) {
-                    var manualinv = req.body.manualInvite
-                    manualinv.map(async (el, index) => {
-                        el.fcmToken = (el.fcmToken) ? el.fcmToken : '';
-                        obj.push(el);
-                        if (index == (manualinv.length - 1)) {
-                            //add to invitation to user record
-                            addgameinvitation(obj, userId.id, eventId)
-                            invitemail(res, req, obj, eventId);
-                        }
-                    })
-                } else {
-                    // console.log("invitepeople -> else")
-                    addgameinvitation(obj, userId.id, eventId)
-                    invitemail(res, req, obj, eventId);
-                }
+                addgameinvitation(obj, userId.id, eventId)
+                invitemail(res, req, obj, eventId);
             }
         }).catch((err) => {
-            // console.log("invitepeople -> err", err)
+            console.log("invitepeople -> err", err)
         })
+    })
+
+    var manualinv = req.body.manualInvite
+    manualinv.map(async (el, index) => {
+        obj.push(el);
+        if (index == (manualinv.length - 1)) {
+            invitManualemail(res, req, obj, eventId);
+        }
     })
 }
 async function addgameinvitation(userlist, sederId, eventId) {
@@ -774,14 +838,15 @@ async function addgameinvitation(userlist, sederId, eventId) {
     userlist.map((el) => {
         let invitation = {
             senderId: sederId,
-            eventId: eventId
+            eventId: eventId,
+            createdAt: new Date()
         };
         if (el.userid) {
             let query = { _id: el.userid },
                 update = { $push: { invitationtogame: invitation } },
                 options = { new: true };
             user.findOneAndUpdate(query, update, options).then((data) => {
-                console.log("addgameinvitation -> data", data)
+                // console.log("addgameinvitation -> data", data)
 
             }).catch((err) => {
                 console.log("addgameinvitation -> err", err)
@@ -883,6 +948,8 @@ function removeNotificationCount(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token)
 
+
+
     let query = { _id: obj.id }
     let update = {
         $set: {
@@ -905,7 +972,7 @@ function removeNotificationCount(req, res) {
         if(err){
             return res.json({ code: code.ineternalError, message: msg.internalServerError })
         } else {
-            return res.json({ code: code.ok, data: 'successfully' })
+            return res.json({ code: code.ok, data: 'Successfully' })
         }
     })
 }
@@ -917,23 +984,23 @@ async function gamenotification(req, res) {
     let query = { _id: obj.id };
     await user.findOne(query)
         // "NotificationType": "invitenotification"
-        .populate('invitationtogame.senderId', '_id firstname lastname imageUrl')
-        .populate('invitationtogame.eventId', '_id date starttime endtime Address')
-        .populate('rateyouNotification.userId', '_id firstname lastname imageUrl')
-        .populate('rateyouNotification.eventId', '_id date starttime endtime Address')
+        .populate('invitationtogame.senderId', '_id firstname lastname imageUrl sport')
+        .populate('invitationtogame.eventId', '_id date starttime endtime Address sport')
+        .populate('rateyouNotification.userId', '_id firstname lastname imageUrl sport')
+        .populate('rateyouNotification.eventId', '_id date starttime endtime Address sport')
         // "NotificationType": "joineventnotification"
-        .populate('joineventNotification.userId', '_id firstname lastname imageUrl')
-        .populate('joineventNotification.eventId', '_id date starttime endtime Address')
+        .populate('joineventNotification.userId', '_id firstname lastname imageUrl sport')
+        .populate('joineventNotification.eventId', '_id date starttime endtime Address sport')
         //eventfull "NotificationType":"eventfullNotification"
-        .populate('eventfullNotification.eventId', '_id date starttime endtime Address')
+        .populate('eventfullNotification.eventId', '_id date starttime endtime Address sport')
         // "NotificationType": "eventhappennotification"
-        .populate('eventhappenNotification.eventId', '_id date starttime endtime Address')
+        .populate('eventhappenNotification.eventId', '_id date starttime endtime Address sport')
         // "NotificationType": "eventaftertimenotification"
-        .populate('eventafterhourNotification.eventId', '_id date starttime endtime Address')
+        .populate('eventafterhourNotification.eventId', '_id date starttime endtime Address sport')
         //" NotificationType  " :  ratenotification
-        .populate('rateplayerNotification.eventId', '_id date starttime endtime Address')
+        .populate('rateplayerNotification.eventId', '_id date starttime endtime Address sport')
         //" NotificationType  " :  ratenotification
-        .populate('rateallNotification.eventId', '_id date starttime endtime Address')
+        .populate('rateallNotification.eventId', '_id date starttime endtime Address sport')
         .then((data) => {
             let gameinvitationnotification = []
             if (data.rateyouNotification) {
@@ -1011,7 +1078,9 @@ async function gamenotification(req, res) {
             }
             //sort by date...
             gameinvitationnotification.sort(function(a,b){
-                return new Date(b.createdAt) - new Date(a.createdAt);
+                if(new Date(b.createdAt) > new Date((new Date().getTime() - (30 * 24 * 60 * 60 * 1000))) && new Date(a.createdAt) > new Date((new Date().getTime() - (30 * 24 * 60 * 60 * 1000)))){
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                }
             });
 
             res.json({ code: code.ok, gamenotification: gameinvitationnotification })
@@ -1021,7 +1090,6 @@ async function gamenotification(req, res) {
         })
 }
 function removegamenotification(req, res) {
-
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     let query = { _id: obj.id },
@@ -1037,6 +1105,7 @@ function removegamenotification(req, res) {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
+
 async function friendnotification(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token);
@@ -1066,20 +1135,88 @@ async function gamenotifdecline(req, res) {
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
 }
+
 async function invitemail(res, req, users, eventId) {
-    console.log("invitemail function 2-> users", users, eventId)
+    // console.log("invitemail function 2-> users", users, eventId)
+    let usersemail = [];
+    // console.log(users)
+
+    event.findOne({ _id: eventId }).populate('sport', '_id name image').then((eventData) => {
+        var dateTime = dateFormat(new Date(eventData.date), "dddd dd/mm");
+        var dateStartTime = dateFormat(new Date(eventData.starttime), "h:MM TT")
+        var dateendTime = dateFormat(new Date(eventData.endtime), "h:MM TT")
+        var eventTime = dateTime + ',  ' + dateStartTime + ' - ' + dateendTime
+
+        user.findOne({ _id: req.user_id }, { firstname: 1 }).then((senderName) => {
+
+            users.map(async (el, i) => {
+                let userId = (el.userid) ? el.userid : ''
+                let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + userId;
+                usersemail.push(el.email)
+                let data = {
+                    username: el.firstname,
+                    subject: "Squad XYZ: Invitation Link",
+                    html: `<h4>Hi ${el.firstname}, <br /><br />
+                ${senderName.firstname} has invited you to the event. <br /><br />
+
+            <img src="${eventData.sport.image}" width="10px"> &nbsp;<b>${eventData.sport.name}</b><br />
+            <img src="https://image.flaticon.com/icons/png/512/2088/2088617.png" width="12px"> &nbsp;<a href="${link}">${eventTime}</a><br />
+            <img src="https://image.flaticon.com/icons/png/512/684/684809.png" width="12px"> &nbsp;${eventData.Address}<br />
+            <img src="https://image.flaticon.com/icons/png/512/61/61584.png" width="12px"> &nbsp;${eventData.price} AED<br />
+            <img src="https://image.flaticon.com/icons/png/512/1161/1161469.png" width="12px"> &nbsp;Who's in ?<br /><br />
+
+            Best Regards,<br />
+            Squad XYZ Team</h4>`
+                }
+                await util.sendEMail(el.email, data).then((data) => {
+                    let fcm_token = (el.fcmToken) ? el.fcmToken : '';
+                    let title = `${senderName.firstname} invite you in event`
+                    FirebaseNotification(fcm_token, title)
+                    if ((data == true) && (i == (users.length - 1))) {
+                        return res.json({ code: code.ok, msg: `Invitation send to ${usersemail}` })
+                    }
+                }).catch((err) => {
+                    console.log("invitemail -> err", err)
+
+                })
+            })
+        })
+    })
+}
+
+async function invitManualemail(res, req, users, eventId) {
+    // console.log("invitemail function 2-> users", users, eventId)
     let usersemail = [];
     users.map(async (el, i) => {
-        console.log("invitemail -> el", el.email)
-        let userId = (el.userid) ? el.userid : ''
-        let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + userId;
+        // console.log("invitemail -> el", el.email)
+        
+        let PlayStore = "https://play.google.com/store/apps/details?id=com.squadxyz";
+        let Appstore = "https://play.google.com/store/apps/details?id=com.squadxyz";
         usersemail.push(el.email)
-        let data = {
+        let userExist = await user.find({email: el.email})
+        // let userId = (userExist[0]._id) ? userExist[0]._id : ''
+        
+        if (userExist[0]) {
+            let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + userExist[0]._id;
+            var Body_data = `Hi ${el.firstname}, <br /><br />
+                Someone has invited you to the event. Click on this link and join here:<a href="${link}">Squad XYZ</a> <br /><br />
+                Best Regards,<br />
+                Squad XYZ Team`;
+        } else {
+            var Body_data = `Hi ${el.firstname}, <br /><br />
+                Someone has invited you to the event. Click on this link and Download App: <br /> 
+                Playstore: <a href="${PlayStore}">Squad XYZ</a><br /> 
+                Appstore: <a href="${Appstore}">Squad XYZ</a> <br /><br />
+                Best Regards,<br />
+                Squad XYZ Team`;
+        }
+
+        var data = {
             username: el.firstname,
             subject: "Squad XYZ: Invitation Link",
-            html: `Hi ${el.firstname}, <br /><br />
-            Someone has invited you to the event. Click on this link and join here:<a href="${link}">Squad XYZ</a> <br /><br />Best Regards,<br />Squad XYZ Team`
+            html: Body_data
         }
+        
         await util.sendEMail(el.email, data).then((data) => {
             let fcm_token = (users.fcmToken) ? users.fcmToken : '';
             invitenotification(fcm_token)
@@ -1093,8 +1230,8 @@ async function invitemail(res, req, users, eventId) {
     })
 }
 async function getinvite(req, res) {
-    console.log("getinvite -> req.headers.eventId", req.params.eventId, req.params.userId)
-    res.redirect("squad://joinevent/eventId=" + req.params.eventId)
+        console.log("getinvite -> req.headers.eventId", req.params.eventId, req.params.userId)
+        res.redirect("squad://joinevent/eventId=" + req.params.eventId)
     // res.redirect('squad://join/' + req.params.userId + '/' + req.params.eventId)//deeplinking url for join event
 }
 async function peoplecount(req, res) {
@@ -1130,6 +1267,7 @@ async function peoplecount(req, res) {
             query._id = {$nin: {_id: obj.id}}
             query.preferences = { $elemMatch: { "sportId": {$in: [sportId]} } }
             await user.find(query).then((data) => {
+                console.log(data.length)
                 myResolve(data.length)
             }).catch((err) => {
                 myReject(err)
@@ -1173,6 +1311,8 @@ function addRatingasplayer(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token)
     const { ratearray } = req.body;
+
+    user.findOne({ _id: obj.id }, { firstname: 1 }).then((senderName) => {
     
     ratearray.map((ele, index) => {
         // console.log("addRatingasplayer -> ele", ratearray.length, index + 1)
@@ -1185,8 +1325,10 @@ function addRatingasplayer(req, res) {
             update = { $push: { "rateasplayer": rating } },
             options = { new: true };
         userdao.findOneAndUpdate(query, update, options).then((userdata) => {
-            addratingnotif(rateas.player, obj.id, ele.userId, ele.eventId)
-                (userdata.fcmToken) ? rateyounotification(userdata.fcmToken) : '';
+            if(obj.id != ele.userId){
+                addratingnotif(rateas.player, obj.id, ele.userId, ele.eventId)
+                (userdata.fcmToken) ? FirebaseNotification(userdata.fcmToken, `${senderName.firstname} rate you`) : '';
+            }
         }).catch((err) => {
             return res.json({ code: code.internalError, message: msg.internalServerError })
             // console.log("addRating -> err==================================", err)
@@ -1195,11 +1337,16 @@ function addRatingasplayer(req, res) {
             return res.json({ code: code.ok, msg: msg.addrate })
         }
     })
+})
 }
 function addRatingasorganizer(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token)
     const { rate, userId, eventId } = req.body;
+    var GiveNotify = true
+    if(obj.id != userId){
+        GiveNotify = false
+    }
     let rating = {
         by: obj.id,
         ratedwith: rate,
@@ -1209,7 +1356,10 @@ function addRatingasorganizer(req, res) {
         update = { $push: { "rateasorganizer": rating } },
         options = { new: true };
     userdao.findOneAndUpdate(query, update, options).then((userdata) => {
-        addratingnotif(rateas.organizer, obj.id, userId, eventId);
+        if(GiveNotify){
+            console.log(obj.id, userId, '=======================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+            addratingnotif(rateas.organizer, obj.id, userId, eventId);
+        }
         (userdata.fcmToken) ? rateyounotification(userdata.fcmToken) : '';
         return res.json({ code: code.ok, msg: msg.addrate })
     }).catch((err) => {
@@ -1223,14 +1373,14 @@ function addratingnotif(type, senderId, receiverId, eventId) {
     let rateyouNotification = {
         type: type,
         userId: senderId,
-        eventId: eventId
+        eventId: eventId,
+        createdAt: new Date()
     };
 
     let query = { _id: receiverId },
         update = { $push: { rateyouNotification: rateyouNotification } },
         options = { new: true };
     user.findOneAndUpdate(query, update, options).then((data) => {
-        // console.log("rateyou notification added -> data", data)
 
     }).catch((err) => {
         console.log("err", err)
@@ -1313,8 +1463,9 @@ function sendrequest(req, res) {
         if (data) {
             return res.json({ code: code.ok, msg: "user are aready your friend" })
         } else {
+            user.findOne({ _id: obj.id }, { firstname: 1 }).then((senderName) => {
             userdao.findOneAndUpdate(query, update, options).then((receiverdata) => {
-                friendrequestnotif(receiverdata);
+                FirebaseNotification(receiverdata.fcmToken, `${senderName.firstname} wants to be your friend`);
                 let query1 = { _id: obj.id },
                     update1 = { $push: { sentRequest: userId } },
                     options1 = { new: true };
@@ -1325,6 +1476,7 @@ function sendrequest(req, res) {
             }).catch((err) => {
                 return res.json({ code: code.internalError, message: msg.internalServerError })
             })
+        })
         }
     }).catch((err) => {
         return res.json({ code: code.internalError, message: msg.internalServerError })
@@ -1332,7 +1484,8 @@ function sendrequest(req, res) {
 }
 function friendrequestNotification(senderId, receiverId) {
     let friendrequestNotification = {
-        userId: senderId
+        userId: senderId,
+        createdAt: new Date()
     };
 
     let query = { _id: receiverId },
@@ -1342,7 +1495,6 @@ function friendrequestNotification(senderId, receiverId) {
         // console.log("friendrequestNotification -> data", data)
     }).catch((err) => {
         console.log("err", err)
-
     })
 }
 function requestlist(req, res) {
@@ -1564,50 +1716,48 @@ function getuserpreference(req, res, next) {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
-function invitenotification(users) {//sent to user
-    console.log("invitenotification -> users", users)
-    var message = {
-        to: (users.fcmToken) ? users.fcmToken : '',//fcm token whom you want to notify
+function FirebaseNotification(fcmToken, title) {//sent to user
+    var payload = {
         notification: {
-            title: 'Someone invites you in a game',
-            // body: 'Body of your push notification'
-        },
-        data: {
-            my_key: 'CODERSCOTCH',
-            my_another_key: 'my another value'
+            color: '#ff0000',
+            title: title
         }
-    };
-    fcm.send(message, function (err, response) {
-        if (err) {
-            console.log("Something has gone wrong!");
-        } else {
-            console.log("Successfully sent with response: ", response);
-        }
-    });
+    }
+    var options = {
+        priority: "high",
+        timeToLive: 60 * 60 * 24
+    }
+    // var token = fcmToken ? fcmToken : '';
+
+    if(fcmToken){
+        admin.messaging().sendToDevice(fcmToken, payload, options)
+        .then((response) => {
+            return 'success';
+        })
+        .catch((error) => {
+            console.log('error', error)
+        })
+    }
+    
 }
+
 function rateyounotification(fcmToken) {
-    var message = {
-        to: fcmToken,//fcm token of event creator
-        // collapse_key: 'your_collapse_key',
-
+    var payload = {
         notification: {
-            title: 'Someone rate you',
-            // body: 'Body of your push notification'
-        },
-
-        data: {
-            my_key: 'CODERSCOTCH',
-            my_another_key: 'my another value'
+            title: 'Someone rate you'
         }
-    };
-    fcm.send(message, function (err, response) {
-        if (err) {
-            console.log("loginUser -> err============================================>", err)
-            console.log("Something has gone wrong!");
-        } else {
-            console.log("Successfully sent with response: ", response);
-        }
-    });
+    }
+    var options = {
+        priority: "high",
+        timeToLive: 60 * 60 * 24
+    }
+    var token = fcmToken ? fcmToken : 'fJEiwtwfRAW1OH8Ea-FrGs:APA91bHUAQDiDf15Z3baGUkPMHcdwyLYb7adywAYW6YXPGcS4GLy-KyyKkr78SYxpj0AJ0IslZdW1DUuizlCOJVBTn_z1UXzNN5do-4jlT049PjuHumU5l3MyGJmm-b_0rBAEVfCPF1R';
+    admin.messaging().sendToDevice(token, payload, options)
+        .then((response) => {
+        })
+        .catch((error) => {
+            console.log('error', error)
+        })
 }
 function eventfullnotification(creatorId, eventId) {//sent to event creator
     //creatorId,eventId
@@ -1842,7 +1992,7 @@ module.exports = {
     invitepeople,
     invitemail,
     peoplecount,
-    invitenotification,
+    FirebaseNotification,
     rateyounotification,
     addRatingasplayer,
     addRatingasorganizer,
