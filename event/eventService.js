@@ -255,7 +255,8 @@ function joinevent(req, res) {
                             if (obj.id != data.createdby) {
                                 user.findOne({ _id: data.createdby }).then((data) => {
                                     if (data.fcmToken) {
-                                        userService.FirebaseNotification(data.fcmToken, `${senderName.firstname} is joined your event`)
+                                        var firebaseClick = {"type": "joinEvent"}
+                                        userService.FirebaseNotification(data.fcmToken, `${senderName.firstname} is joined your event`, firebaseClick)
                                     }
                                 })
                                 addjoineventNotification(data._id, obj.id, data.createdby)
@@ -325,6 +326,8 @@ function joinevent2(req, res) {
     user.findOne(query).then((data) => {
         // console.log(data)
         if (data.participatedin.length == 0) {
+
+            // console.log(data.participatedin.length)
             this.joinevent(req, res)
         } else {
             data.participatedin.map((eventId, eindex) => {
@@ -334,8 +337,10 @@ function joinevent2(req, res) {
                     event.find(query).then((eventdata) => {
                         // console.log(query)
                         if (eventdata.length == 0) {
+                            console.log(eventdata.length)
                             this.joinevent(req, res)
                         } else {
+                            console.log(eventdata.length)
                             res.json({ code: code.badRequest, msg: msg.cannotjoinevent })
                         }
                     })
@@ -403,6 +408,7 @@ function eventplayed(req, res) {
                     userdata.rateasorganizer.map((rate) => {
                         rateasorganizer += rate.ratedwith
                     })
+                    
                     userdata = {
                         // ...userdata._doc,
                         _id: userdata._id,
@@ -414,7 +420,21 @@ function eventplayed(req, res) {
                         rateasorganizer: (rateasorganizer / userdata.rateasorganizer.length)
                     }
                     events.participants[i] = userdata;
+
+
+
+                    // userdata.averagePlayerRating = rateasplayer;
                 })
+                averagePlayerRating = 0;
+                events.participants.map((rates) => {
+                    averagePlayerRating += rates.rateasplayer
+                })
+
+                data[index] = {
+                    ...events._doc,
+                    "averagePlayerRating": averagePlayerRating / events.participants.length
+                }
+            
                 if (data.length == (index + 1)) {
                     // console.log("eventplayed -> finallist", data)
                     return res.json({ code: code.ok, data: data })
@@ -429,7 +449,7 @@ function eventplayed(req, res) {
 function eventwillplayed(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
-    let query = { date: { "$gt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
+    let query = { date: { "$gte": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
     let mysort={date:-1}
     return event.find(query).sort(mysort).populate('placeId', '_id sportId').populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer').then((data) => {
         console.log("eventwillplayed -> !data", data.length)
@@ -1188,15 +1208,16 @@ function unjoinevent(req, res) {
             update = { $pull: { participants: obj.id }, participate: false }
         }
         return eventdao.findOneAndUpdate(query, update, options).then((data) => {
-            if (data) {
+            if (data){
                 console.log("unjoinevent -> data", data)
                 let query1 = { _id: obj.id },
                     update1 = { $pull: { participatedin: { eventId: data._id } } },
                     options1 = { new: true };
-                if (obj.id == data.createdby) {
-                    update1 = { $push: { participatedin: { eventId: data._id, participate: false } } }
-                }
+                // if (obj.id == data.createdby) {
+                //     update1 = { $push: { participatedin: { eventId: data._id, participate: false } } }
+                // }
                 userDao.findOneAndUpdate(query1, update1, options1).then((userdata) => {
+                    console.log(userdata)
                     // console.log("joinevent -> userdata", userdata)
                     userService.joinevent(data.createdby, obj.id, data.id)//creatorsid,usersid,eventsid
                     res.json({ code: code.ok, msg: msg.eventunjoin })
@@ -1204,11 +1225,11 @@ function unjoinevent(req, res) {
             }
         }).catch((err) => {
             console.log("joinevent -> err", err)
-            res.json({ code: code.ineternalError, message: msg.internalServerError })
+            res.json({ code: code.internalError, message: msg.internalServerError })
         })
     }).catch((err) => {
         console.log("joinevent -> err", err)
-        res.json({ code: code.ineternalError, message: msg.internalServerError })
+        res.json({ code: code.internalError, message: msg.internalServerError })
     })
 }
 
@@ -1217,9 +1238,9 @@ function eventFCM(req, res) {
     let obj = util.decodeToken(token)
     var query = { _id: req.query.eventId }
     event.findOne(query, {participants: 1}).populate('participants', '_id fcmToken').then((findData) => {
-        return res.json(findData.participants)
+        return res.json({ code: code.ok, data: findData.participants })
     }).catch((error) => {
-        console.log(error)
+        res.json({ code: code.internalError, message: msg.internalServerError })
     })
 }
 

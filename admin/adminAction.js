@@ -22,7 +22,18 @@ function deleteuser(req, res,next) {
 function resetpassword(req, res,next) {
     service.resetpassword(req, res,next)
 }
-
+function playerLocations(req, res, next) {
+    service.playerLocations(req, res, next)
+}
+function playerRating(req, res, next){
+    service.playerRating(req, res, next)
+}
+function eventHours(req, res, next){
+    service.eventHours(req, res, next)
+}
+function sportLocations(req, res, next){
+    service.sportLocations(req, res, next)
+}
 
 
 module.exports = {
@@ -32,6 +43,9 @@ module.exports = {
     deactiveuser,
     deleteuser,
     resetpassword,
-    listsport
- 
+    listsport,
+    playerLocations,
+    playerRating,
+    eventHours,
+    sportLocations
 }

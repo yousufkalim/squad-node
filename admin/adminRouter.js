@@ -34,4 +34,23 @@ adminRouter.route('/resetpassword')
         actions.resetpassword(req, res, next)
     });
 
+adminRouter.route('/playerLocations')
+    .get([], (req, res, next) => {
+        actions.playerLocations(req, res, next)
+    });
+adminRouter.route('/sportLocation')
+    .get([], (req, res, next) => {
+        actions.sportLocations(req, res, next)
+    });
+
+adminRouter.route('/playerRating')
+    .get([], (req, res, next) => {
+        actions.playerRating(req, res, next)
+    });
+
+adminRouter.route('/eventHours')
+    .get([], (req, res, next) => {
+        actions.eventHours(req, res, next)
+    });
+
 module.exports = adminRouter;
