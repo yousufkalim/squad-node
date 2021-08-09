@@ -115,6 +115,8 @@ async function registerUser(req, res) {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
+
+
 function loginUser(req, res) {
     console.log("loginUser ->   req.body.fcm", req.body.fcm)
     const fcmToken = (req.body.fcm) ? req.body.fcm : '';
@@ -803,6 +805,7 @@ function invitepeople(req, res) {
     // console.log(userId.id, 'kk')
     req.user_id = userId.id
     var { users, eventId } = req.body;
+    console.log(req.body)
     
     var obj = []
     users = users.filter(e => e !== userId.id);
@@ -829,6 +832,7 @@ function invitepeople(req, res) {
     manualinv.map(async (el, index) => {
         obj.push(el);
         if (index == (manualinv.length - 1)) {
+            console.log()
             invitManualemail(res, req, obj, eventId);
         }
     })
@@ -1153,25 +1157,27 @@ async function invitemail(res, req, users, eventId) {
                 let userId = (el.userid) ? el.userid : ''
                 let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + userId;
                 usersemail.push(el.email)
+                var Body_data = `<h4>Hi ${el.firstname}, <br /><br />
+                ${senderName.firstname} has invited you to the event. <br /><br />
+
+        ${eventData.sport.name === 'Cricket' ? '🏏' : eventData.sport.name === 'Hockey' ? '🏑' : eventData.sport.name === 'Tennis' ? '🎾' : eventData.sport.name === 'Football' ? '⚽️' : eventData.sport.name === 'Basketball' ? '🏀' : '🎮'} &nbsp;<b>${eventData.sport.name}</b><br />
+        ⏱ &nbsp; <a href="${link}">${eventTime}</a><br />
+        📍 &nbsp;${eventData.Address}<br />
+        💰 &nbsp;${eventData.price} AED<br />
+        🖐🏻  &nbsp;Who's in ?<br /><br />
+
+        Best Regards,<br />
+        Squad XYZ Team</h4>`;
                 let data = {
                     username: el.firstname,
                     subject: "Squad XYZ: Invitation Link",
-                    html: `<h4>Hi ${el.firstname}, <br /><br />
-                ${senderName.firstname} has invited you to the event. <br /><br />
-
-            <img src="${eventData.sport.image}" width="10px"> &nbsp;<b>${eventData.sport.name}</b><br />
-            <img src="https://image.flaticon.com/icons/png/512/2088/2088617.png" width="12px"> &nbsp;<a href="${link}">${eventTime}</a><br />
-            <img src="https://image.flaticon.com/icons/png/512/684/684809.png" width="12px"> &nbsp;${eventData.Address}<br />
-            <img src="https://image.flaticon.com/icons/png/512/61/61584.png" width="12px"> &nbsp;${eventData.price} AED<br />
-            <img src="https://image.flaticon.com/icons/png/512/1161/1161469.png" width="12px"> &nbsp;Who's in ?<br /><br />
-
-            Best Regards,<br />
-            Squad XYZ Team</h4>`
+                    html: Body_data
                 }
                 await util.sendEMail(el.email, data).then((data) => {
                     let fcm_token = (el.fcmToken) ? el.fcmToken : '';
-                    let title = `${senderName.firstname} invite you in event`
-                    FirebaseNotification(fcm_token, title)
+                    let title = `${senderName.firstname} invited you to an event`
+                    let firebaseClick = { "type": "eventInvite", "eventId": `${eventId}` }
+                    FirebaseNotification(fcm_token, title, firebaseClick)
                     if ((data == true) && (i == (users.length - 1))) {
                         return res.json({ code: code.ok, msg: `Invitation send to ${usersemail}` })
                     }
@@ -1187,48 +1193,66 @@ async function invitemail(res, req, users, eventId) {
 async function invitManualemail(res, req, users, eventId) {
     // console.log("invitemail function 2-> users", users, eventId)
     let usersemail = [];
-    users.map(async (el, i) => {
-        // console.log("invitemail -> el", el.email)
-        
-        let PlayStore = "https://play.google.com/store/apps/details?id=com.squadxyz";
-        let Appstore = "https://play.google.com/store/apps/details?id=com.squadxyz";
-        usersemail.push(el.email)
-        let userExist = await user.find({email: el.email})
-        // let userId = (userExist[0]._id) ? userExist[0]._id : ''
-        
-        if (userExist[0]) {
-            let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + userExist[0]._id;
-            var Body_data = `Hi ${el.firstname}, <br /><br />
-                Someone has invited you to the event. Click on this link and join here:<a href="${link}">Squad XYZ</a> <br /><br />
-                Best Regards,<br />
-                Squad XYZ Team`;
-        } else {
-            var Body_data = `Hi ${el.firstname}, <br /><br />
+
+    console.log(eventId)
+
+    event.findOne({ _id: eventId }).populate('sport', '_id name image').then((eventData) => {
+        // console.log(eventData)
+        var dateTime = dateFormat(new Date(eventData.date), "dddd dd/mm");
+        var dateStartTime = dateFormat(new Date(eventData.starttime), "h:MM TT")
+        var dateendTime = dateFormat(new Date(eventData.endtime), "h:MM TT")
+        var eventTime = dateTime + ',  ' + dateStartTime + ' - ' + dateendTime
+
+        users.map(async (el, i) => {
+            // console.log("invitemail -> el", el.email)
+
+            let PlayStore = "https://play.google.com/store/apps/details?id=com.squadxyz";
+            let Appstore = "https://play.google.com/store/apps/details?id=com.squadxyz";
+            usersemail.push(el.email)
+            let userExist = await user.find({ email: el.email })
+            // let userId = (userExist[0]._id) ? userExist[0]._id : ''
+
+            if (userExist[0]) {
+                let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + userExist[0]._id;
+                var Body_data = `<h4>Hi ${el.firstname}, <br /><br />
+            Someone has invited you to the event. <br /><br />
+
+        ${eventData.sport.name === 'Cricket' ? '🏏' : eventData.sport.name === 'Hockey' ? '🏑' : eventData.sport.name === 'Tennis' ? '🎾' : eventData.sport.name === 'Football' ? '⚽️' : eventData.sport.name === 'Basketball' ? '🏀' : '🎮'} &nbsp;<b>${eventData.sport.name}</b><br />
+        ⏱ &nbsp; <a href="${link}">${eventTime}</a><br />
+        📍 &nbsp;${eventData.Address}<br />
+        💰 &nbsp;${eventData.price} AED<br />
+        🖐🏻  &nbsp;Who's in ?<br /><br />
+
+        Best Regards,<br />
+        Squad XYZ Team</h4>`;
+            } else {
+                var Body_data = `Hi ${el.firstname}, <br /><br />
                 Someone has invited you to the event. Click on this link and Download App: <br /> 
                 Playstore: <a href="${PlayStore}">Squad XYZ</a><br /> 
                 Appstore: <a href="${Appstore}">Squad XYZ</a> <br /><br />
                 Best Regards,<br />
                 Squad XYZ Team`;
-        }
-
-        var data = {
-            username: el.firstname,
-            subject: "Squad XYZ: Invitation Link",
-            html: Body_data
-        }
-        
-        await util.sendEMail(el.email, data).then((data) => {
-            let fcm_token = (users.fcmToken) ? users.fcmToken : '';
-            invitenotification(fcm_token)
-            if ((data == true) && (i == (users.length - 1))) {
-                return res.json({ code: code.ok, msg: `Invitation send to ${usersemail}` })
             }
+
+            var data = {
+                username: el.firstname,
+                subject: "Squad XYZ: Invitation Link",
+                html: Body_data
+            }
+
+            await util.sendEMail(el.email, data).then((data) => {
+                let fcm_token = (users.fcmToken) ? users.fcmToken : '';
+                // invitenotification(fcm_token)
+                if ((data == true) && (i == (users.length - 1))) {
+                    return res.json({ code: code.ok, msg: `Invitation send to ${usersemail}` })
+                }
+            })
         }).catch((err) => {
             console.log("invitemail -> err", err)
-
         })
     })
 }
+
 async function getinvite(req, res) {
         console.log("getinvite -> req.headers.eventId", req.params.eventId, req.params.userId)
         res.redirect("squad://joinevent/eventId=" + req.params.eventId)
@@ -1327,7 +1351,8 @@ function addRatingasplayer(req, res) {
         userdao.findOneAndUpdate(query, update, options).then((userdata) => {
             if(obj.id != ele.userId){
                 addratingnotif(rateas.player, obj.id, ele.userId, ele.eventId)
-                (userdata.fcmToken) ? FirebaseNotification(userdata.fcmToken, `${senderName.firstname} rate you`) : '';
+                let firebaseClick = {"type": "rate"}
+                (userdata.fcmToken) ? FirebaseNotification(userdata.fcmToken, `${senderName.firstname} rated you`, firebaseClick) : '';
             }
         }).catch((err) => {
             return res.json({ code: code.internalError, message: msg.internalServerError })
@@ -1465,7 +1490,8 @@ function sendrequest(req, res) {
         } else {
             user.findOne({ _id: obj.id }, { firstname: 1 }).then((senderName) => {
             userdao.findOneAndUpdate(query, update, options).then((receiverdata) => {
-                FirebaseNotification(receiverdata.fcmToken, `${senderName.firstname} wants to be your friend`);
+                var firebaseClick = {"type": "friendReq", "user_id": `${senderName._id}`}
+                FirebaseNotification(receiverdata.fcmToken, `${senderName.firstname} wants to be your friend`, firebaseClick);
                 let query1 = { _id: obj.id },
                     update1 = { $push: { sentRequest: userId } },
                     options1 = { new: true };
@@ -1716,19 +1742,22 @@ function getuserpreference(req, res, next) {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
     })
 }
-function FirebaseNotification(fcmToken, title) {//sent to user
+
+
+
+function FirebaseNotification(fcmToken, title, data) {
     var payload = {
         notification: {
             color: '#ff0000',
             title: title
-        }
+        }, 
+        data
     }
     var options = {
         priority: "high",
         timeToLive: 60 * 60 * 24
     }
-    // var token = fcmToken ? fcmToken : '';
-
+    console.log(payload)
     if(fcmToken){
         admin.messaging().sendToDevice(fcmToken, payload, options)
         .then((response) => {
@@ -1738,8 +1767,9 @@ function FirebaseNotification(fcmToken, title) {//sent to user
             console.log('error', error)
         })
     }
-    
 }
+
+
 
 function rateyounotification(fcmToken) {
     var payload = {
@@ -1787,8 +1817,8 @@ function eventfullnotification(creatorId, eventId) {//sent to event creator
     }).catch((err) => {
         return res.json({ code: code.internalError, message: msg.internalServerError })
     })
-
 }
+
 function eventhournotification(adminId, hours) {//sent to event owner
     user.findById({ _id: adminId }).then((data) => {
         let fcmtoken = (data.fcmToken) ? data.fcmToken : ""

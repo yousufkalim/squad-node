@@ -10,14 +10,15 @@ http_codes = {
 }
 
 messages = {
+    nameNotValid: "First Name or Last Name cannot contain numeric values.",
     internalServerError: "Internal server error",
     registered: "Registered",
     incorrectpass: "Incorrect Password",
-    notFound: "Email Address not found",//"Reccord not found",
+    notFound: "Email address not found",//"Reccord not found",
     tokeninvalidorexpire: "Token Invalid or Expired",
     passwordChanged: "Password changed",
     invalidEmail: 'Enter Valid Email Address',
-    invalidPass: 'Password must be 6 charactor long, 1 uppercase and 1 number',
+    invalidPass: 'Password should contain at least 6 characters minimum, numeric values and 1 special character.',
     mailNotSent: "Mail not send",
     invalidToken: 'Invalid Token',
     invalidBody: 'Invalid input',
@@ -33,7 +34,7 @@ messages = {
     preferencesupdated: 'Preferences Updated',
     emailvalidate: "Email Validated",
     verifyemailfirst: "Verify Your Email First",
-    emailAlreadyRegistered: "Email Already registered",
+    emailAlreadyRegistered: "Email already registered",
     latlongincorrect: "longitude/latitude is out of bounds",
     preferancedeleted: "Preferance Removed",
     placeadded: "Place added",
@@ -45,7 +46,7 @@ messages = {
     cantdeleve: "You can not delete this event",
     evenotfound: "Event not found",
     eventunjoin: "Event unjoined",
-    cannotjoinevent: "you can not join this event as you have already joint event which will happen at the same time of this event",
+    cannotjoinevent: "You can not join this this event as you have already joined an event which will happen at this time.",
     invalidEmailPass: "Email or Password is incorrect",//'Invalid email or password, Email_format:standard email format. Password_format: between 8 to 20 character with number and special character eg. Superm@n123',
     removeNotification: "Notification Removed"
 }

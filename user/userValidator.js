@@ -23,11 +23,32 @@ async function validateSignUp(req, res, next) {
                 return res.json({ code: code.badRequest, message: msg.emailAlreadyRegistered });
             }
             else {
-                if (util.validateEmail(email)
-                    && util.validatePassword(password)) {
-                    next()
+
+                for (let i = 0; i < firstname.length; i++) {
+                    const element = firstname[i];
+                    if(!(/[a-zA-Z]/).test(element)){
+                        return res.json({code: code.badRequest, message: msg.nameNotValid})
+                    }
+                }
+                for (let i = 0; i < lastname.length; i++) {
+                    const element = lastname[i];
+                    if(!(/[a-zA-Z]/).test(element)){
+                        return res.json({code: code.badRequest, message: msg.nameNotValid})
+                    }
+                }
+                
+                // if (util.validateEmail(email) && util.validatePassword(password)) {
+                //     next()
+                // } else {
+                //     return res.json({ code: code.badRequest, message: msg.invalidEmailPass })
+                // }
+
+                if(!util.validateEmail(email)){
+                    return res.json({ code: code.badRequest, message: msg.invalidEmail })
+                } else if(true !== util.validatePassword(password)){
+                    return res.json({ code: code.badRequest, message: util.validatePassword(password) })
                 } else {
-                    return res.json({ code: code.badRequest, message: msg.invalidEmailPass })
+                    next()
                 }
             }
         }
