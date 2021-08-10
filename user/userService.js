@@ -78,14 +78,15 @@ async function registerUser(req, res) {
     const data = req.body
 
     return userdao.create(data).then(async (result) => {
-        let link = "http://" + req.headers.host + "/user/validateemail/" + result._id;
+        let link = "https://" + process.env.DOMAIN_NAME + "/api/user/validateemail/" + result._id;
 
         const defultvar = DefaultPreference(result._id)
-
+        //console.log(result.firstname);
+        //return false;
         let data = {
-            username: result.name,
+            username: result.firstname,
             subject: "Squad XYZ: Validate Your EmailID for SQUAD",
-            html: `Hi ${result.name} <br /> 
+            html: `Hi ${result.firstname} <br /> 
             Please click on here:<a href="${link}"> Squad XYZ</a> to Validate Your EmailID. <br /><br /> 
             If you did not request this, please ignore this email.<br /> <br />Best Regards,<br />Squad XYZ Team`
         }
@@ -202,7 +203,7 @@ function forgotPassword(req, res) {
                 },
                 options = { new: true }
             userdao.findOneAndUpdate(query, update, options).then(async (user) => {
-                let link = "http://" + req.headers.host + "/user/reset/" + user.resetPasswordToken;
+                let link = "https://" + process.env.DOMAIN_NAME + "/api/user/reset/" + user.resetPasswordToken;
 
                 let data = {
                     username: user.firstname,
@@ -1155,7 +1156,7 @@ async function invitemail(res, req, users, eventId) {
 
             users.map(async (el, i) => {
                 let userId = (el.userid) ? el.userid : ''
-                let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + userId;
+                let link = "https://" + process.env.DOMAIN_NAME + "/api/user/getinvite/" + eventId + '/' + userId;
                 usersemail.push(el.email)
                 var Body_data = `<h4>Hi ${el.firstname}, <br /><br />
                 ${senderName.firstname} has invited you to the event. <br /><br />
@@ -1163,7 +1164,7 @@ async function invitemail(res, req, users, eventId) {
         ${eventData.sport.name === 'Cricket' ? '🏏' : eventData.sport.name === 'Hockey' ? '🏑' : eventData.sport.name === 'Tennis' ? '🎾' : eventData.sport.name === 'Football' ? '⚽️' : eventData.sport.name === 'Basketball' ? '🏀' : '🎮'} &nbsp;<b>${eventData.sport.name}</b><br />
         ⏱ &nbsp; <a href="${link}">${eventTime}</a><br />
         📍 &nbsp;${eventData.Address}<br />
-        💰 &nbsp;${eventData.price} AED<br />
+        💰 &nbsp;${eventData.price}<br />
         🖐🏻  &nbsp;Who's in ?<br /><br />
 
         Best Regards,<br />
@@ -1213,14 +1214,14 @@ async function invitManualemail(res, req, users, eventId) {
             // let userId = (userExist[0]._id) ? userExist[0]._id : ''
 
             if (userExist[0]) {
-                let link = "http://" + req.headers.host + "/user/getinvite/" + eventId + '/' + userExist[0]._id;
+                let link = "https://" + process.env.DOMAIN_NAME + "/api/user/getinvite/" + eventId + '/' + userExist[0]._id;
                 var Body_data = `<h4>Hi ${el.firstname}, <br /><br />
             Someone has invited you to the event. <br /><br />
 
         ${eventData.sport.name === 'Cricket' ? '🏏' : eventData.sport.name === 'Hockey' ? '🏑' : eventData.sport.name === 'Tennis' ? '🎾' : eventData.sport.name === 'Football' ? '⚽️' : eventData.sport.name === 'Basketball' ? '🏀' : '🎮'} &nbsp;<b>${eventData.sport.name}</b><br />
         ⏱ &nbsp; <a href="${link}">${eventTime}</a><br />
         📍 &nbsp;${eventData.Address}<br />
-        💰 &nbsp;${eventData.price} AED<br />
+        💰 &nbsp;${eventData.price}<br />
         🖐🏻  &nbsp;Who's in ?<br /><br />
 
         Best Regards,<br />
