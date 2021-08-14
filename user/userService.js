@@ -70,7 +70,7 @@ function DefaultPreference(id){
 }
 
 async function registerUser(req, res) {
-    // console.log('here arrive')
+    console.log('here arrive', req)
     // const newpass = util.generateRandomPassword().toUpperCase()
     const hash = bcrypt.hashSync(req.body.password, bcrypt.genSaltSync(10))
     req.body.password = hash;
@@ -123,6 +123,7 @@ function loginUser(req, res) {
     const fcmToken = (req.body.fcm) ? req.body.fcm : '';
     return user.findOne({ email: req.body.email }).then(async (result) => {
         if (result) {
+            console.log("11111111", result);
             if (result.active == false) {
                 return res.json({ code: code.forbidden, message: msg.deacacc })
             }
@@ -151,7 +152,21 @@ function loginUser(req, res) {
                 if (result.emailvalidate == true) {
                     return res.json({ code: code.ok, data: data })
                 } else if (result.emailvalidate == false) {
-                    return res.json({ code: code.badRequest, message: msg.validatefirst })
+                    // return res.json({ code: code.badRequest, message: msg.validatefirst })
+                    let link = "https://" + process.env.DOMAIN_NAME + "/api/user/validateemail/" + result._id;
+                    let data = {
+                        username: result.firstname,
+                        subject: "Squad XYZ: Validate Your EmailID for SQUAD",
+                        html: `Hi ${result.firstname} <br /> 
+                        Please click on here:<a href="${link}"> Squad XYZ</a> to Validate Your EmailID. <br /><br /> 
+                        If you did not request this, please ignore this email.<br /> <br />Best Regards,<br />Squad XYZ Team`
+                    }
+                    await util.sendEMail(result.email, data).then((data) => {
+
+                        (data == true) ? res.json({ code: code.ok, message: `Please verify your account first. Verification link send on ${result.email}` })
+                            : res.json({ code: code.notImplemented, message: msg.mailNotSent })
+                        res.json({ code: code.created, message: msg.registered + " " + `Validation Link send on ${result.email}` })
+                    })
                 }
             } else {
                 return res.json({ code: code.badRequest, message: msg.incorrectpass })
