@@ -368,7 +368,8 @@ function eventplayed(req, res) {
 
             data.map((events, index) => {
                 var avrratvanue = 0,
-                    avrratorganizer = 0
+                    avrratorganizer = 0,
+                    avrratorganizernew = 0
 
                 //place average rate
                 if (!events.rates) {
@@ -395,6 +396,8 @@ function eventplayed(req, res) {
                             }
                         }
                     })
+
+                    avrratorganizernew = avrratorganizer/events.createdby.rateasorganizer.length
                 }
 
                 //organizer average rate
@@ -432,7 +435,8 @@ function eventplayed(req, res) {
 
                 data[index] = {
                     ...events._doc,
-                    "averagePlayerRating": averagePlayerRating / events.participants.length
+                    "averagePlayerRating": averagePlayerRating / events.participants.length,
+                    "avrratorganizer": avrratorganizernew
                 }
             
                 if (data.length == (index + 1)) {

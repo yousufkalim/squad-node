@@ -119,11 +119,11 @@ async function registerUser(req, res) {
 
 
 function loginUser(req, res) {
-    console.log("loginUser ->   req.body.fcm", req.body.fcm)
+    //console.log("loginUser ->   req.body.fcm", req.body.fcm)
+
     const fcmToken = (req.body.fcm) ? req.body.fcm : '';
     return user.findOne({ email: req.body.email }).then(async (result) => {
         if (result) {
-            console.log("11111111", result);
             if (result.active == false) {
                 return res.json({ code: code.forbidden, message: msg.deacacc })
             }
@@ -163,7 +163,7 @@ function loginUser(req, res) {
                     }
                     await util.sendEMail(result.email, data).then((data) => {
 
-                        (data == true) ? res.json({ code: code.ok, message: `Please verify your account first. Verification link send on ${result.email}` })
+                        (data == true) ? res.json({ code: '400', message: `Please verify your account first. Verification link sent to ${result.email}` })
                             : res.json({ code: code.notImplemented, message: msg.mailNotSent })
                         res.json({ code: code.created, message: msg.registered + " " + `Validation Link send on ${result.email}` })
                     })
@@ -1691,7 +1691,8 @@ function userdetail(req, res) {
             friendstatus = "Add friend"
         }
         userdao.findone({ _id: user_Id }).then((userdata) => {
-            console.log("userdetail -> userdata================", userdata)
+            //console.log("userdetail -> userdata================", userdata)
+		console.log(rateasplayer+" "+userdata.rateasplayer.length);
             let Obj = {
                 "imageUrl": (userdata.imageUrl) ? userdata.imageUrl : '',
                 "totalfriends": (userdata.friends) ? userdata.friends.length : 0,
@@ -1703,7 +1704,7 @@ function userdetail(req, res) {
                 "contactNo": (userdata.contactNo) ? userdata.contactNo : "",
                 "Noofeventplayed": (userdata.participatedin) ? userdata.participatedin.length : 0,
                 "rateasorganizer": (userdata.rateasorganizer) ? rateasorganizer / userdata.rateasorganizer.length : "",
-                "rateasplayer": (userdata.rateasplayer) ? rateasplayer / userdata.rateasplayer.length : "",
+                "rateasplayer": (userdata.rateasplayer) ? rateasplayer / data.rateasplayer.length : "",
                 "friendshipstatus": friendstatus
 
             }
