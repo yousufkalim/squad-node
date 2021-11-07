@@ -465,12 +465,14 @@ function eventwillplayed(req, res) {
                 var fr = (userdata.friends) ? userdata.friends.includes(obj.id) : false,
                     rateasplayer = 0,
                     rateasorganizer = 0;
-                userdata.rateasplayer.map((rate) => {
-                    rateasplayer += rate.ratedwith
-                })
-                userdata.rateasorganizer.map((rate) => {
-                    rateasorganizer += rate.ratedwith
-                })
+                    if(new Date(events.endtime).toISOString() < new Date().toISOString()) {
+                        userdata.rateasplayer.map((rate) => {
+                            rateasplayer += rate.ratedwith
+                        })
+                        userdata.rateasorganizer.map((rate) => {
+                            rateasorganizer += rate.ratedwith
+                        })
+                    }
                 userdata = {
                     // ...userdata._doc,
                     _id: userdata._id,
