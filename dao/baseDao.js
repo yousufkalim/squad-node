@@ -41,7 +41,7 @@ class BaseDao {
         if (!options) {
             options = {};
         }
-        return this.Model.update(query, update, options).exec();
+        return this.Model.updateOne(query, update, options).exec();
     }
 
     remove(query, options) {

@@ -48,7 +48,8 @@ messages = {
     eventunjoin: "Event unjoined",
     cannotjoinevent: "You can not join this this event as you have already joined an event which will happen at this time.",
     invalidEmailPass: "Email or Password is incorrect",//'Invalid email or password, Email_format:standard email format. Password_format: between 8 to 20 character with number and special character eg. Superm@n123',
-    removeNotification: "Notification Removed"
+    removeNotification: "Notification Removed",
+    notFinishedEventRateError: "You can add rate this event as this event is not finished yet."
 }
 schemas = {
     admin: 'admin',

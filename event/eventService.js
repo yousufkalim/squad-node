@@ -405,13 +405,20 @@ function eventplayed(req, res) {
                     var fr = (userdata.friends) ? userdata.friends.includes(obj.id) : false,
                         rateasplayer = 0,
                         rateasorganizer = 0;
-                    userdata.rateasplayer.map((rate) => {
-                        rateasplayer += rate.ratedwith
-                    })
-                    userdata.rateasorganizer.map((rate) => {
-                        rateasorganizer += rate.ratedwith
-                    })
-                    
+                        if(new Date(events.endtime).toISOString() < new Date().toISOString()) {
+                            userdata.rateasplayer.map((rate) => {
+                                if(rate.eventId == events._id.toString()) {
+                                    rateasplayer = rate.ratedwith
+                                }
+                                // rateasplayer += rate.ratedwith
+                            })
+                            userdata.rateasorganizer.map((rate) => {
+                                if(rate.eventId == events._id.toString()) {
+                                    rateasorganizer = rate.ratedwith
+                                }
+                                // rateasorganizer += rate.ratedwith
+                            })
+                        }
                     userdata = {
                         // ...userdata._doc,
                         _id: userdata._id,
@@ -419,8 +426,10 @@ function eventplayed(req, res) {
                         lastname: userdata.lastname,
                         imageUrl: userdata.imageUrl,
                         friend: fr,
-                        rateasplayer: (rateasplayer / userdata.rateasplayer.length),
-                        rateasorganizer: (rateasorganizer / userdata.rateasorganizer.length)
+                        //rateasplayer: (rateasplayer / userdata.rateasplayer.length),
+                        rateasplayer,
+                        // rateasorganizer: (rateasorganizer / userdata.rateasorganizer.length),
+                        rateasorganizer
                     }
                     events.participants[i] = userdata;
 
@@ -466,24 +475,30 @@ function eventwillplayed(req, res) {
                     rateasplayer = 0,
                     rateasorganizer = 0;
                     if(new Date(events.endtime).toISOString() < new Date().toISOString()) {
-                        userdata.rateasplayer.map((rate) => {
-                            rateasplayer += rate.ratedwith
-                        })
-                        userdata.rateasorganizer.map((rate) => {
-                            rateasorganizer += rate.ratedwith
-                        })
+                            userdata.rateasplayer.map((rate) => {
+                                if(rate.eventId == events._id.toString()) {
+                                    rateasplayer += rate.ratedwith
+                                }
+                            })
+                            userdata.rateasorganizer.map((rate) => {
+                                if(rate.eventId == events._id.toString()) {
+                                    rateasorganizer += rate.ratedwith
+                                }
+                            })
                     }
-                userdata = {
-                    // ...userdata._doc,
-                    _id: userdata._id,
-                    firstname: userdata.firstname,
-                    lastname: userdata.lastname,
-                    imageUrl: userdata.imageUrl,
-                    friend: fr,
-                    rateasplayer: (rateasplayer / userdata.rateasplayer.length),
-                    rateasorganizer: (rateasorganizer / userdata.rateasorganizer.length)
-                }
-                events.participants[i] = userdata;
+                    userdata = {
+                        // ...userdata._doc,
+                        _id: userdata._id,
+                        firstname: userdata.firstname,
+                        lastname: userdata.lastname,
+                        imageUrl: userdata.imageUrl,
+                        friend: fr,
+                        // rateasplayer: (rateasplayer / userdata.rateasplayer.length),
+                        rateasplayer,
+                        // rateasorganizer: (rateasorganizer / userdata.rateasorganizer.length)
+                        rateasorganizer
+                    }
+                    events.participants[i] = userdata;
             })
             if (data.length == (index + 1)) {
                 // console.log("eventplayed -> finallist", data)

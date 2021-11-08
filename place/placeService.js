@@ -87,10 +87,11 @@ function placelist(req, res) {
 function addRating(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token)
-    const { rate, placeId } = req.body;
+    const { rate, placeId, eventId } = req.body;
     let rating = {
         by: obj.id,
-        ratedwith: rate
+        ratedwith: rate,
+        eventId: eventId
     }
     let query = { _id: placeId },
         update = { $push: { "rates": rating } },

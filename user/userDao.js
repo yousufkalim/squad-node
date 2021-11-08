@@ -22,6 +22,13 @@ function find(query){
         return result; 
     })
 }
+
+function updateOne(query,update,options){
+    return userdao.updateOne(query,update,options).then((result)=>{
+        return result; 
+    })
+}
+
 function findOneAndUpdate(query,update,options){
     return userdao.findOneAndUpdate(query,update,options).then((result)=>{
         return result; 
@@ -32,5 +39,6 @@ module.exports = {
     findone,
     findOneAndUpdate,
     find,
-    remove
+    remove,
+    updateOne
 }

@@ -1351,32 +1351,74 @@ function addRatingasplayer(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token)
     const { ratearray } = req.body;
-
     user.findOne({ _id: obj.id }, { firstname: 1 }).then((senderName) => {
     
     ratearray.map((ele, index) => {
         // console.log("addRatingasplayer -> ele", ratearray.length, index + 1)
-        let rating = {
-            by: obj.id,
-            ratedwith: ele.rate,
-            eventId: ele.eventId
-        }
-        let query = { _id: ele.userId },
-            update = { $push: { "rateasplayer": rating } },
-            options = { new: true };
-        userdao.findOneAndUpdate(query, update, options).then((userdata) => {
-            if(obj.id != ele.userId){
-                addratingnotif(rateas.player, obj.id, ele.userId, ele.eventId)
-                let firebaseClick = {"type": "rate"}
-                (userdata.fcmToken) ? FirebaseNotification(userdata.fcmToken, `${senderName.firstname} rated you`, firebaseClick) : '';
+        // check existing rating object find 
+        let q = { _id: ele.eventId };
+        event.find(q).then((eventdata) => {
+            if(new Date(eventdata[0].endtime).toISOString() < new Date().toISOString()) {
+                let checkExistingRatingQuery = {"rateasplayer": {$elemMatch:{"eventId":ele.eventId,"by":obj.id}}, "_id" : ele.userId };
+                userdao.find(checkExistingRatingQuery).then((ratingData) => {
+                    let checkExistingRatingdata = ratingData[0];
+                    if(ratingData.length > 0){
+                        let checkRestrateasPlayersRes = checkExistingRatingdata.rateasplayer.filter((checkData) => {
+                            return (checkData.eventId == ele.eventId && checkData.by == obj.id);
+                        });
+                        if(checkRestrateasPlayersRes.length > 0){
+                            // update record 
+                            let rating = {
+                                _id: checkRestrateasPlayersRes[0]['_id'],
+                                by: obj.id,
+                                ratedwith: ele.rate,
+                                eventId: ele.eventId
+                            }
+                            const filteredRatedPlayerIndex = ratingData[0].rateasplayer.findIndex((item) => {
+                                return item._id === checkRestrateasPlayersRes[0]['_id']
+                            });
+                            let query = { "_id":ele.userId,"rateasplayer._id": checkRestrateasPlayersRes[0]['_id'] };
+                            let update = { $set : {} };
+                            update.$set["rateasplayer."+filteredRatedPlayerIndex+".ratedwith"] = ele.rate;
+                            userdao.updateOne(query, update).then((userdata) => {
+                                if(obj.id != ele.userId){
+                                    addratingnotif(rateas.player, obj.id, ele.userId, ele.eventId)
+                                    let firebaseClick = {"type": "rate"}
+                                    (userdata.fcmToken) ? FirebaseNotification(userdata.fcmToken, `${senderName.firstname} rated you`, firebaseClick) : '';
+                                }
+                            }).catch((err) => {
+                                return res.json({ code: code.internalError, message: msg.internalServerError })
+                            })
+                        }
+                    } else {
+                        let rating = {
+                            by: obj.id,
+                            ratedwith: ele.rate,
+                            eventId: ele.eventId
+                        }
+                        let query = { _id: ele.userId },
+                            update = { $push: { "rateasplayer": rating } },
+                            options = { new: true };
+                        userdao.findOneAndUpdate(query, update, options).then((userdata) => {
+                            if(obj.id != ele.userId){
+                                addratingnotif(rateas.player, obj.id, ele.userId, ele.eventId)
+                                let firebaseClick = {"type": "rate"}
+                                (userdata.fcmToken) ? FirebaseNotification(userdata.fcmToken, `${senderName.firstname} rated you`, firebaseClick) : '';
+                            }
+                        }).catch((err) => {
+                            return res.json({ code: code.internalError, message: msg.internalServerError })
+                        })
+                    }
+                }).catch((err) => {
+                    return res.json({ code: code.internalError, message: msg.internalServerError })
+                })
+                if (ratearray.length == index + 1) {
+                    return res.json({ code: code.ok, msg: msg.addrate })
+                }
+            } else {
+                return res.json({ code: code.badRequest, message: msg.notFinishedEventRateError })
             }
-        }).catch((err) => {
-            return res.json({ code: code.internalError, message: msg.internalServerError })
-            // console.log("addRating -> err==================================", err)
         })
-        if (ratearray.length == index + 1) {
-            return res.json({ code: code.ok, msg: msg.addrate })
-        }
     })
 })
 }
@@ -1384,28 +1426,33 @@ function addRatingasorganizer(req, res) {
     let token = req.headers['authorization'],
         obj = util.decodeToken(token)
     const { rate, userId, eventId } = req.body;
-    var GiveNotify = true
-    if(obj.id != userId){
-        GiveNotify = false
-    }
-    let rating = {
-        by: obj.id,
-        ratedwith: rate,
-        eventId: eventId
-    }
-    let query = { _id: userId },
-        update = { $push: { "rateasorganizer": rating } },
-        options = { new: true };
-    userdao.findOneAndUpdate(query, update, options).then((userdata) => {
-        if(GiveNotify){
-            console.log(obj.id, userId, '=======================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
-            addratingnotif(rateas.organizer, obj.id, userId, eventId);
+    let q = { _id: eventId };
+    event.find(q).then((eventdata) => {
+        if(new Date(eventdata[0].endtime).toISOString() < new Date().toISOString()) {
+            var GiveNotify = true
+            if(obj.id != userId){
+                GiveNotify = false
+            }
+            let rating = {
+                by: obj.id,
+                ratedwith: rate,
+                eventId: eventId
+            }
+            let query = { _id: userId },
+                update = { $push: { "rateasorganizer": rating } },
+                options = { new: true };
+            userdao.findOneAndUpdate(query, update, options).then((userdata) => {
+                if(GiveNotify){
+                    console.log(obj.id, userId, '=======================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+                    addratingnotif(rateas.organizer, obj.id, userId, eventId);
+                }
+                (userdata.fcmToken) ? rateyounotification(userdata.fcmToken) : '';
+                return res.json({ code: code.ok, msg: msg.addrate })
+            }).catch((err) => {
+                // console.log("addRating -> err===============================", err)
+                return res.json({ code: code.internalError, message: msg.internalServerError })
+            })
         }
-        (userdata.fcmToken) ? rateyounotification(userdata.fcmToken) : '';
-        return res.json({ code: code.ok, msg: msg.addrate })
-    }).catch((err) => {
-        // console.log("addRating -> err===============================", err)
-        return res.json({ code: code.internalError, message: msg.internalServerError })
     })
 
 }
