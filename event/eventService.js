@@ -447,7 +447,7 @@ function eventplayed(req, res) {
                 })
 
                 let venueAverageRating = 0;
-                if(events.rates.length > 0){
+                if(events.rates && events.rates.length > 0){
                     events.rates.map((venueRate) => {
                         venueAverageRating += venueRate.ratedwith;
                     });
