@@ -405,16 +405,21 @@ function eventplayed(req, res) {
                     var fr = (userdata.friends) ? userdata.friends.includes(obj.id) : false,
                         rateasplayer = 0,
                         rateasorganizer = 0;
+
+                        rateasPlayerCount = 0;
+                        rateasorganizerCount = 0;
                         if(new Date(events.endtime).toISOString() < new Date().toISOString()) {
                             userdata.rateasplayer.map((rate) => {
                                 if(rate.eventId == events._id.toString()) {
-                                    rateasplayer = rate.ratedwith
+                                    rateasPlayerCount++;
+                                    rateasplayer += rate.ratedwith
                                 }
                                 // rateasplayer += rate.ratedwith
                             })
                             userdata.rateasorganizer.map((rate) => {
                                 if(rate.eventId == events._id.toString()) {
-                                    rateasorganizer = rate.ratedwith
+                                    rateasorganizer += rate.ratedwith
+                                    rateasorganizerCount++;
                                 }
                                 // rateasorganizer += rate.ratedwith
                             })
@@ -426,10 +431,9 @@ function eventplayed(req, res) {
                         lastname: userdata.lastname,
                         imageUrl: userdata.imageUrl,
                         friend: fr,
-                        //rateasplayer: (rateasplayer / userdata.rateasplayer.length),
-                        rateasplayer,
-                        // rateasorganizer: (rateasorganizer / userdata.rateasorganizer.length),
-                        rateasorganizer
+                        rateasplayer: (rateasPlayerCount!==0 ? (rateasplayer / rateasPlayerCount) : rateasPlayerCount),
+                        rateasorganizer: (rateasorganizerCount!==0 ? (rateasorganizer / rateasorganizerCount) : rateasorganizer),
+                        
                     }
                     events.participants[i] = userdata;
 
