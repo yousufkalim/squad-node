@@ -446,10 +446,22 @@ function eventplayed(req, res) {
                     averagePlayerRating += rates.rateasplayer
                 })
 
+                let venueAverageRating = 0;
+                if(events.rates.length > 0){
+                    events.rates.map((venueRate) => {
+                        venueAverageRating += venueRate.ratedwith;
+                    });
+                }
+
+                if(venueAverageRating!=0){
+                    venueAverageRating = venueAverageRating / events.rates.length;
+                }
+
                 data[index] = {
                     ...events._doc,
                     "averagePlayerRating": averagePlayerRating / events.participants.length,
-                    "avrratorganizer": avrratorganizernew
+                    "avrratorganizer": avrratorganizernew,
+                    "averageVenueRating": venueAverageRating
                 }
             
                 if (data.length == (index + 1)) {
