@@ -400,7 +400,7 @@ function eventplayed(req, res) {
                     avrratorganizernew = avrratorganizer/events.createdby.rateasorganizer.length
                 }
                 
-                let totalRateasPlayerCount = 0;
+                
                 //organizer average rate
                 events.participants.map((userdata, i) => {
                     var fr = (userdata.friends) ? userdata.friends.includes(obj.id) : false,
@@ -413,7 +413,6 @@ function eventplayed(req, res) {
                             userdata.rateasplayer.map((rate) => {
                                 if(rate.eventId == events._id.toString()) {
                                     rateasPlayerCount++;
-                                    totalRateasPlayerCount++;
                                     rateasplayer += rate.ratedwith
                                 }
                                 // rateasplayer += rate.ratedwith
@@ -443,9 +442,12 @@ function eventplayed(req, res) {
 
                     // userdata.averagePlayerRating = rateasplayer;
                 })
+                
                 averagePlayerRating = 0;
+                let totalRateasPlayerCount = 0;
                 events.participants.map((rates) => {
-                    averagePlayerRating += rates.rateasplayer
+                    averagePlayerRating += rates.rateasplayer;
+                    totalRateasPlayerCount++;
                 })
 
                 let venueAverageRating = 0;
