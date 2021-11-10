@@ -31,6 +31,8 @@ function addeventunauthorized(req, res) {
     })
 }
 function addevent(req, res) {
+    console.log(req.body);
+    req.body.placeId = '6038f254cdc8d6205c475c9f'; //DSC Hockey Stadium
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     req.body.createdby = obj.id
@@ -357,7 +359,7 @@ function eventplayed(req, res) {
     //"avrratvanue" "avrratorganizer"
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
-    let query = { date: { "$lt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
+    let query = { endtime: { "$lt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
     event.find(query)
         .populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer')
         .populate('createdby', '_id rateasorganizer').sort({starttime: -1}).then((data) => {//
@@ -401,20 +403,27 @@ function eventplayed(req, res) {
                 }
 
                 //organizer average rate
+                
                 events.participants.map((userdata, i) => {
                     var fr = (userdata.friends) ? userdata.friends.includes(obj.id) : false,
                         rateasplayer = 0,
                         rateasorganizer = 0;
+
+                        rateasPlayerCount = 0;
+                        rateasorganizerCount = 0;
                         if(new Date(events.endtime).toISOString() < new Date().toISOString()) {
                             userdata.rateasplayer.map((rate) => {
                                 if(rate.eventId == events._id.toString()) {
-                                    rateasplayer = rate.ratedwith
+                                    rateasPlayerCount++;
+
+                                    rateasplayer += rate.ratedwith
                                 }
                                 // rateasplayer += rate.ratedwith
                             })
                             userdata.rateasorganizer.map((rate) => {
                                 if(rate.eventId == events._id.toString()) {
-                                    rateasorganizer = rate.ratedwith
+                                    rateasorganizer += rate.ratedwith
+                                    rateasorganizerCount++;
                                 }
                                 // rateasorganizer += rate.ratedwith
                             })
@@ -426,10 +435,9 @@ function eventplayed(req, res) {
                         lastname: userdata.lastname,
                         imageUrl: userdata.imageUrl,
                         friend: fr,
-                        //rateasplayer: (rateasplayer / userdata.rateasplayer.length),
-                        rateasplayer,
-                        // rateasorganizer: (rateasorganizer / userdata.rateasorganizer.length),
-                        rateasorganizer
+                        rateasplayer: (rateasPlayerCount!==0 ? (rateasplayer / rateasPlayerCount) : rateasPlayerCount),
+                        rateasorganizer: (rateasorganizerCount!==0 ? (rateasorganizer / rateasorganizerCount) : rateasorganizer),
+                        
                     }
                     events.participants[i] = userdata;
 
@@ -438,14 +446,28 @@ function eventplayed(req, res) {
                     // userdata.averagePlayerRating = rateasplayer;
                 })
                 averagePlayerRating = 0;
+                let totalRateAsPlayerCount = 0;
                 events.participants.map((rates) => {
                     averagePlayerRating += rates.rateasplayer
+                    totalRateAsPlayerCount++;
                 })
+
+                let venueAverageRating = 0;
+                if(events.rates && events.rates.length > 0){
+                    events.rates.map((venueRate) => {
+                        venueAverageRating += venueRate.ratedwith;
+                    });
+                }
+
+                if(venueAverageRating!=0){
+                    venueAverageRating = venueAverageRating / events.rates.length;
+                }
 
                 data[index] = {
                     ...events._doc,
-                    "averagePlayerRating": averagePlayerRating / events.participants.length,
-                    "avrratorganizer": avrratorganizernew
+                    "averagePlayerRating": averagePlayerRating / totalRateAsPlayerCount,
+                    "avrratorganizer": avrratorganizernew,
+                    "averageVenueRating": venueAverageRating
                 }
             
                 if (data.length == (index + 1)) {
@@ -462,7 +484,7 @@ function eventplayed(req, res) {
 function eventwillplayed(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
-    let query = { date: { "$gte": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
+    let query = { endtime: { "$gte": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
     let mysort={date:-1}
     return event.find(query).sort(mysort).populate('placeId', '_id sportId').populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer').then((data) => {
         console.log("eventwillplayed -> !data", data.length)
