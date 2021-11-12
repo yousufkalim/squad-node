@@ -27,10 +27,18 @@ function findOneAndUpdate(query,update,options){
         return result; 
     })
 }
+
+function updateOne(query,update,options){
+    return placedao.updateOne(query,update,options).then((result)=>{
+        return result; 
+    })
+}
+
 module.exports = {
     create,
     findone,
     findOneAndUpdate,
     find,
-    remove
+    remove,
+    updateOne
 }

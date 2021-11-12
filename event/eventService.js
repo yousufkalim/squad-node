@@ -11,6 +11,8 @@ const userDao = require('../user/userDao');
 const { gender } = require('../constants').gender;
 const geolib = require('geolib');
 
+const placeService = require('../place/placeService');
+
 function latlongtokm(userlong, userlat, eventlong, eventlang) {
     let km = geolib.getDistance(
         { latitude: userlong, longitude: userlat },
@@ -32,17 +34,25 @@ function addeventunauthorized(req, res) {
 }
 function addevent(req, res) {
     console.log(req.body);
-    req.body.placeId = '6038f254cdc8d6205c475c9f'; //DSC Hockey Stadium
+    //req.body.placeId = '6038f254cdc8d6205c475c9f'; //DSC Hockey Stadium
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
     req.body.createdby = obj.id
     const data = req.body;
-    return eventdao.create(data).then((response) => {
-        res.json({ code: code.created, eventId: response._id, message: msg.eventcreated })
-    }).catch((err) => {
-        console.log("addevent -> err", err)
+
+    //Check place and if not present then create place 
+    placeService.findAddPlace(req.body).then((resFindAddpPlace)=>{
+        req.body.placeId = resFindAddpPlace.placeId;
+        return eventdao.create(data).then((response) => {
+            res.json({ code: code.created, eventId: response._id, message: msg.eventcreated })
+        }).catch((err) => {
+            console.log("addevent -> err", err)
+            res.json({ code: code.ineternalError, message: msg.internalServerError })
+        })
+    }).catch((err)=>{
+        console.log("Err in findAddPlace eventServicr => ",err);
         res.json({ code: code.ineternalError, message: msg.internalServerError })
-    })
+    });    
 }
 function updateevent(req, res) {
     console.log(req.body, '===============0')
@@ -53,26 +63,50 @@ function updateevent(req, res) {
         eventdao.findOneAndUpdate(query, update, options)
     }
 
-    delete req.body.location;
-    delete req.body.Address;
+    
 
     console.log(req.body, '===============1')
-
     let query = { _id: req.query.eventId },
         update = { $set: req.body },
         options = { new: true }
-    event.findOne(query).then((data) => {
-        if (data.starttime < new Date()) {
-            res.json({ code: code.badRequest, msg: `You can't edit beacuse of event is finished` })
-        } else {
-            return eventdao.findOneAndUpdate(query, update, options).then((result) => {
 
-                return res.json({ code: code.ok, data: result })
-            }).catch((err) => {
-                res.json({ code: code.ineternalError, message: msg.internalServerError })
+    if(req.body.placeId && req.body.placeId != null && req.body.placeId != ""){
+        event.findOne(query).then((data) => {
+            if (data.starttime < new Date()) {
+                res.json({ code: code.badRequest, msg: `You can't edit beacuse of event is finished` })
+            } else {
+                return eventdao.findOneAndUpdate(query, update, options).then((result) => {
+    
+                    return res.json({ code: code.ok, data: result })
+                }).catch((err) => {
+                    res.json({ code: code.ineternalError, message: msg.internalServerError })
+                })
+            }
+        })
+    } else {
+        placeService.findAddPlace(req.body).then((resFindAddpPlace) => {
+            req.body.placeId = resFindAddpPlace.placeId;
+            delete req.body.location;
+            delete req.body.Address;
+
+            update = { $set: req.body }
+            event.findOne(query).then((data) => {
+                if (data.starttime < new Date()) {
+                    res.json({ code: code.badRequest, msg: `You can't edit beacuse of event is finished` })
+                } else {
+                    return eventdao.findOneAndUpdate(query, update, options).then((result) => {
+        
+                        return res.json({ code: code.ok, data: result })
+                    }).catch((err) => {
+                        res.json({ code: code.ineternalError, message: msg.internalServerError })
+                    })
+                }
             })
-        }
-    })
+        }).catch((err) => {
+            console.log("Err in findAddPlace updateEvent",err);
+            res.json({ code: code.ineternalError, message: msg.internalServerError })
+        })
+    }
 }
 function eventdetail(req, res) {
     let token = req.headers['authorization']
@@ -362,13 +396,17 @@ function eventplayed(req, res) {
     let query = { endtime: { "$lt": new Date(req.query.date) }, participants: { "$in": [obj.id] } };
     event.find(query)
         .populate('participants', '_id firstname lastname imageUrl friends rateasplayer rateasorganizer')
+        .populate('placeId', '_id rates')
         .populate('createdby', '_id rateasorganizer').sort({starttime: -1}).then((data) => {//
             // console.log("eventplayed -> data==================================>", data.length)
+
             if (data.length == 0) {
                 return res.json({ code: code.ok, data: data })
             }
 
             data.map((events, index) => {
+                //console.log(events.placeId);
+
                 var avrratvanue = 0,
                     avrratorganizer = 0,
                     avrratorganizernew = 0
@@ -378,7 +416,7 @@ function eventplayed(req, res) {
                     avrratvanue = 0
                 } else {
                     avrratvanue = 0;
-                    console.log(events.rates, '====================')
+                    //console.log(events.rates, '====================')
                     events.rates.map((placerate, pindex) => {
                         avrratvanue += placerate.ratedwith
                         if (events.rates.length == (pindex + 1)) {
@@ -444,7 +482,8 @@ function eventplayed(req, res) {
 
 
                     // userdata.averagePlayerRating = rateasplayer;
-                })
+                });
+
                 averagePlayerRating = 0;
                 let totalRateAsPlayerCount = 0;
                 events.participants.map((rates) => {
@@ -453,14 +492,18 @@ function eventplayed(req, res) {
                 })
 
                 let venueAverageRating = 0;
-                if(events.rates && events.rates.length > 0){
-                    events.rates.map((venueRate) => {
+                let totalPlayerVenueRateCount = 0;
+                //console.log("Place ID: ==========="+events.placeId);
+                
+                if(events.placeId && events.placeId.rates && events.placeId.rates.length > 0){
+                    events.placeId.rates.map((venueRate) => {
                         venueAverageRating += venueRate.ratedwith;
+                        totalPlayerVenueRateCount++;
                     });
                 }
 
                 if(venueAverageRating!=0){
-                    venueAverageRating = venueAverageRating / events.rates.length;
+                    venueAverageRating = venueAverageRating / totalPlayerVenueRateCount;
                 }
 
                 data[index] = {

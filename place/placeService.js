@@ -85,25 +85,70 @@ function placelist(req, res) {
 }
 
 function addRating(req, res) {
-    let token = req.headers['authorization'],
+    try {
+        let token = req.headers['authorization'],
         obj = util.decodeToken(token)
-    const { rate, placeId, eventId } = req.body;
-    let rating = {
-        by: obj.id,
-        ratedwith: rate,
-        eventId: eventId
-    }
-    let query = { _id: placeId },
-        update = { $push: { "rates": rating } },
-        options = { new: true };
-    placedao.findOneAndUpdate(query, update, options).then((userdata) => {
-        (userdata.fcmToken) ? rateyounotification(userdata.fcmToken) : '';
-        return res.json({ code: code.ok, msg: msg.addrate })
-    }).catch((err) => {
-        console.log("addRating -> err", err)
-        return res.json({ code: code.internalError, message: msg.internalServerError })
-    })
+        const { rate, placeId, eventId } = req.body;
+        let rating = {
+            by: obj.id,
+            ratedwith: rate,
+            eventId: eventId
+        };
 
+        let checkExistingRatingQuery = {"rates": {$elemMatch:{"by":obj.id}},"_id": placeId};
+        placedao.find(checkExistingRatingQuery).then((ratingData) => {
+            console.log("ratingData",ratingData);
+            let checkExistingRatingdata = ratingData[0];
+            if(ratingData.length > 0){
+                let checkRestrateasPlayersRes = checkExistingRatingdata.rates.filter((checkData) => {
+                    return (checkData.by == obj.id);
+                });
+                console.log("checkRestrateasPlayersRes",checkRestrateasPlayersRes);
+                if(checkRestrateasPlayersRes.length > 0){
+                    let rating = {
+                        _id: checkRestrateasPlayersRes[0]['_id'],
+                        by: obj.id,
+                        ratedwith: rate,
+                        eventId: eventId
+                    }
+                    const filteredRatedPlayerIndex = ratingData[0].rates.findIndex((item) => {
+                        return item._id === checkRestrateasPlayersRes[0]['_id']
+                    });
+                    console.log("filteredRatedPlayerIndex",filteredRatedPlayerIndex);
+                    let query = { "_id":placeId,"rates._id": checkRestrateasPlayersRes[0]['_id'] };
+                    console.log("query",query);
+                    let update = { $set : {} };
+                    update.$set["rates."+filteredRatedPlayerIndex+".ratedwith"] = rate;
+                    console.log("update",update);
+                    placedao.updateOne(query, update).then((placedata) => {
+                        console.log("placedata",placedata);
+                        return res.json({ code: code.ok, msg: msg.addrate })
+                    }).catch((err) => {
+                        console.log("update rate err 127 => ",err);
+                        return res.json({ code: code.internalError, message: msg.internalServerError })
+                    })
+                }
+            } else {
+                let query = { _id: placeId },
+                update = { $push: { "rates": rating } },
+                options = { new: true };
+                placedao.findOneAndUpdate(query, update, options).then((userdata) => {
+                    (userdata.fcmToken) ? rateyounotification(userdata.fcmToken) : '';
+                    return res.json({ code: code.ok, msg: msg.addrate })
+                }).catch((err) => {
+                    console.log("addRating -> err 134", err)
+                    return res.json({ code: code.internalError, message: msg.internalServerError })
+                })
+            }
+        }).catch((err) => {
+            console.log("addRating -> err 139", err)
+            return res.json({ code: code.internalError, message: msg.internalServerError })
+        });
+
+    } catch (err) {
+        console.log("Err =>", err);
+        return res.json({ code: code.internalError, message: msg.internalServerError })
+    }
 }
 
 function nearPlace(req, res) {
@@ -331,11 +376,48 @@ function addplaceevent(events, placeid) {
 
     })
 }
+
+function findAddPlace(placeObj) {
+    let query = {
+        "address":placeObj.Address
+    }
+
+    return new Promise((resolve,reject) => {
+        placedao.findone(query).then((data) => {
+            console.log("data place ",data);
+            if(data && data.id){
+                return resolve({"status":"success","placeId":data.id});
+            } else {
+                //add place
+                let placeData = {
+                    'location':placeObj.location,
+                    'sportId':placeObj.sport,
+                    'address':placeObj.Address,
+                    'rates':[]
+                };
+    
+                placedao.create(placeData).then((placeRes)=>{
+                    console.log("place added successfully");
+                    return resolve({"status":"success","placeId":placeRes.id});
+                }).catch((err)=>{
+                    console.log("Err in addPlace",err);
+                    return reject({"err":true});
+                });
+            }
+            
+        }).catch((err) => {
+            console.log("Err in findPlace",err);
+            return reject({"err":true});
+        })
+    });
+}
+
 module.exports = {
     latlongtokm,
     addplace,
     placelist,
     addRating,
     addplaceevent,
-    nearPlace
+    nearPlace,
+    findAddPlace
 }
