@@ -64,7 +64,15 @@ async function validateSignUp(req, res, next) {
 async function validateLogin(req, res, next) {
     const { email, password } = req.body;
     if (email && password) {
-
+        next()
+    }
+    else {
+        return res.json({ code: code.badRequest, message: msg.invalidBody })
+    }
+}
+async function validateIsEmailExist(req, res, next) {
+    const { email } = req.body;
+    if (email) {
         next()
     }
     else {
@@ -224,6 +232,7 @@ async function validateSocialLoginLinkedin(req, res, next) {
 }
 module.exports = {
     validateLogin,
+    validateIsEmailExist,
     verifyToken,
     validateUpdate,
     validateSocialLogin,

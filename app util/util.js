@@ -39,7 +39,7 @@ function validatePassword(data) {
 
       // Minimum 8 characters
       if (password.length < 6) {
-        error += ' atlist 6 characters minimum'
+        error += ' at least 6 characters minimum'
       }
 
       // At least one uppercase
@@ -58,9 +58,9 @@ function validatePassword(data) {
       // At least one number
       if (!/[0-9]/.test(password)) {
         if (error === "password shoud contain") {
-          error += " numaric value";
+          error += " numeric value";
         } else {
-          error += ", numaric value";
+          error += ", numeric value";
         }
       }
 
@@ -76,22 +76,22 @@ function validatePassword(data) {
     //   noerror = false
       if(error === 'password shoud contain'){
         error = true
-      } else if(error === 'password shoud contain numaric value, 1 special character'){
-        error = 'password shoud contain numaric value and 1 special character'
-      } else if(error === 'password shoud contain atlist 6 characters minimum, 1 special character'){
-        error = 'password shoud contain atlist 6 characters minimum and 1 special character'
-      } else if(error === 'password shoud contain atlist 6 characters minimum, numaric value, 1 special character') {
-        error = 'password shoud contain atlist 6 characters minimum, numaric value and 1 special character'
-      } else if(error === 'password shoud contain atlist 6 characters minimum, numaric value'){
-        error = 'password shoud contain atlist 6 characters minimum and numaric value'
-      } else if(error === 'password shoud contain atlist 6 characters minimum, character, numaric value, 1 special character'){
-        error = 'password shoud contain atlist 6 characters minimum, character, numaric value and 1 special character'
-      } else if(error === 'password shoud contain atlist 6 characters minimum, character'){
-        error = 'password shoud contain atlist 6 characters minimum and character'
-      } else if(error === 'password shoud contain atlist 6 characters minimum, character, numaric value'){
-        error = 'password shoud contain atlist 6 characters minimum, character and numaric value'
-      } else if(error === "password shoud contain atlist 6 characters minimum, character, 1 special character"){
-        error = "password shoud contain atlist 6 characters minimum, character and 1 special character"
+      } else if(error === 'password shoud contain numeric value, 1 special character'){
+        error = 'password shoud contain numeric value and 1 special character'
+      } else if(error === 'password shoud contain at least 6 characters minimum, 1 special character'){
+        error = 'password shoud contain at least 6 characters minimum and 1 special character'
+      } else if(error === 'password shoud contain at least 6 characters minimum, numeric value, 1 special character') {
+        error = 'password shoud contain at least 6 characters minimum, numeric value and 1 special character'
+      } else if(error === 'password shoud contain at least 6 characters minimum, numeric value'){
+        error = 'password shoud contain at least 6 characters minimum and numeric value'
+      } else if(error === 'password shoud contain at least 6 characters minimum, character, numeric value, 1 special character'){
+        error = 'password shoud contain at least 6 characters minimum, character, numeric value and 1 special character'
+      } else if(error === 'password shoud contain at least 6 characters minimum, character'){
+        error = 'password shoud contain at least 6 characters minimum and character'
+      } else if(error === 'password shoud contain at least 6 characters minimum, character, numeric value'){
+        error = 'password shoud contain at least 6 characters minimum, character and numeric value'
+      } else if(error === "password shoud contain at least 6 characters minimum, character, 1 special character"){
+        error = "password shoud contain at least 6 characters minimum, character and 1 special character"
       } else if(error === "password shoud contain character, 1 special character"){
         error = "password shoud contain character and 1 special character"
       }

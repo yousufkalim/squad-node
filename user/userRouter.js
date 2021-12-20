@@ -14,6 +14,10 @@ userRouter.route('/login')
     .post([validate.validateLogin], (req, res, next) => {
         actions.loginUser(req, res, next)
     });
+userRouter.route('/isEmailExist')
+    .post([validate.validateIsEmailExist], (req, res, next) => {
+        actions.isEmailExist(req, res, next)
+    });
 userRouter.route('/loginAdmin')
     .post([validate.validateLogin], (req, res, next) => {
         actions.loginAdmin(req, res, next)

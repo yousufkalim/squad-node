@@ -7,6 +7,9 @@ function registerUser(req, res, next) {
 function loginUser(req, res, next) {
     service.loginUser(req, res, next)
 }
+function isEmailExist(req, res, next) {
+    service.isEmailExist(req, res, next)
+}
 
 function forgotPassword(req, res, next) {
     service.forgotPassword(req, res, next)
@@ -143,6 +146,7 @@ function logout(req, res) {
 module.exports = {
     registerUser,
     loginUser,
+    isEmailExist,
     forgotPassword,
     getresetpassword,
     resetpassword,

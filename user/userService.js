@@ -92,9 +92,9 @@ async function registerUser(req, res) {
         }
         await util.sendEMail(result.email, data).then((data) => {
 
-            (data == true) ? res.json({ code: code.ok, message: `Link send on ${result.email}` })
+            (data == true) ? res.json({ code: code.ok, message: `Link sent to ${result.email}` })
                 : res.json({ code: code.notImplemented, message: msg.mailNotSent })
-            res.json({ code: code.created, message: msg.registered + " " + `Validation Link send on ${result.email}` })
+            res.json({ code: code.created, message: msg.registered + " " + `Validation Link sent to ${result.email}` })
         })
         if (data == true) {
             let tokn = util.generateToken(result, process.env.USER_SECRET);
@@ -165,7 +165,7 @@ function loginUser(req, res) {
 
                         (data == true) ? res.json({ code: '400', message: `Please verify your account first. Verification link sent to ${result.email}` })
                             : res.json({ code: code.notImplemented, message: msg.mailNotSent })
-                        res.json({ code: code.created, message: msg.registered + " " + `Validation Link send on ${result.email}` })
+                        res.json({ code: code.created, message: msg.registered + " " + `Validation Link sent to ${result.email}` })
                     })
                 }
             } else {
@@ -176,6 +176,24 @@ function loginUser(req, res) {
         }
     }).catch((err) => {
         console.log("login -> err=================================================================>", err)
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+
+    })
+}
+function isEmailExist(req, res) {
+    return user.findOne({ email: req.body.email, isdeleted: false }).then(async (result) => {
+        if (result) {
+            let data = {
+                isEmailExist: true
+            }
+            return res.json({ code: code.ok, message: msg.emailExist, data: data })
+        } else {
+            let data = {
+                isEmailExist: false
+            }
+            return res.json({ code: code.ok, data: data })
+        }
+    }).catch((err) => {
         res.json({ code: code.ineternalError, message: msg.internalServerError })
 
     })
@@ -233,7 +251,7 @@ function forgotPassword(req, res) {
 
                 }
                 await util.sendEMail(user.email, data).then((data) => {
-                    return (data == true) ? res.json({ code: code.ok, message: `Link send on ${result.email}` })
+                    return (data == true) ? res.json({ code: code.ok, message: `Link sent to ${result.email}` })
                         : res.json({ code: code.notImplemented, message: msg.mailNotSent })
                 })
             })
@@ -2065,6 +2083,7 @@ module.exports = {
     registerUser,
     // updateProfile,
     loginUser,
+    isEmailExist,
     forgotPassword,
     getresetpassword,
     resetpassword,

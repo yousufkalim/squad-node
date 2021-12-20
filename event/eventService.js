@@ -13,13 +13,13 @@ const geolib = require('geolib');
 
 const placeService = require('../place/placeService');
 
-function latlongtokm(userlong, userlat, eventlong, eventlang) {
+function latlongtokm(userlong, userlat, eventlong, eventlat) {
     let km = geolib.getDistance(
-        { latitude: userlong, longitude: userlat },
-        { latitude: eventlong, longitude: eventlang },
+        { latitude: userlat, longitude: userlong },
+        { latitude: eventlat, longitude: eventlong },
         accuracy = 1
     );
-    return km
+    return km/1000;
 
 }
 function addeventunauthorized(req, res) {
@@ -740,48 +740,92 @@ function preferenceBasedList(req, res) {
                                 for (let i = 0; i < data.length; i++) {
                                     for (let j = 0; j < level.length; j++) {
                                         for (let k = 0; k < data[i].level.length; k++) {
-                                            if (data[i].level[k] == level[j] || data[i].level[k] == JSON.stringify(['ALL'])) {
+                                            // if (data[i].level[k] == level[j] || data[i].level[k] == JSON.stringify(['ALL'])) {
+                                            //     sorted.push(data[i])
+                                            // }
+                                            // if (data[i].level[k] != level[j] || data[i].level[k] != JSON.stringify(['ALL'])) {
+                                            //     nonsorted.push(data[i])
+                                            // }
+
+                                            if (level[j] == 'ALL') {
                                                 sorted.push(data[i])
-                                            }
-                                            if (data[i].level[k] != level[j] || data[i].level[k] != JSON.stringify(['ALL'])) {
-                                                nonsorted.push(data[i])
-                                            }
+                                            } else if (data[i].level[k] == level[j]) {
+                                                sorted.push(data[i])
+                                            }                                            
                                         }
                                     }
                                 }
-                                return sorted.concat(nonsorted);
+                                // return sorted.concat(nonsorted);
+                                return sorted;
                             }
 
-                            var sorted = [], nonsorted = []
+                            var sportsorted = [], sportnonsorted = []
                             function sortSport(data, sport) {
                                 for (let i = 0; i < data.length; i++) {
                                     for (let j = 0; j < sport.length; j++) {
                                         if (data[i].sport == sport[j]) {
-                                            sorted.push(data[i])
+                                            sportsorted.push(data[i])
                                         }
-                                        if (data[i].sport != sport[j]) {
-                                            nonsorted.push(data[i])
-                                        }
+                                        // if (data[i].sport != sport[j]) {
+                                        //     sportnonsorted.push(data[i])
+                                        // }
                                     }
                                 }
-                                return sorted.concat(nonsorted);
+                                // return sportsorted.concat(sportnonsorted);
+                                return sportsorted;
                             }
 
-                            if (free == 0) {
+                            // if (km) {
+                            //     mydatas.sort(function (a, b) {
+                            //         if (km < 1000) {
+                            //             return a.distance - b.distance;
+                            //         } else {
+                            //             return b.distance - a.distance;
+                            //         }
+                            //     })
+                            // }
+                            if (km && km < 1000) {
+                                var kmData = [];
+                                for (let i=0; i<mydatas.length; i++) {
+                                    if (mydatas[i].distance <= km) {
+                                        kmData.push(mydatas[i]);
+                                    }
+                                }
+                                mydatas = kmData;
+                                mydatas.sort(function (a, b) {
+                                    return a.distance - b.distance;
+                                })
+                            } else {
+                                mydatas.sort(function (a, b) {
+                                    return a.distance - b.distance;
+                                })
+                            }
+
+                            mydatas.sort(function (a, b) {
+                                if (a.seatsremain > 0 && b.seatsremain > 0) {
+                                    return a.seatsremain - b.seatsremain;
+                                } else {
+                                    return b.seatsremain - a.seatsremain;
+                                }
+                            })
+
+                            // if (free == 0) {
+                            //     mydatas.sort(function (a, b) {
+                            //         return a.price - b.price;
+                            //     })
+                            // }
+                            if (free == 1) {
                                 mydatas.sort(function (a, b) {
                                     return a.price - b.price;
                                 })
-                            }
-
-                            if (km) {
-                                mydatas.sort(function (a, b) {
-                                    if (km < 1000) {
-                                        return a.distance - b.distance;
-                                    } else {
-                                        return b.distance - a.distance;
+                            } else {
+                                var freeData = [];
+                                for (let i=0; i<mydatas.length; i++) {
+                                    if (mydatas[i].price == 0) {
+                                        freeData.push(mydatas[i]);
                                     }
-
-                                })
+                                }
+                                mydatas = freeData;
                             }
 
                             if (levelfilter) {
@@ -796,19 +840,19 @@ function preferenceBasedList(req, res) {
                                 mydatas = sortSport(mydatas, split)
                             }
 
-                            if (req.query.level) {
-                                let lrtrim = req.query.level.substring(1, req.query.level.length - 1);
-                                let split = lrtrim.split(",")
-                                if (km == 1000 && JSON.stringify(split) == JSON.stringify(['ALL']) && free == 0 && !sportfilter) {
-                                    mydatas.sort(function (a, b) {
-                                        if (a.seatsremain > 0 && b.seatsremain > 0) {
-                                            return a.seatsremain - b.seatsremain;
-                                        } else {
-                                            return b.seatsremain - a.seatsremain;
-                                        }
-                                    })
-                                }
-                            }
+                            // if (req.query.level) {
+                            //     let lrtrim = req.query.level.substring(1, req.query.level.length - 1);
+                            //     let split = lrtrim.split(",")
+                            //     if (km == 1000 && JSON.stringify(split) == JSON.stringify(['ALL']) && free == 0 && !sportfilter) {
+                            //         mydatas.sort(function (a, b) {
+                            //             if (a.seatsremain > 0 && b.seatsremain > 0) {
+                            //                 return a.seatsremain - b.seatsremain;
+                            //             } else {
+                            //                 return b.seatsremain - a.seatsremain;
+                            //             }
+                            //         })
+                            //     }
+                            // }
 
                             var uniq = {}
                             mydatas = mydatas.filter(obj => !uniq[obj._id] && (uniq[obj._id] = true));
@@ -864,48 +908,93 @@ function preferenceBasedList(req, res) {
                                     for (let i = 0; i < data.length; i++) {
                                         for (let j = 0; j < level.length; j++) {
                                             for (let k = 0; k < data[i].level.length; k++) {
-                                                if (data[i].level[k] == level[j] || data[i].level[k] == JSON.stringify(['ALL'])) {
+                                                // if (data[i].level[k] == level[j] || data[i].level[k] == JSON.stringify(['ALL'])) {
+                                                //     sorted.push(data[i])
+                                                // }
+                                                // if (data[i].level[k] != level[j] || data[i].level[k] != JSON.stringify(['ALL'])) {
+                                                //     nonsorted.push(data[i])
+                                                // }
+
+                                                if (level[j] == 'ALL') {
                                                     sorted.push(data[i])
-                                                }
-                                                if (data[i].level[k] != level[j] || data[i].level[k] != JSON.stringify(['ALL'])) {
-                                                    nonsorted.push(data[i])
+                                                } else if (data[i].level[k] == level[j]) {
+                                                    sorted.push(data[i])
                                                 }
                                             }
                                         }
                                     }
-                                    return sorted.concat(nonsorted);
+                                    // return sorted.concat(nonsorted);
+                                    return sorted;
                                 }
 
-                                var sorted = [], nonsorted = []
+                                var sportsorted = [], sportnonsorted = []
                                 function sortSport(data, sport) {
                                     for (let i = 0; i < data.length; i++) {
                                         for (let j = 0; j < sport.length; j++) {
                                             if (data[i].sport == sport[j]) {
-                                                sorted.push(data[i])
+                                                sportsorted.push(data[i])
                                             }
-                                            if (data[i].sport != sport[j]) {
-                                                nonsorted.push(data[i])
-                                            }
+                                            // if (data[i].sport != sport[j]) {
+                                            //     sportnonsorted.push(data[i])
+                                            // }
                                         }
                                     }
-                                    return sorted.concat(nonsorted);
+                                    // return sportsorted.concat(sportnonsorted);
+                                    return sportsorted;
                                 }
 
-                                if (free == 0) {
+                                // if (km) {
+                                //     myPrivateData.sort(function (a, b) {
+                                //         if (km < 1000) {
+                                //             return a.distance - b.distance;
+                                //         } else {
+                                //             return b.distance - a.distance;
+                                //         }
+
+                                //     })
+                                // }
+                                if (km && km < 1000) {
+                                    var kmData = [];
+                                    for (let i=0; i<myPrivateData.length; i++) {
+                                        if (myPrivateData[i].distance <= km) {
+                                            kmData.push(myPrivateData[i]);
+                                        }
+                                    }
+                                    myPrivateData = kmData;
+                                    myPrivateData.sort(function (a, b) {
+                                        return a.distance - b.distance;
+                                    })
+                                } else {
+                                    myPrivateData.sort(function (a, b) {
+                                        return a.distance - b.distance;
+                                    })
+                                }
+
+                                myPrivateData.sort(function (a, b) {
+                                    if (a.seatsremain > 0 && b.seatsremain > 0) {
+                                        return a.seatsremain - b.seatsremain;
+                                    } else {
+                                        return b.seatsremain - a.seatsremain;
+                                    }
+                                })
+
+                                // if (free == 0) {
+                                //     myPrivateData.sort(function (a, b) {
+                                //         return a.price - b.price;
+                                //     })
+                                // }
+                                if (free == 1) {
                                     myPrivateData.sort(function (a, b) {
                                         return a.price - b.price;
                                     })
-                                }
-
-                                if (km) {
-                                    myPrivateData.sort(function (a, b) {
-                                        if (km < 1000) {
-                                            return a.distance - b.distance;
-                                        } else {
-                                            return b.distance - a.distance;
+                                } else {
+                                    var freeData = [];
+                                    for (let i=0; i<myPrivateData.length; i++) {
+                                        if (myPrivateData[i].price == 0) {
+                                            freeData.push(myPrivateData[i]);
                                         }
-
-                                    })
+                                    }
+                                    myPrivateData = freeData;
                                 }
 
                                 if (levelfilter) {
@@ -920,19 +1009,19 @@ function preferenceBasedList(req, res) {
                                     myPrivateData = sortSport(myPrivateData, split)
                                 }
 
-                                if (req.query.level) {
-                                    let lrtrim = req.query.level.substring(1, req.query.level.length - 1);
-                                    let split = lrtrim.split(",")
-                                    if (km == 1000 && JSON.stringify(split) == JSON.stringify(['ALL']) && free == 0 && !sportfilter) {
-                                        myPrivateData.sort(function (a, b) {
-                                            if (a.seatsremain > 0 && b.seatsremain > 0) {
-                                                return a.seatsremain - b.seatsremain;
-                                            } else {
-                                                return b.seatsremain - a.seatsremain;
-                                            }
-                                        })
-                                    }
-                                }
+                                // if (req.query.level) {
+                                //     let lrtrim = req.query.level.substring(1, req.query.level.length - 1);
+                                //     let split = lrtrim.split(",")
+                                //     if (km == 1000 && JSON.stringify(split) == JSON.stringify(['ALL']) && free == 0 && !sportfilter) {
+                                //         myPrivateData.sort(function (a, b) {
+                                //             if (a.seatsremain > 0 && b.seatsremain > 0) {
+                                //                 return a.seatsremain - b.seatsremain;
+                                //             } else {
+                                //                 return b.seatsremain - a.seatsremain;
+                                //             }
+                                //         })
+                                //     }
+                                // }
 
                                 var uniq = {}
                                 let onlyPrivateEvent = myPrivateData.filter(obj => !uniq[obj._id] && (uniq[obj._id] = true));

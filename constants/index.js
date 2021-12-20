@@ -16,6 +16,7 @@ messages = {
     incorrectpass: "Incorrect Password",
     notFound: "Email address not found",//"Reccord not found",
     tokeninvalidorexpire: "Token Invalid or Expired",
+    emailExist: "User already registered, Please login!",
     passwordChanged: "Password changed",
     invalidEmail: 'Enter Valid Email Address',
     invalidPass: 'Password should contain at least 6 characters minimum, numeric values and 1 special character.',
