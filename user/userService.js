@@ -270,27 +270,30 @@ function getresetpassword(req, res) {
         .then((user) => {
             if (!user) return res.send('<style>*{transition:all .6s}html{height:100%}body{font-family:Lato,sans-serif;color:#888;margin:0}#main{display:table;width:100%;height:100vh;text-align:center}.fof{display:table-cell;vertical-align:middle}.fof h1{font-size:50px;display:inline-block;padding-right:12px;animation:type .5s alternate infinite}@keyframes type{from{box-shadow:inset -3px 0 0 #888}to{box-shadow:inset -3px 0 0 transparent}}</style><div id="main"><div class="fof"><h1>Your Requested Link is Expired</h1></div></div>')
             else {
-                //console.log("getresetpassword -> user.resetPasswordToken", ua, user.resetPasswordToken)
-                //res.redirect('squad://reset/' + user.resetPasswordToken)
-                //res.render('reset.jade')
-
-console.log(browserName);
+                console.log("getresetpassword -> user.resetPasswordToken", ua, user.resetPasswordToken)
+                console.log(browserName);
+                if(req.device.type.toUpperCase() === 'DESKTOP'){ // desktop
+                    res.redirect('https://appbackend.squadxyz.com/#/resetpassword/' + user.resetPasswordToken)
+                }else{
+                    res.redirect('squad://reset/' + user.resetPasswordToken)
+                    res.render('reset.jade')
+                }
                 //==================
-                if (browserName == "Firefox") {
-                     res.redirect('squad://reset/' + user.resetPasswordToken)
-                     res.render('reset.jade', { user });
+//                 if (browserName == "Firefox") {
+//                      res.redirect('squad://reset/' + user.resetPasswordToken)
+//                      res.render('reset.jade', { user });
 
-                 } else if (browserName == "Chrome") {
-                     //res.redirect('intent://reset/' + user.resetPasswordToken + '/#Intent;scheme=squad;package=com.squadxyz')
+//                  } else if (browserName == "Chrome") {
+//                      //res.redirect('intent://reset/' + user.resetPasswordToken + '/#Intent;scheme=squad;package=com.squadxyz')
 
-                     //res.render('reset.jade', { user });
+//                      //res.render('reset.jade', { user });
 
-                     //res.redirect('/reset/' + user.resetPasswordToken)
-res.render('reset.jade', { user });
-                 } else {
-                     res.redirect('squad://reset/' + user.resetPasswordToken)
-                     res.render('reset.jade', { user });
-                 }
+//                      //res.redirect('/reset/' + user.resetPasswordToken)
+// res.render('reset.jade', { user });
+//                  } else {
+//                      res.redirect('squad://reset/' + user.resetPasswordToken)
+//                      res.render('reset.jade', { user });
+//                  }
                 //=======================
             }
         })
