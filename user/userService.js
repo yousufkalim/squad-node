@@ -536,6 +536,55 @@ function socialloginLinkedin(req, res) {
     })
 
 }
+
+function appleSocialLogin(req, res) {
+    const appleId = req.body.appleId.trim(),
+    email = req.body.email.trim();
+    let query = { $or: [{ appleId: appleId }, { email: email }] };
+    return userdao.findone(query).then((user) => {
+        if (user) {
+            const fcmToken = (req.body.fcm) ? req.body.fcm : '';
+            let query1 = { _id: user._id },
+                update = { $set: { fcmToken: fcmToken } },
+                options = { new: true }
+                userdao.findOneAndUpdate(query1, update, options)
+            let token = util.generateToken(user, process.env.USER_SECRET)
+            let data = {
+                _id: user._id,
+                email: user.email,
+                fullname: user.fullname,
+                appleId: user.appleId,
+                token: token
+            }
+            return res.json({ code: code.ok, message: msg.loggedIn, data: data })
+        } else {
+            let addobj = {
+                fullname: req.body.fullname.trim(),
+                appleId: req.body.appleId.trim(),
+                email: req.body.email.trim(),
+                isAppleLogin: true,
+                fcmToken: req.body.fcm,
+            }
+            return userdao.create(addobj).then((user) => {
+                DefaultPreference(user._id)
+                let token = util.generateToken(user, process.env.USER_SECRET)
+                let data = {
+                    _id: user._id,
+                    email: user.email,
+                    fullname: user.fullname,
+                    appleId: user.appleId,
+                    token: token
+                }
+                return res.json({ code: code.ok, message: msg.loggedIn, data: data })
+            })
+        }
+    }).catch((err) => {
+        res.json({ code: code.ineternalError, message: msg.internalServerError })
+    })
+
+}
+
+
 function getprofile(req, res) {
     let token = req.headers['authorization']
     let obj = util.decodeToken(token)
@@ -2099,6 +2148,7 @@ module.exports = {
     socialloginGmail,
     socialloginFacebook,
     socialloginLinkedin,
+    appleSocialLogin,
     update,
     sportlist,
     verifyToken,

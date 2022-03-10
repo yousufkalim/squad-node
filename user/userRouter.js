@@ -79,6 +79,10 @@ userRouter.route('/linkedin/socialLogin')
     .post([validate.validateSocialLoginLinkedin], (req, res) => {
         actions.socialloginLinkedin(req, res)
     })
+userRouter.route('/apple/socialLogin')
+    .post([validate.validateAppleSocialLogin], (req, res) => {
+        actions.appleSocialLogin(req, res)
+    })
 
 
 userRouter.route('/createpreference')

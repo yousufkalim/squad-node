@@ -1,4 +1,3 @@
-
 const code = require('../constants').http_codes;
 const msg = require('../constants').messages;
 const status = require('../constants').status;
@@ -6,10 +5,14 @@ const commondao = require('../common/commonDao');
 const userdao = require('../user/userDao')
 const util = require('../app util/util');
 const jwt = require('jsonwebtoken')
-const { OAuth2Client } = require('google-auth-library');
+const {
+    OAuth2Client
+} = require('google-auth-library');
 const client = new OAuth2Client();
 const axios = require('axios');
-const { role } = require('../constants');
+const {
+    role
+} = require('../constants');
 async function validateSignUp(req, res, next) {
     if (req.body.firstname && req.body.lastname && req.body.password && req.body.email) {
         var firstname = req.body.firstname.trim(),
@@ -18,65 +21,94 @@ async function validateSignUp(req, res, next) {
             password = req.body.password.trim();
 
         if (firstname && lastname && email && password) {
-            let query = { email: email }
-            if (await userdao.findone(query)) {
-                return res.json({ code: code.badRequest, message: msg.emailAlreadyRegistered });
+            let query = {
+                email: email
             }
-            else {
+            if (await userdao.findone(query)) {
+                return res.json({
+                    code: code.badRequest,
+                    message: msg.emailAlreadyRegistered
+                });
+            } else {
 
                 for (let i = 0; i < firstname.length; i++) {
                     const element = firstname[i];
-                    if(!(/[a-zA-Z\s]/).test(element)){
-                        return res.json({code: code.badRequest, message: msg.nameNotValid})
+                    if (!(/[a-zA-Z\s]/).test(element)) {
+                        return res.json({
+                            code: code.badRequest,
+                            message: msg.nameNotValid
+                        })
                     }
                 }
                 for (let i = 0; i < lastname.length; i++) {
                     const element = lastname[i];
-                    if(!(/[a-zA-Z\s]/).test(element)){
-                        return res.json({code: code.badRequest, message: msg.nameNotValid})
+                    if (!(/[a-zA-Z\s]/).test(element)) {
+                        return res.json({
+                            code: code.badRequest,
+                            message: msg.nameNotValid
+                        })
                     }
                 }
-                
+
                 // if (util.validateEmail(email) && util.validatePassword(password)) {
                 //     next()
                 // } else {
                 //     return res.json({ code: code.badRequest, message: msg.invalidEmailPass })
                 // }
 
-                if(!util.validateEmail(email)){
-                    return res.json({ code: code.badRequest, message: msg.invalidEmail })
-                } else if(true !== util.validatePassword(password)){
-                    return res.json({ code: code.badRequest, message: util.validatePassword(password) })
+                if (!util.validateEmail(email)) {
+                    return res.json({
+                        code: code.badRequest,
+                        message: msg.invalidEmail
+                    })
+                } else if (true !== util.validatePassword(password)) {
+                    return res.json({
+                        code: code.badRequest,
+                        message: util.validatePassword(password)
+                    })
                 } else {
                     next()
                 }
             }
+        } else {
+            return res.json({
+                code: code.badRequest,
+                message: msg.invalidBody
+            })
         }
-        else {
-            return res.json({ code: code.badRequest, message: msg.invalidBody })
-        }
-    }
-    else {
-        return res.json({ code: code.badRequest, message: msg.invalidBody })
+    } else {
+        return res.json({
+            code: code.badRequest,
+            message: msg.invalidBody
+        })
     }
 }
 
 async function validateLogin(req, res, next) {
-    const { email, password } = req.body;
+    const {
+        email,
+        password
+    } = req.body;
     if (email && password) {
         next()
-    }
-    else {
-        return res.json({ code: code.badRequest, message: msg.invalidBody })
+    } else {
+        return res.json({
+            code: code.badRequest,
+            message: msg.invalidBody
+        })
     }
 }
 async function validateIsEmailExist(req, res, next) {
-    const { email } = req.body;
+    const {
+        email
+    } = req.body;
     if (email) {
         next()
-    }
-    else {
-        return res.json({ code: code.badRequest, message: msg.invalidBody })
+    } else {
+        return res.json({
+            code: code.badRequest,
+            message: msg.invalidBody
+        })
     }
 }
 async function verifyToken(req, res, next) {
@@ -86,42 +118,65 @@ async function verifyToken(req, res, next) {
     await jwt.verify(token, process.env.USER_SECRET, (err) => {
         console.log("verifyToken -> err", err)
         if (err) {
-            return res.json({ code: code.unAuthorized, message: msg.invalidToken })
-        }
-        else {
+            return res.json({
+                code: code.unAuthorized,
+                message: msg.invalidToken
+            })
+        } else {
             let obj = util.decodeToken(token)
             console.log("verifyToken -> obj", obj)
-            let query = { _id: obj.id }
+            let query = {
+                _id: obj.id
+            }
             commondao.findone(query).then((data) => {
 
                 if (!data) {
-                    return res.json({ code: code.unAuthorized, message: msg.invalidToken })
+                    return res.json({
+                        code: code.unAuthorized,
+                        message: msg.invalidToken
+                    })
                 } else {
 
                     next();
 
                 }
             }).catch((err) => {
-                return res.json({ code: code.internalError, message: msg.internalServerError }) //msg.internalServerError })
+                return res.json({
+                    code: code.internalError,
+                    message: msg.internalServerError
+                }) //msg.internalServerError })
             })
         }
     })
 }
 async function validateUpdate(req, res, next) {
-    const { email, password, role } = req.body;
+    const {
+        email,
+        password,
+        role
+    } = req.body;
     if (!email && !password & !role) {
         next()
-    }
-    else {
-        return res.json({ code: code.badRequest, message: msg.invalidBody })
+    } else {
+        return res.json({
+            code: code.badRequest,
+            message: msg.invalidBody
+        })
     }
 }
 async function verifyaddpreferance(req, res, next) {
-    const { sportId, radius, level } = req.body.preferences;
+    const {
+        sportId,
+        radius,
+        level
+    } = req.body.preferences;
     if (sportId && radius && level) {
         next()
     } else {
-        return res.json({ code: code.badRequest, message: msg.invalidBody })
+        return res.json({
+            code: code.badRequest,
+            message: msg.invalidBody
+        })
     }
 }
 async function validateSocialLogin(req, res, next) {
@@ -141,19 +196,29 @@ async function validateSocialLogin(req, res, next) {
                 if (valid == true) {
                     next()
                 } else {
-                    res.json({ code: code.badRequest, message: msg.invalidBody });
+                    res.json({
+                        code: code.badRequest,
+                        message: msg.invalidBody
+                    });
                 }
             }).catch((err) => {
-                return res.json({ code: code.badRequest, message: msg.invalidToken })
+                return res.json({
+                    code: code.badRequest,
+                    message: msg.invalidToken
+                })
 
             })
+        } else {
+            return res.json({
+                code: code.badRequest,
+                message: msg.invalidBody
+            })
         }
-        else {
-            return res.json({ code: code.badRequest, message: msg.invalidBody })
-        }
-    }
-    else {
-        return res.json({ code: code.badRequest, message: msg.invalidBody })
+    } else {
+        return res.json({
+            code: code.badRequest,
+            message: msg.invalidBody
+        })
     }
 }
 async function validateSocialLoginFace(req, res, next) {
@@ -178,19 +243,29 @@ async function validateSocialLoginFace(req, res, next) {
                 if (valid == true) {
                     next()
                 } else {
-                    res.json({ code: code.badRequest, message: msg.invalidToken });
+                    res.json({
+                        code: code.badRequest,
+                        message: msg.invalidToken
+                    });
                 }
             }).catch((err) => {
-                return res.json({ code: code.badRequest, message: msg.invalidToken })
+                return res.json({
+                    code: code.badRequest,
+                    message: msg.invalidToken
+                })
             });
 
+        } else {
+            return res.json({
+                code: code.badRequest,
+                message: msg.invalidBody
+            })
         }
-        else {
-            return res.json({ code: code.badRequest, message: msg.invalidBody })
-        }
-    }
-    else {
-        return res.json({ code: code.badRequest, message: msg.invalidBody })
+    } else {
+        return res.json({
+            code: code.badRequest,
+            message: msg.invalidBody
+        })
     }
 }
 async function validateSocialLoginLinkedin(req, res, next) {
@@ -201,17 +276,24 @@ async function validateSocialLoginLinkedin(req, res, next) {
         await axios({
             url: 'https://api.linkedin.com/v2/me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams))',
             method: 'get',
-            headers: { "Authorization": `Bearer ${token}` }
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
         }).then(async (result) => {
             // console.log("validateSocialLoginLinkedin -> result",)
             var imageUrl = result.data.profilePicture['displayImage~'].elements[0].identifiers[0].identifier
             if (result.status == 401) {
-                return res.json({ code: code.badRequest, message: msg.invalidToken })
+                return res.json({
+                    code: code.badRequest,
+                    message: msg.invalidToken
+                })
             }
             await axios({
                 url: "https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))",
                 method: 'get',
-                headers: { "Authorization": `Bearer ${token}` }
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
             }).then(async (resultmail) => {
                 let Obj = {
                     socialId: result.data.id,
@@ -226,9 +308,26 @@ async function validateSocialLoginLinkedin(req, res, next) {
             })
         }).catch((err) => {
             console.log("validateSocialLoginLinkedin -> err", err)
-            return res.json({ code: code.badRequest, message: msg.invalidToken })
+            return res.json({
+                code: code.badRequest,
+                message: msg.invalidToken
+            })
         });
     }
+}
+async function validateAppleSocialLogin(req, res, next) {
+        await next();
+        // let token = req.body.accessToken.trim();
+        // console.log("validateAppleSocialLogin -> token", token)
+        // // console.log("validateSocialLoginLinkedin -> result",)
+        // let Obj = {
+        //     appleId: result.data.id,
+        //     fullName: result.data.fullName.localized['en_US'],
+        //     email: resultmail.data.elements[0]['handle~'].emailAddress,
+        // }
+        // console.log("validateAppleSocialLogin -> Obj", Obj)
+        // req.body = Obj;
+        // await next()
 }
 module.exports = {
     validateLogin,
@@ -238,6 +337,7 @@ module.exports = {
     validateSocialLogin,
     validateSocialLoginFace,
     validateSocialLoginLinkedin,
+    validateAppleSocialLogin,
     validateSignUp,
     verifyaddpreferance
 
