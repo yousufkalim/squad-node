@@ -538,7 +538,7 @@ function socialloginLinkedin(req, res) {
 }
 
 function appleSocialLogin(req, res) {
-    const appleId = req.body.appleId.trim(),
+    const appleId = req.body.appleId.trim();
     email = req.body.email.trim();
     let query = { $or: [{ appleId: appleId }, { email: email }] };
     return userdao.findone(query).then((user) => {
@@ -564,6 +564,7 @@ function appleSocialLogin(req, res) {
                 email: req.body.email.trim(),
                 isAppleLogin: true,
                 fcmToken: req.body.fcm,
+                location: req.body.location,
             }
             return userdao.create(addobj).then((user) => {
                 DefaultPreference(user._id)
