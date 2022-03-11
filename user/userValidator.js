@@ -316,18 +316,14 @@ async function validateSocialLoginLinkedin(req, res, next) {
     }
 }
 async function validateAppleSocialLogin(req, res, next) {
+    if (req.body.identityToken && req.body.user) {
         await next();
-        // let token = req.body.accessToken.trim();
-        // console.log("validateAppleSocialLogin -> token", token)
-        // // console.log("validateSocialLoginLinkedin -> result",)
-        // let Obj = {
-        //     appleId: result.data.id,
-        //     fullName: result.data.fullName.localized['en_US'],
-        //     email: resultmail.data.elements[0]['handle~'].emailAddress,
-        // }
-        // console.log("validateAppleSocialLogin -> Obj", Obj)
-        // req.body = Obj;
-        // await next()
+    } else {
+        return res.json({
+            code: code.internalError,
+            message: msg.internalServerError
+        })
+    }
 }
 module.exports = {
     validateLogin,

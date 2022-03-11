@@ -538,29 +538,33 @@ function socialloginLinkedin(req, res) {
 }
 
 function appleSocialLogin(req, res) {
-    const appleId = req.body.appleId.trim();
-    email = req.body.email.trim();
-    let query = { $or: [{ appleId: appleId }, { email: email }] };
+    const appleId = req.body.identityToken.trim();
+    const userToken = req.body.user.trim();
+    let query = { $or: [{ user: userToken }] };
     return userdao.findone(query).then((user) => {
         if (user) {
             const fcmToken = (req.body.fcm) ? req.body.fcm : '';
             let query1 = { _id: user._id },
-                update = { $set: { fcmToken: fcmToken } },
-                options = { new: true }
+                update = { $set: { appleId:appleId, fcmToken: fcmToken, email: req.body.email ? req.body.email : user.email, firstname: req.body.firstname ? req.body.firstname : user.firstname, lastname: req.body.lastname ? req.body.lastname : user.lastname } },
+                options = { new: false }
                 userdao.findOneAndUpdate(query1, update, options)
             let token = util.generateToken(user, process.env.USER_SECRET)
             let data = {
                 _id: user._id,
-                email: user.email,
-                fullname: user.fullname,
-                appleId: user.appleId,
-                token: token
+                    email: req.body.email ? req.body.email : user.email,
+                    firstname: req.body.firstname ? req.body.firstname : user.firstname,
+                    lastname: req.body.lastname ? req.body.lastname : user.lastname,
+                    user: user.user,
+                    identityToken: appleId,
+                    token: token
             }
             return res.json({ code: code.ok, message: msg.loggedIn, data: data })
         } else {
             let addobj = {
-                fullname: req.body.fullname.trim(),
-                appleId: req.body.appleId.trim(),
+                firstname: req.body.firstname.trim(),
+                lastname: req.body.lastname.trim(),
+                appleId: appleId,
+                user: req.body.user,
                 email: req.body.email.trim(),
                 isAppleLogin: true,
                 fcmToken: req.body.fcm,
@@ -572,8 +576,10 @@ function appleSocialLogin(req, res) {
                 let data = {
                     _id: user._id,
                     email: user.email,
-                    fullname: user.fullname,
-                    appleId: user.appleId,
+                    firstname: user.firstname,
+                    lastname: user.lastname,
+                    user: user.user,
+                    identityToken: user.appleId,
                     token: token
                 }
                 return res.json({ code: code.ok, message: msg.loggedIn, data: data })

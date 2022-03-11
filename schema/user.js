@@ -10,7 +10,6 @@ const gender = require('../constants/index').gender;
 const rateas = require('../constants/index').rateas;
 var userSchema = new schema({
     firstname: { type: String },
-    fullname: { type: String },
     lastname: { type: String },
     dob: { type: Date },
     email: { type: String },
@@ -27,6 +26,7 @@ var userSchema = new schema({
     gender: { type: String, enum: [gender.male, gender.female, gender.other] },
     socialId: { type: String },
     appleId: { type: String },
+    user: { type: String },
     resetPasswordToken: {
         type: String
     },
