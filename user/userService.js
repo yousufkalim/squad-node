@@ -25,8 +25,10 @@ const { promises } = require('fs');
 var serverKey = process.env.SERVER_KEY;
 var fcm = new FCM(serverKey);
 var ObjectId = require('mongodb').ObjectID;
-var admin = require("firebase-admin")
+var admin = require("firebase-admin");
+const { BitlyClient } = require('bitly');
 var serviceAccount = require("../firebase_sdk/squad-xyz-61441-firebase-adminsdk-4zmx5-0330ac1321.json")
+const bitly = new BitlyClient('1d65d2908d446dbea5318accc7446fd30d49d103', {});
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -1250,19 +1252,21 @@ async function invitemail(res, req, users, eventId) {
         var eventTime = dateTime + ',  ' + dateStartTime + ' - ' + dateendTime
 
         user.findOne({ _id: req.user_id }, { firstname: 1 }).then((senderName) => {
-
+            console.log(senderName);
             users.map(async (el, i) => {
                 let userId = (el.userid) ? el.userid : ''
-                let link = "https://" + process.env.DOMAIN_NAME + "/api/user/getinvite/" + eventId + '/' + userId;
+                let url = "https://" + process.env.DOMAIN_NAME + "/api/user/getinvite/" + eventId + '/' + userId;
+                let link = await bitly.shorten(url);
                 usersemail.push(el.email)
                 var Body_data = `<h4>Hi ${el.firstname}, <br /><br />
                 ${senderName.firstname} has invited you to the event. <br /><br />
 
         ${eventData.sport.name === 'Cricket' ? '🏏' : eventData.sport.name === 'Hockey' ? '🏑' : eventData.sport.name === 'Tennis' ? '🎾' : eventData.sport.name === 'Football' ? '⚽️' : eventData.sport.name === 'Basketball' ? '🏀' : '🎮'} &nbsp;<b>${eventData.sport.name}</b><br />
-        ⏱ &nbsp; <a href="${link}">${eventTime}</a><br />
+        ⏱ &nbsp; ${eventTime}<br />
         📍 &nbsp;${eventData.Address}<br />
         💰 &nbsp;${eventData.price}<br />
-        🖐🏻  &nbsp;Who's in ?<br /><br />
+        🖐🏻  &nbsp;Who's in ?<br />
+        Join event here: <a href="${link.link}">${link.link}</a><br /><br />
 
         Best Regards,<br />
         Squad XYZ Team</h4>`;
