@@ -1247,9 +1247,9 @@ async function invitemail(res, req, users, eventId) {
     // console.log(users)
 
     event.findOne({ _id: eventId }).populate('sport', '_id name image').then((eventData) => {
-        var dateTime = moment(eventData.starttime).utc().format('YYYY-MM-DD')
-        var dateStartTime = moment(eventData.starttime).utc().format('hh:mm')
-        var dateendTime = moment(eventData.endtime).utc().format('hh:mm')
+        var dateTime = moment.utc(eventData.starttime).format('YYYY-MM-DD')
+        var dateStartTime = moment.utc(eventData.starttime).format('HH:mm');
+        var dateendTime = moment.utc(eventData.endtime).format('HH:mm');
         var eventTime = dateTime + ' ' + dateStartTime + ' - ' + dateendTime
 
         user.findOne({ _id: req.user_id }, { firstname: 1 }).then((senderName) => {
