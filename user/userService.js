@@ -26,6 +26,7 @@ var serverKey = process.env.SERVER_KEY;
 var fcm = new FCM(serverKey);
 var ObjectId = require('mongodb').ObjectID;
 var admin = require("firebase-admin");
+var moment = require("moment");
 const { BitlyClient } = require('bitly');
 var serviceAccount = require("../firebase_sdk/squad-xyz-61441-firebase-adminsdk-4zmx5-0330ac1321.json")
 const bitly = new BitlyClient('1d65d2908d446dbea5318accc7446fd30d49d103', {});
@@ -1246,13 +1247,12 @@ async function invitemail(res, req, users, eventId) {
     // console.log(users)
 
     event.findOne({ _id: eventId }).populate('sport', '_id name image').then((eventData) => {
-        var dateTime = dateFormat(new Date(eventData.date), "dddd dd/mm");
-        var dateStartTime = dateFormat(new Date(eventData.starttime), "h:MM TT")
-        var dateendTime = dateFormat(new Date(eventData.endtime), "h:MM TT")
-        var eventTime = dateTime + ',  ' + dateStartTime + ' - ' + dateendTime
+        var dateTime = moment(eventData.starttime).utc().format('YYYY-MM-DD')
+        var dateStartTime = moment(eventData.starttime).utc().format('hh:mm')
+        var dateendTime = moment(eventData.endtime).utc().format('hh:mm')
+        var eventTime = dateTime + ' ' + dateStartTime + ' - ' + dateendTime
 
         user.findOne({ _id: req.user_id }, { firstname: 1 }).then((senderName) => {
-            console.log(senderName);
             users.map(async (el, i) => {
                 let userId = (el.userid) ? el.userid : ''
                 let url = "https://" + process.env.DOMAIN_NAME + "/api/user/getinvite/" + eventId + '/' + userId;
