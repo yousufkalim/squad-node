@@ -1262,8 +1262,8 @@ async function invitemail(res, req, users, eventId) {
                 ${senderName.firstname} has invited you to the event. <br /><br />
 
         ${eventData.sport.name === 'Cricket' ? '🏏' : eventData.sport.name === 'Hockey' ? '🏑' : eventData.sport.name === 'Tennis' ? '🎾' : eventData.sport.name === 'Football' ? '⚽️' : eventData.sport.name === 'Basketball' ? '🏀' : '🎮'} &nbsp;<b>${eventData.sport.name}</b><br />
-        ⏱ &nbsp; ${eventTime}(UTC)<br />
-        📍 &nbsp;${eventData.Address}<br />
+        ⏱ &nbsp;${eventTime} (UTC)<br />
+        📍 &nbsp; ${eventData.Address}<br />
         💰 &nbsp;${eventData.price ? eventData.price : 'Free'}<br />
         🖐🏻  &nbsp;Who's in ?<br />
         Join event here: <a href="${link.link}">${link.link}</a><br /><br />
