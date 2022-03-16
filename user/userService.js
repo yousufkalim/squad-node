@@ -1247,9 +1247,9 @@ async function invitemail(res, req, users, eventId) {
     // console.log(users)
 
     event.findOne({ _id: eventId }).populate('sport', '_id name image').then((eventData) => {
-        var dateTime = moment(eventData.starttime).format('YYYY-MM-DD')
-        var dateStartTime = moment(eventData.starttime).format('HH:mm');
-        var dateendTime = moment(eventData.endtime).format('HH:mm');
+        var dateTime = moment.utc(eventData.starttime).format('YYYY-MM-DD')
+        var dateStartTime = moment.utc(eventData.starttime).format('HH:mm');
+        var dateendTime = moment.utc(eventData.endtime).format('HH:mm');
         var eventTime = dateTime + ' ' + dateStartTime + ' - ' + dateendTime
 
         user.findOne({ _id: req.user_id }, { firstname: 1 }).then((senderName) => {
@@ -1262,7 +1262,7 @@ async function invitemail(res, req, users, eventId) {
                 ${senderName.firstname} has invited you to the event. <br /><br />
 
         ${eventData.sport.name === 'Cricket' ? '🏏' : eventData.sport.name === 'Hockey' ? '🏑' : eventData.sport.name === 'Tennis' ? '🎾' : eventData.sport.name === 'Football' ? '⚽️' : eventData.sport.name === 'Basketball' ? '🏀' : '🎮'} &nbsp;<b>${eventData.sport.name}</b><br />
-        ⏱ &nbsp; ${eventTime}<br />
+        ⏱ &nbsp; ${eventTime}(UTC)<br />
         📍 &nbsp;${eventData.Address}<br />
         💰 &nbsp;${eventData.price ? eventData.price : 'Free'}<br />
         🖐🏻  &nbsp;Who's in ?<br />
