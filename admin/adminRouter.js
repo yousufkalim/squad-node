@@ -44,12 +44,12 @@ adminRouter.route('/sportLocation')
     });
 
 adminRouter.route('/playerRating')
-    .get([validate.verifyToken], (req, res, next) => {
+    .get([], (req, res, next) => {
         actions.playerRating(req, res, next)
     });
 
 adminRouter.route('/eventHours')
-    .get([validate.verifyToken], (req, res, next) => {
+    .get([], (req, res, next) => {
         actions.eventHours(req, res, next)
     });
 
