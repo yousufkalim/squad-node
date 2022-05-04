@@ -1782,7 +1782,7 @@ async function invitemail(res, req, users, eventId) {
             </tr>
             <tr>
                 <td>⏱</td>
-                <td>${eventTime} (UTC)</td>
+                <td>${eventTime}</td>
             </tr>
             <tr>
                 <td>📍</td>
@@ -1868,7 +1868,7 @@ async function invitManualemail(res, req, users, eventId) {
             </tr>
             <tr>
                 <td>⏱</td>
-                <td>${eventTime} (UTC)</td>
+                <td>${eventTime}</td>
             </tr>
             <tr>
                 <td>📍</td>
