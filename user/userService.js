@@ -977,7 +977,7 @@ function verifyToken(req, res, next) {
         }).catch(err => {
 
             return res.json({
-                code: code.unAuthorized,
+                code: '444',
                 message: msg.inValidToken
             })
         })
